@@ -212,7 +212,7 @@ export default function LineageShowcase() {
         <div className="flex items-center gap-6 shrink-0 w-full md:w-auto justify-between md:justify-end">
           <a 
             className="text-[#82d6c5] hover:text-[#268072] font-label-sm text-sm uppercase tracking-widest hover:underline flex items-center gap-1.5 transition-colors" 
-            href="#onboarding"
+            href="/catalog"
           >
             Explore Lineage <ArrowUpRight className="w-4 h-4" />
           </a>

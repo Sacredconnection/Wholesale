@@ -32,7 +32,7 @@ export default function Footer() {
             Resources
           </h5>
           <nav className="flex flex-col gap-4">
-            <a className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="#onboarding">
+            <a className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/catalog">
               Catalog
             </a>
             <a className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="#" onClick={(e) => { e.preventDefault(); alert("Contacting B2B Support..."); }}>

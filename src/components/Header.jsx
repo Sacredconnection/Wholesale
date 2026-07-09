@@ -1,10 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
+import { usePathname } from 'next/navigation';
 import { Menu, X, ArrowRight } from 'lucide-react';
 
 export default function Header({ onOpenLogin, onOpenApply }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const pathname = usePathname();
 
   return (
     <header className="sticky top-0 w-full bg-[#212121] border-b border-white/10 z-50 relative">
@@ -20,16 +22,22 @@ export default function Header({ onOpenLogin, onOpenApply }) {
 
         {/* Navigation Links (Center - Desktop Only) */}
         <nav className="hidden lg:flex items-center gap-8 text-sm font-medium tracking-wide text-white/70 font-body-md">
-          <a className="text-white border-b-2 border-[#268072] pb-1 transition-colors" href="#">
+          <a 
+            className={`${pathname === '/' ? 'text-white border-b-2 border-[#268072]' : 'hover:text-white'} pb-1 transition-colors`} 
+            href="/"
+          >
             Home
           </a>
-          <a className="hover:text-white transition-colors pb-1" href="#tribes">
+          <a className="hover:text-white transition-colors pb-1" href="/#tribes">
             About the Tribes
           </a>
-          <a className="hover:text-white transition-colors pb-1" href="#onboarding">
+          <a 
+            className={`${pathname === '/catalog' ? 'text-white border-b-2 border-[#268072]' : 'hover:text-white'} pb-1 transition-colors`} 
+            href="/catalog"
+          >
             Wholesale Catalog
           </a>
-          <a className="hover:text-white transition-colors pb-1" href="#footer">
+          <a className="hover:text-white transition-colors pb-1" href="/#footer">
             Contact
           </a>
         </nav>
@@ -64,29 +72,29 @@ export default function Header({ onOpenLogin, onOpenApply }) {
       {mobileMenuOpen && (
         <div className="absolute top-[100%] left-0 w-full bg-[#212121] border-b border-white/10 px-6 py-8 flex flex-col gap-6 md:hidden z-40 backdrop-blur-md shadow-xl animate-fade-in">
           <a 
-            className="text-white text-base font-medium" 
-            href="#"
+            className={`${pathname === '/' ? 'text-white' : 'text-white/70 hover:text-white'} text-base font-medium transition-colors`} 
+            href="/"
             onClick={() => setMobileMenuOpen(false)}
           >
             Home
           </a>
           <a 
             className="text-white/70 hover:text-white text-base font-medium transition-colors" 
-            href="#tribes"
+            href="/#tribes"
             onClick={() => setMobileMenuOpen(false)}
           >
             About the Tribes
           </a>
           <a 
-            className="text-white/70 hover:text-white text-base font-medium transition-colors" 
-            href="#onboarding"
+            className={`${pathname === '/catalog' ? 'text-white' : 'text-white/70 hover:text-white'} text-base font-medium transition-colors`} 
+            href="/catalog"
             onClick={() => setMobileMenuOpen(false)}
           >
             Wholesale Catalog
           </a>
           <a 
             className="text-white/70 hover:text-white text-base font-medium transition-colors" 
-            href="#footer"
+            href="/#footer"
             onClick={() => setMobileMenuOpen(false)}
           >
             Contact
