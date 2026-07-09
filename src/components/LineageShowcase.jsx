@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { ArrowUpRight, Globe, ShieldCheck, HeartHandshake, Eye } from 'lucide-react';
 
 const TRIBES_DATA = [
@@ -108,6 +108,43 @@ const TRIBES_DATA = [
 
 export default function LineageShowcase() {
   const [selectedTribe, setSelectedTribe] = useState(null);
+  const sliderRef = useRef(null);
+  const isDown = useRef(false);
+  const startX = useRef(0);
+  const scrollLeft = useRef(0);
+  const [hasMoved, setHasMoved] = useState(false);
+  const dragStartPos = useRef({ x: 0, y: 0 });
+
+  const handleMouseDown = (e) => {
+    isDown.current = true;
+    startX.current = e.pageX - sliderRef.current.offsetLeft;
+    scrollLeft.current = sliderRef.current.scrollLeft;
+    dragStartPos.current = { x: e.clientX, y: e.clientY };
+    setHasMoved(false);
+  };
+
+  const handleMouseLeave = () => {
+    isDown.current = false;
+  };
+
+  const handleMouseUp = () => {
+    isDown.current = false;
+  };
+
+  const handleMouseMove = (e) => {
+    if (!isDown.current) return;
+    
+    const moveX = Math.abs(e.clientX - dragStartPos.current.x);
+    const moveY = Math.abs(e.clientY - dragStartPos.current.y);
+    if (moveX > 5 || moveY > 5) {
+      setHasMoved(true);
+    }
+
+    e.preventDefault();
+    const x = e.pageX - sliderRef.current.offsetLeft;
+    const walk = (x - startX.current) * 1.5; // Drag speed multiplier
+    sliderRef.current.scrollLeft = scrollLeft.current - walk;
+  };
 
   return (
     <section id="tribes" className="flex flex-col gap-12 pt-12 border-t border-white/10 scroll-mt-24 w-full">
@@ -134,18 +171,29 @@ export default function LineageShowcase() {
         </div>
       </div>
 
-      {/* Tribe Carousel Track - Seamless CSS Marquee */}
+      {/* Tribe Carousel Track - Seamless CSS Marquee replaced by Draggable Slider */}
       <div className="w-full overflow-hidden relative">
         {/* Soft edge blur overlays to blend marquee at the container edges */}
         <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-[#131313] to-transparent z-10 pointer-events-none"></div>
         <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-[#131313] to-transparent z-10 pointer-events-none"></div>
 
-        <div className="flex gap-6 animate-marquee animate-marquee-hover-pause py-4">
-          {[...TRIBES_DATA, ...TRIBES_DATA].map((tribe, index) => (
+        <div 
+          ref={sliderRef}
+          onMouseDown={handleMouseDown}
+          onMouseLeave={handleMouseLeave}
+          onMouseUp={handleMouseUp}
+          onMouseMove={handleMouseMove}
+          className="flex gap-6 py-4 overflow-x-auto scrollbar-none select-none cursor-grab active:cursor-grabbing"
+        >
+          {TRIBES_DATA.map((tribe) => (
             <div 
-              key={`${tribe.id}-${index}`}
-              onClick={() => setSelectedTribe(tribe)}
-              className="group cursor-pointer relative overflow-hidden rounded bg-[#1a1a1a] border border-white/5 aspect-[3/4] w-[280px] sm:w-[320px] shrink-0 transition-all duration-300 hover:border-[#268072]/50 hover:shadow-lg hover:shadow-[#268072]/5"
+              key={tribe.id}
+              onClick={() => {
+                if (!hasMoved) {
+                  setSelectedTribe(tribe);
+                }
+              }}
+              className="group cursor-pointer relative overflow-hidden rounded bg-[#1a1a1a] border border-white/5 aspect-[3/4] w-[280px] sm:w-[320px] shrink-0 transition-all duration-300 hover:border-[#268072]/50 hover:shadow-lg hover:shadow-[#268072]/5 select-none"
             >
               {/* Image Overlay */}
               <div 
