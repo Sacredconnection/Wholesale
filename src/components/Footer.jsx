@@ -16,9 +16,6 @@ export default function Footer() {
               alt="Sacred Connection Wholesale Logo" 
               className="h-14 md:h-16 w-auto"
             />
-            <span className="text-xs font-semibold tracking-[0.25em] text-[#82d6c5] font-label-sm">
-              B2B PORTAL
-            </span>
           </div>
           <p className="font-body-md text-base text-white/50 leading-relaxed">
             © {new Date().getFullYear()} Sacred Connection Wholesale. Committed to ethical fair-trade sourcing and indigenous preservation.
