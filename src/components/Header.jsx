@@ -8,13 +8,13 @@ export default function Header({ onOpenLogin, onOpenApply }) {
 
   return (
     <header className="sticky top-0 w-full bg-[#212121] border-b border-white/10 z-50 relative">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-6 md:py-8 flex items-center justify-between w-full">
+      <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between w-full">
         {/* Logotipo (Left) */}
         <a className="flex items-center group shrink-0" href="#">
           <img 
             src="/logo.svg" 
             alt="Sacred Connection Wholesale Logo" 
-            className="h-16 md:h-20 w-auto transition-all duration-300 group-hover:opacity-90"
+            className="h-12 md:h-16 w-auto transition-all duration-300 group-hover:opacity-90"
           />
         </a>
 
