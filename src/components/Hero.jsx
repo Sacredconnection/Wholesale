@@ -9,7 +9,7 @@ export default function Hero({ onOpenApply }) {
       {/* Full Bleed Background Image */}
       <div className="absolute inset-0 z-0">
         <img 
-          src="/hero-banner.png" 
+          src="/hero-banner.jpg" 
           alt="Misty Amazonian forest canopy at dawn" 
           className="w-full h-full object-cover object-center animate-fade-in"
         />

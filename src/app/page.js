@@ -24,7 +24,7 @@ export const metadata = {
     url: "https://wholesale.sacredconnection.com",
     images: [
       {
-        url: "/hero-banner.png",
+        url: "/hero-banner.jpg",
         width: 1200,
         height: 630,
         alt: "Sacred Connection Wholesale - Amazon Canopy",
@@ -35,7 +35,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Sacred Connection Wholesale | B2B Portal",
     description: "Direct fair-trade sourcing of sacred Amazonian snuffs (rapé) and traditional forest remedies.",
-    images: ["/hero-banner.png"],
+    images: ["/hero-banner.jpg"],
   },
   robots: {
     index: true,

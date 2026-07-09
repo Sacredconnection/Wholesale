@@ -8,11 +8,18 @@ export default function Header({ onOpenLogin, onOpenApply }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
 
+  const handleHomeClick = (e) => {
+    if (pathname === '/') {
+      e.preventDefault();
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  };
+
   return (
     <header className="sticky top-0 w-full bg-[#212121] border-b border-white/10 z-50 relative">
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between w-full">
         {/* Logotipo (Left) */}
-        <a className="flex items-center group shrink-0" href="#">
+        <a className="flex items-center group shrink-0" href="/" onClick={handleHomeClick}>
           <img 
             src="/logo.svg" 
             alt="Sacred Connection Wholesale Logo" 
@@ -25,6 +32,7 @@ export default function Header({ onOpenLogin, onOpenApply }) {
           <a 
             className={`${pathname === '/' ? 'text-white border-b-2 border-[#268072]' : 'hover:text-white'} pb-1 transition-colors`} 
             href="/"
+            onClick={handleHomeClick}
           >
             Home
           </a>
@@ -74,7 +82,10 @@ export default function Header({ onOpenLogin, onOpenApply }) {
           <a 
             className={`${pathname === '/' ? 'text-white' : 'text-white/70 hover:text-white'} text-base font-medium transition-colors`} 
             href="/"
-            onClick={() => setMobileMenuOpen(false)}
+            onClick={(e) => {
+              setMobileMenuOpen(false);
+              handleHomeClick(e);
+            }}
           >
             Home
           </a>
