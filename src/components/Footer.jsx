@@ -14,7 +14,7 @@ export default function Footer() {
             <img 
               src="/logo.svg" 
               alt="Sacred Connection Wholesale Logo" 
-              className="h-10 md:h-12 w-auto"
+              className="h-14 md:h-16 w-auto"
             />
             <span className="text-xs font-semibold tracking-[0.25em] text-[#82d6c5] font-label-sm">
               B2B PORTAL
