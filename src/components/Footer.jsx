@@ -10,10 +10,12 @@ export default function Footer() {
         
         {/* Brand Info */}
         <div className="md:col-span-2 flex flex-col gap-6 pr-8">
-          <div className="flex flex-col">
-            <span className="font-headline-md text-2xl font-bold text-white tracking-tight">
-              Sacred Connection Wholesale
-            </span>
+          <div className="flex flex-col items-start gap-2">
+            <img 
+              src="/logo.svg" 
+              alt="Sacred Connection Wholesale Logo" 
+              className="h-10 md:h-12 w-auto"
+            />
             <span className="text-xs font-semibold tracking-[0.25em] text-[#82d6c5] font-label-sm">
               B2B PORTAL
             </span>

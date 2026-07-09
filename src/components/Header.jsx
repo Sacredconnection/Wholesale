@@ -10,13 +10,12 @@ export default function Header({ onOpenLogin, onOpenApply }) {
     <header className="sticky top-0 w-full bg-[#212121] border-b border-white/10 z-50 relative">
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between w-full">
         {/* Logotipo (Left) */}
-        <a className="flex flex-col tracking-tight group shrink-0" href="#">
-          <span className="text-lg md:text-xl font-bold leading-none tracking-wide text-white group-hover:text-[#268072] transition-colors font-headline-md">
-            SACRED CONNECTION
-          </span>
-          <span className="text-[10px] font-semibold tracking-[0.25em] text-[#268072] font-label-sm">
-            WHOLESALE
-          </span>
+        <a className="flex items-center group shrink-0" href="#">
+          <img 
+            src="/logo.svg" 
+            alt="Sacred Connection Wholesale Logo" 
+            className="h-10 md:h-12 w-auto transition-all duration-300 group-hover:opacity-90"
+          />
         </a>
 
         {/* Navigation Links (Center - Desktop Only) */}
