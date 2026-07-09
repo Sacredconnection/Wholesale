@@ -55,14 +55,14 @@ const TRIBES_DATA = [
     details: 'Shanenawa formulations are known for spiritual cleansing. Using the ash of the Murici tree, their blends are formulated to cleanse heavy energy, relieve stress, and support deep breathing.'
   },
   {
-    id: 'kaxinawa',
-    name: 'Kaxinawá',
-    region: 'Tarauacá',
+    id: 'caboclo',
+    name: 'Caboclo',
+    region: 'Amazon Forest',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxX9RLK7e9LqsuZC8AK-lukxxkF3zyp430pkyLpfCmEhp23UKY3U3Q98_DVFLDI99ZaS0NP8FiHDWFzdrbI3jr8aqM_zYvIYDYyM8CP970cGL9b4gfkOChyHNg7AWeRHQ4qC7sv4SFDu7DCYN4LUY-2gff7o98nJN1OxdOnRZALBqmoAyN0j1IiHqyN9vOWrl4E8Aeeo03iC7NH27M3svR4_sTaSPDSotqRFQhOWJzRIGYwJJMouQI7g',
-    description: 'A traditional branch of the Huni Kuin nation residing along the Tarauacá River, keeping ancient, uncompromised ritual forms and linguistic dialects intact.',
-    sustainability: '100% Elder Supervised',
-    harvest: 'Ethical Forest Gathered',
-    details: 'Blended with the ash of the Parica tree, Kaxinawá recipes provide intense focus and strong sensory elevation. They are preferred for ritual studies and seeking deep meditative visions.'
+    description: 'Caboclo formulations represent the synthesis of traditional indigenous knowledge and forest medicine gathered by rubber tappers and riverside communities throughout the Amazon.',
+    sustainability: 'Fair-Trade Co-op Sourced',
+    harvest: 'Wild-Harvested Botanicals',
+    details: 'Crafted using traditional forest ashes mixed with native herbs, Caboclo blends offer a balanced, grounding energy, designed to connect the body and mind in daily practices.'
   },
   {
     id: 'puyanawa',
@@ -95,14 +95,14 @@ const TRIBES_DATA = [
     details: 'Their snuffs are formulated to promote peace, safety, and spiritual protection. Infused with aromatic herbs like Sansara, Kuntanawa blends are smooth, relaxing, and centering.'
   },
   {
-    id: 'tuxa',
-    name: 'Tuxá',
-    region: 'São Francisco',
+    id: 'shwadaw',
+    name: 'Shwãdaw',
+    region: 'Acre, Brazil',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxX9RLK7e9LqsuZC8AK-lukxxkF3zyp430pkyLpfCmEhp23UKY3U3Q98_DVFLDI99ZaS0NP8FiHDWFzdrbI3jr8aqM_zYvIYDYyM8CP970cGL9b4gfkOChyHNg7AWeRHQ4qC7sv4SFDu7DCYN4LUY-2gff7o98nJN1OxdOnRZALBqmoAyN0j1IiHqyN9vOWrl4E8Aeeo03iC7NH27M3svR4_sTaSPDSotqRFQhOWJzRIGYwJJMouQI7g',
-    description: 'The Tuxá reside near the São Francisco river. Historically water gatherers, they maintain deep spiritual ties to river flows and riparian forest species.',
-    sustainability: 'Equitable Water Preservation',
-    harvest: 'Aquatic Herb Blended',
-    details: 'Tuxá snuffs are rare, light gray, and contain specialized riverbank botanicals. They are used traditionally to clear the sinuses, induce light meditative states, and foster water-spirit connection.'
+    description: 'The Shwãdaw (also known as Shawãdawa or Arara) live along the Juruá River basin. Their name represents the sun and the macaw. They preserve deep ancestral songs and botanical expertise.',
+    sustainability: '100% Direct Community Sourced',
+    harvest: 'Sun-Dried Traditional Milling',
+    details: 'Shwãdaw formulations incorporate unique forest ash combinations (like Tsunu bark) with special native plants, facilitating deep meditation, opening the heart, and strengthening spiritual connection.'
   }
 ];
 
