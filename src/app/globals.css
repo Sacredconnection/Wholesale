@@ -1,0 +1,147 @@
+@import "tailwindcss";
+
+@theme {
+  --color-on-tertiary-fixed-variant: #454747;
+  --color-surface-container-highest: #353535;
+  --color-outline: #889390;
+  --color-on-secondary-fixed: #1a1c1c;
+  --color-on-secondary: #2f3131;
+  --color-on-tertiary: #2f3131;
+  --color-primary-fixed-dim: #82d6c5;
+  --color-on-primary: #003730;
+  --color-surface-tint: #82d6c5;
+  --color-on-secondary-fixed-variant: #454747;
+  --color-primary-fixed: #9ef2e1;
+  --color-on-background: #e5e2e1;
+  --color-on-primary-fixed-variant: #005046;
+  --color-error: #ffb4ab;
+  --color-tertiary-container: #727373;
+  --color-tertiary: #c6c6c7;
+  --color-on-primary-fixed: #00201b;
+  --color-inverse-surface: #e5e2e1;
+  --color-on-error-container: #ffdad6;
+  --color-on-secondary-container: #b4b5b5;
+  --color-on-surface: #e5e2e1;
+  --color-surface-container-low: #1b1c1c;
+  --color-on-surface-variant: #bec9c5;
+  --color-error-container: #93000a;
+  --color-secondary-fixed: #e2e2e2;
+  --color-secondary-container: #454747;
+  --color-surface: #131313;
+  --color-secondary: #c6c6c7;
+  --color-surface-bright: #393939;
+  --color-surface-variant: #353535;
+  --color-secondary-fixed-dim: #c6c6c7;
+  --color-surface-container: #202020;
+  --color-on-tertiary-fixed: #1a1c1c;
+  --color-on-primary-container: #e7fff8;
+  --color-tertiary-fixed: #e2e2e2;
+  --color-outline-variant: #3e4946;
+  --color-background: #131313;
+  --color-surface-container-high: #2a2a2a;
+  --color-inverse-primary: #006b5e;
+  --color-surface-container-lowest: #0e0e0e;
+  --color-primary-container: #268072;
+  --color-inverse-on-surface: #303030;
+  --color-primary: #82d6c5;
+  --color-surface-dim: #131313;
+  --color-on-tertiary-container: #fafafa;
+  --color-tertiary-fixed-dim: #c6c6c7;
+  --color-on-error: #690005;
+
+  --radius-DEFAULT: 0.125rem;
+  --radius-lg: 0.25rem;
+  --radius-xl: 0.5rem;
+  --radius-full: 9999px;
+
+  --spacing-gutter: 24px;
+  --spacing-margin-mobile: 20px;
+  --spacing-unit: 8px;
+  --spacing-container-max: 1440px;
+  --spacing-margin-desktop: 64px;
+
+  --font-headline-lg: var(--font-hanken-grotesk), sans-serif;
+  --font-label-sm: var(--font-geist-mono), monospace;
+  --font-headline-md: var(--font-hanken-grotesk), sans-serif;
+  --font-body-md: var(--font-dm-sans), sans-serif;
+  --font-body-lg: var(--font-dm-sans), sans-serif;
+  --font-headline-lg-mobile: var(--font-hanken-grotesk), sans-serif;
+  --font-display-lg: var(--font-hanken-grotesk), sans-serif;
+}
+
+@layer utilities {
+  .glass-panel {
+    background-color: rgba(19, 19, 19, 0.8);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(62, 73, 70, 0.3);
+  }
+}
+
+@keyframes drift {
+  0%, 100% { transform: translate(0, 0); }
+  50% { transform: translate(30px, 20px); }
+}
+
+.animate-drift-slow { 
+  animation: drift 15s ease-in-out infinite; 
+}
+
+.animate-drift-slower { 
+  animation: drift 20s ease-in-out infinite reverse; 
+}
+
+@keyframes fade-in-up {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in-up { 
+  animation: fade-in-up 0.8s ease-out forwards; 
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in { 
+  animation: fade-in 1s ease-out forwards; 
+}
+
+body {
+  font-family: var(--font-dm-sans), sans-serif;
+  background-color: #131313;
+  color: #e5e2e1;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-hanken-grotesk), sans-serif;
+}
+
+code, pre, .font-mono {
+  font-family: var(--font-geist-mono), monospace;
+}
+
+/* Hide scrollbar for Chrome, Safari and Opera */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Hide scrollbar for IE, Edge and Firefox */
+.scrollbar-none {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+.animate-marquee {
+  animation: marquee 45s linear infinite;
+}
+
+.animate-marquee-hover-pause:hover {
+  animation-play-state: paused;
+}
