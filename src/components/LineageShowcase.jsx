@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { ArrowUpRight, Globe, ShieldCheck, HeartHandshake, Eye } from 'lucide-react';
 
 const TRIBES_DATA = [
@@ -95,14 +95,14 @@ const TRIBES_DATA = [
     details: 'Their snuffs are formulated to promote peace, safety, and spiritual protection. Infused with aromatic herbs like Sansara, Kuntanawa blends are smooth, relaxing, and centering.'
   },
   {
-    id: 'shwadaw',
-    name: 'Shwãdaw',
+    id: 'shawadawa',
+    name: 'Shawãdawa',
     region: 'Acre, Brazil',
     image: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAxX9RLK7e9LqsuZC8AK-lukxxkF3zyp430pkyLpfCmEhp23UKY3U3Q98_DVFLDI99ZaS0NP8FiHDWFzdrbI3jr8aqM_zYvIYDYyM8CP970cGL9b4gfkOChyHNg7AWeRHQ4qC7sv4SFDu7DCYN4LUY-2gff7o98nJN1OxdOnRZALBqmoAyN0j1IiHqyN9vOWrl4E8Aeeo03iC7NH27M3svR4_sTaSPDSotqRFQhOWJzRIGYwJJMouQI7g',
-    description: 'The Shwãdaw (also known as Shawãdawa or Arara) live along the Juruá River basin. Their name represents the sun and the macaw. They preserve deep ancestral songs and botanical expertise.',
+    description: 'The Shawãdawa (also known as Arara) live along the Juruá River basin. Their name represents the sun and the macaw. They preserve deep ancestral songs and botanical expertise.',
     sustainability: '100% Direct Community Sourced',
     harvest: 'Sun-Dried Traditional Milling',
-    details: 'Shwãdaw formulations incorporate unique forest ash combinations (like Tsunu bark) with special native plants, facilitating deep meditation, opening the heart, and strengthening spiritual connection.'
+    details: 'Shawãdawa formulations incorporate unique forest ash combinations (like Tsunu bark) with special native plants, facilitating deep meditation, opening the heart, and strengthening spiritual connection.'
   }
 ];
 
@@ -110,6 +110,7 @@ export default function LineageShowcase() {
   const [selectedTribe, setSelectedTribe] = useState(null);
   const sliderRef = useRef(null);
   const isDown = useRef(false);
+  const isHovered = useRef(false);
   const startX = useRef(0);
   const scrollLeft = useRef(0);
   const [hasMoved, setHasMoved] = useState(false);
@@ -125,6 +126,11 @@ export default function LineageShowcase() {
 
   const handleMouseLeave = () => {
     isDown.current = false;
+    isHovered.current = false;
+  };
+
+  const handleMouseEnter = () => {
+    isHovered.current = true;
   };
 
   const handleMouseUp = () => {
@@ -143,8 +149,50 @@ export default function LineageShowcase() {
     e.preventDefault();
     const x = e.pageX - sliderRef.current.offsetLeft;
     const walk = (x - startX.current) * 1.5; // Drag speed multiplier
-    sliderRef.current.scrollLeft = scrollLeft.current - walk;
+    
+    const slider = sliderRef.current;
+    const halfWidth = slider.scrollWidth / 2;
+    let newScrollLeft = scrollLeft.current - walk;
+    
+    // Wrap around for infinite scrolling during drag
+    if (newScrollLeft >= halfWidth) {
+      newScrollLeft -= halfWidth;
+      startX.current = x;
+      scrollLeft.current = newScrollLeft;
+    } else if (newScrollLeft <= 0) {
+      newScrollLeft += halfWidth;
+      startX.current = x;
+      scrollLeft.current = newScrollLeft;
+    }
+    
+    slider.scrollLeft = newScrollLeft;
   };
+
+  useEffect(() => {
+    let animationFrameId;
+    
+    const scrollLoop = () => {
+      if (sliderRef.current) {
+        const slider = sliderRef.current;
+        const halfWidth = slider.scrollWidth / 2;
+
+        if (!isDown.current && !isHovered.current) {
+          slider.scrollLeft += 0.8; // Auto-scroll speed
+          
+          if (slider.scrollLeft >= halfWidth) {
+            slider.scrollLeft -= halfWidth;
+          }
+        }
+      }
+      animationFrameId = requestAnimationFrame(scrollLoop);
+    };
+    
+    animationFrameId = requestAnimationFrame(scrollLoop);
+    
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, []);
 
   return (
     <section id="tribes" className="flex flex-col gap-12 pt-12 border-t border-white/10 scroll-mt-24 w-full">
@@ -180,14 +228,15 @@ export default function LineageShowcase() {
         <div 
           ref={sliderRef}
           onMouseDown={handleMouseDown}
+          onMouseEnter={handleMouseEnter}
           onMouseLeave={handleMouseLeave}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
           className="flex gap-6 py-4 overflow-x-auto scrollbar-none select-none cursor-grab active:cursor-grabbing"
         >
-          {TRIBES_DATA.map((tribe) => (
+          {[...TRIBES_DATA, ...TRIBES_DATA].map((tribe, index) => (
             <div 
-              key={tribe.id}
+              key={`${tribe.id}-${index}`}
               onClick={() => {
                 if (!hasMoved) {
                   setSelectedTribe(tribe);
