@@ -78,11 +78,11 @@ export default function NGOSection() {
       <section
         ref={sectionRef}
         id="ngo-partnership"
-        className="bg-[#284e32] border border-white/5 rounded-2xl p-8 md:p-16 relative overflow-hidden scroll-mt-24 w-full"
+        className="bg-[#1a1a1a] border border-[#268072]/35 rounded-2xl p-8 md:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#268072]/5 hover:border-[#268072]/60 transition-colors duration-500"
       >
         {/* Ambient background glow */}
-        <div className="absolute -top-24 -left-24 w-96 h-96 bg-[#268072] opacity-[0.04] blur-[120px] pointer-events-none rounded-full" />
-        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-[#82d6c5] opacity-[0.03] blur-[120px] pointer-events-none rounded-full" />
+        <div className="absolute -top-36 -left-36 w-[500px] h-[500px] bg-[#268072] opacity-[0.09] blur-[130px] pointer-events-none rounded-full" />
+        <div className="absolute -bottom-36 -right-36 w-[500px] h-[500px] bg-[#82d6c5] opacity-[0.07] blur-[130px] pointer-events-none rounded-full" />
 
         {/* NGO Symbol Watermark in Bottom-Right */}
         <img 
@@ -119,7 +119,7 @@ export default function NGOSection() {
             {/* Titles */}
             <div className="flex flex-col gap-4">
               <h2 className="font-headline-lg text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
-                Bridges of Support for the <span className="text-[#82d6c5]">Amazon Rainforest</span>
+                Bridges of Support for the <span className="text-[#268072]">Amazon Rainforest</span>
               </h2>
               <p className="font-body-md text-base md:text-lg text-white/70 leading-relaxed">
                 Conexão Ancestral acts as a vital bridge between the wisdom of the forest and the modern world. We support indigenous self-determination in Acre, Brazil, safeguarding ancestral knowledge and protecting traditional territories.
@@ -131,7 +131,7 @@ export default function NGOSection() {
               
               {/* Pillar 1 */}
               <div className="flex flex-col gap-3 group">
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#82d6c5] group-hover:bg-[#268072]/20 transition-all duration-300">
+                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#268072] group-hover:bg-[#268072]/20 transition-all duration-300">
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
@@ -144,7 +144,7 @@ export default function NGOSection() {
 
               {/* Pillar 2 */}
               <div className="flex flex-col gap-3 group">
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#82d6c5] group-hover:bg-[#268072]/20 transition-all duration-300">
+                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#268072] group-hover:bg-[#268072]/20 transition-all duration-300">
                   <Leaf className="w-5 h-5" />
                 </div>
                 <div>
@@ -157,7 +157,7 @@ export default function NGOSection() {
 
               {/* Pillar 3 */}
               <div className="flex flex-col gap-3 group">
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#82d6c5] group-hover:bg-[#268072]/20 transition-all duration-300">
+                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#268072] group-hover:bg-[#268072]/20 transition-all duration-300">
                   <Droplets className="w-5 h-5" />
                 </div>
                 <div>
