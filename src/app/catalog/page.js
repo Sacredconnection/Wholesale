@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -77,6 +77,21 @@ export default function CatalogPage() {
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 8;
+
+  // Smooth scroll ref
+  const productListRef = useRef(null);
+  const isMounted = useRef(false);
+
+  // Smooth scroll effect on page change
+  useEffect(() => {
+    if (isMounted.current) {
+      if (productListRef.current) {
+        productListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    } else {
+      isMounted.current = true;
+    }
+  }, [currentPage]);
 
   // Extract Categories and Tribes dynamically for dropdowns
   const categories = useMemo(() => {
@@ -249,7 +264,7 @@ export default function CatalogPage() {
         </div>
 
         {/* Product Table Grid */}
-        <div className="border border-white/10 rounded-sm overflow-hidden bg-[#1a1a1a]">
+        <div ref={productListRef} className="border border-white/10 rounded-sm overflow-hidden bg-[#1a1a1a]">
           {/* Header Row */}
           <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-3 bg-[#131313] border-b border-white/10 text-[10px] font-mono text-white/40 uppercase tracking-widest font-bold">
             <div className="col-span-1">Image</div>
