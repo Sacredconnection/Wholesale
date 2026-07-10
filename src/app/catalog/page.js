@@ -35,8 +35,20 @@ const TRIBE_COLORS = {
   "puyanawa": "#402C23",
   "shanenawa": "#0367A6",
   "shawadawa": "#731414",
-  "yawanawa": "#BF7E04"
+  "yawanawa": "#BF7E04",
+  "shamanic-blend": "#2C4A52",
+  "sacred-medicines": "#3A2040",
+  "sacred-connection": "#1A3A2A",
 };
+
+// Normalize string for accent-insensitive comparison
+// Strips diacritics, lowercases and trims — used ONLY for comparison, never for display
+const normalizeStr = (str) =>
+  (str || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
 
 const getTribeBgColor = (tribeName) => {
   if (!tribeName) return "#1c1c1c";
@@ -63,13 +75,24 @@ export default function CatalogPage() {
   const [category, setCategory] = useState("All");
   const [tribe, setTribe] = useState("All");
 
-  // Read URL query parameters to set initial tribe filter
+  // Read URL query parameters to set initial tribe filter and page
+  // Resolve accent-insensitively against actual data so URL params always match
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
       const tribeParam = params.get("tribe");
       if (tribeParam) {
-        setTribe(tribeParam);
+        const match = PRODUCTS_DATA.find(
+          (p) => normalizeStr(p.tribe) === normalizeStr(tribeParam)
+        );
+        setTribe(match ? match.tribe : tribeParam);
+      }
+      const pageParam = params.get("page");
+      if (pageParam) {
+        const pageNum = parseInt(pageParam);
+        if (!isNaN(pageNum) && pageNum > 0) {
+          setCurrentPage(pageNum);
+        }
       }
     }
   }, []);
@@ -82,37 +105,78 @@ export default function CatalogPage() {
   const productListRef = useRef(null);
   const isMounted = useRef(false);
 
-  // Smooth scroll effect on page change
+  // Smooth scroll effect on page change & URL query sync
   useEffect(() => {
     if (isMounted.current) {
       if (productListRef.current) {
         productListRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
       }
+      const params = new URLSearchParams(window.location.search);
+      if (currentPage > 1) {
+        params.set("page", currentPage.toString());
+      } else {
+        params.delete("page");
+      }
+      if (tribe !== "All") {
+        params.set("tribe", tribe.toLowerCase());
+      } else {
+        params.delete("tribe");
+      }
+      const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
+      window.history.replaceState(null, '', newUrl);
     } else {
       isMounted.current = true;
     }
-  }, [currentPage]);
+  }, [currentPage, tribe]);
 
-  // Extract Categories and Tribes dynamically for dropdowns
+  // Extract Categories and Tribes dynamically for dropdowns (A–Z, accent-insensitive dedup)
   const categories = useMemo(() => {
-    return ["All", ...new Set(PRODUCTS_DATA.map((p) => p.category))];
+    const seen = new Map(); // normalised key → original string
+    PRODUCTS_DATA.forEach((p) => {
+      const key = normalizeStr(p.category);
+      if (!seen.has(key)) seen.set(key, p.category);
+    });
+    const unique = [...seen.values()].sort((a, b) =>
+      normalizeStr(a).localeCompare(normalizeStr(b))
+    );
+    return ["All", "New Arrivals", ...unique];
   }, []);
 
   const tribes = useMemo(() => {
-    return ["All", ...new Set(PRODUCTS_DATA.map((p) => p.tribe))];
+    const seen = new Map(); // normalised key → original string
+    PRODUCTS_DATA.forEach((p) => {
+      const key = normalizeStr(p.tribe);
+      if (!seen.has(key)) seen.set(key, p.tribe);
+    });
+    const unique = [...seen.values()].sort((a, b) =>
+      normalizeStr(a).localeCompare(normalizeStr(b))
+    );
+    return ["All", ...unique];
   }, []);
 
-  // Filtered Products
+  // Filtered Products – accent-insensitive matching, sorted A–Z
   const filteredProducts = useMemo(() => {
-    return PRODUCTS_DATA.filter((product) => {
-      const matchesSearch = 
-        product.name.toLowerCase().includes(search.toLowerCase()) || 
-        product.sku.toLowerCase().includes(search.toLowerCase());
-      const matchesCategory = category === "All" || product.category === category;
-      const matchesTribe = tribe === "All" || product.tribe === tribe;
-      return matchesSearch && matchesCategory && matchesTribe;
-    });
+    const normSearch  = normalizeStr(search);
+    const normCat     = normalizeStr(category);
+    const normTribe   = normalizeStr(tribe);
+
+    return PRODUCTS_DATA
+      .filter((product) => {
+        const matchesSearch =
+          normalizeStr(product.name).includes(normSearch) ||
+          normalizeStr(product.sku).includes(normSearch);
+        const matchesCategory =
+          category === "All" ||
+          (category === "New Arrivals"
+            ? product.isNew === true
+            : normalizeStr(product.category) === normCat);
+        const matchesTribe =
+          tribe === "All" || normalizeStr(product.tribe) === normTribe;
+        return matchesSearch && matchesCategory && matchesTribe;
+      })
+      .sort((a, b) => normalizeStr(a.name).localeCompare(normalizeStr(b.name)));
   }, [search, category, tribe]);
+
 
   // Paginated Products
   const paginatedProducts = useMemo(() => {
@@ -155,19 +219,31 @@ export default function CatalogPage() {
             </p>
           </div>
           
-          {/* Quick Cart Summary Button */}
-          <button 
-            onClick={() => setIsCartOpen(true)}
-            className="flex items-center gap-3 bg-[#1a1a1a] hover:bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 py-3.5 px-6 rounded-sm text-sm font-bold tracking-wide text-white uppercase relative shrink-0 cursor-pointer"
-          >
-            <ShoppingBag className="w-4 h-4 text-[#82d6c5]" />
-            Order Sheet
-            {cartTotalItems > 0 && (
-              <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#e02401] text-[10px] font-bold text-white absolute -top-2 -right-2 animate-pulse">
-                {cartTotalItems}
-              </span>
-            )}
-          </button>
+          {/* Header Action Buttons */}
+          <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+            {/* Download Catalog PDF Button */}
+            <button 
+              onClick={() => alert("Downloading Wholesale Catalog & Pricing PDF...")}
+              className="flex items-center gap-3 bg-[#268072] hover:bg-[#1f665b] text-white border-0 py-3.5 px-6 rounded-sm text-sm font-bold tracking-wide uppercase transition-all duration-300 cursor-pointer shadow-lg shadow-[#268072]/15 grow sm:grow-0 justify-center"
+            >
+              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              PDF Catalog
+            </button>
+
+            {/* Quick Cart Summary Button */}
+            <button 
+              onClick={() => setIsCartOpen(true)}
+              className="flex items-center gap-3 bg-[#1a1a1a] hover:bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 py-3.5 px-6 rounded-sm text-sm font-bold tracking-wide text-white uppercase relative cursor-pointer grow sm:grow-0 justify-center"
+            >
+              <ShoppingBag className="w-4 h-4 text-[#82d6c5]" />
+              Order Sheet
+              {cartTotalItems > 0 && (
+                <span className="flex h-5 w-5 items-center justify-center rounded-full bg-[#e02401] text-[10px] font-bold text-white absolute -top-2 -right-2 animate-pulse">
+                  {cartTotalItems}
+                </span>
+              )}
+            </button>
+          </div>
         </div>
 
         {/* Filters Panel */}
@@ -216,7 +292,9 @@ export default function CatalogPage() {
                   className="w-full bg-[#131313] border border-white/10 rounded-sm py-4 px-4 text-sm text-white focus:outline-none focus:border-[#268072] transition-colors font-body-md cursor-pointer appearance-none"
                 >
                   {categories.map((cat) => (
-                    <option key={cat} value={cat}>{cat === "All" ? "All Categories" : cat}</option>
+                    <option key={cat} value={cat}>
+                      {cat === "All" ? "All Categories" : cat === "New Arrivals" ? "🆕 New Arrivals" : cat}
+                    </option>
                   ))}
                 </select>
                 <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/40">
@@ -286,7 +364,7 @@ export default function CatalogPage() {
                   >
                     {/* Image Column */}
                     <div className="col-span-1 md:col-span-1 flex items-center">
-                      <Link href={`/product/${product.id}`} className="block">
+                      <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="block">
                         <div 
                           className="w-14 h-14 rounded-full border border-white/10 hover:border-[#268072]/45 flex items-center justify-center text-lg font-black text-white select-none transition-all duration-300 relative shadow-md hover:shadow-lg font-mono uppercase"
                           style={{ backgroundColor: getTribeBgColor(product.tribe) }}
@@ -300,9 +378,14 @@ export default function CatalogPage() {
 
                     {/* Name Column */}
                     <div className="col-span-1 md:col-span-4 flex flex-col gap-1">
-                      <Link href={`/product/${product.id}`} className="hover:text-[#82d6c5] transition-colors text-left no-underline group">
-                        <h3 className="font-headline-md text-lg font-bold text-white group-hover:text-[#82d6c5] transition-colors">
+                      <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="hover:text-[#82d6c5] transition-colors text-left no-underline group">
+                        <h3 className="font-headline-md text-lg font-bold text-white group-hover:text-[#82d6c5] transition-colors flex items-center gap-2 flex-wrap">
                           {product.name}
+                          {product.isNew && (
+                            <span className="inline-block text-[9px] font-black tracking-widest bg-emerald-500 text-white px-1.5 py-0.5 rounded-sm uppercase align-middle">
+                              New
+                            </span>
+                          )}
                         </h3>
                       </Link>
                       <div className="flex gap-2">

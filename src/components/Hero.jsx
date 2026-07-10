@@ -3,16 +3,41 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 
+const BANNERS = [
+  {
+    src: "/banner/hero-banner.jpg",
+    alt: "Misty Amazonian forest canopy at dawn"
+  },
+  {
+    src: "/banner/hero-banner-01.jpg",
+    alt: "Sacred medicines and tribal forest scenery"
+  }
+];
+
 export default function Hero({ onOpenApply }) {
+  const [activeIdx, setActiveIdx] = React.useState(0);
+
+  React.useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveIdx((prev) => (prev + 1) % BANNERS.length);
+    }, 6000);
+    return () => clearInterval(timer);
+  }, []);
+
   return (
     <div className="relative w-full min-h-screen bg-[#131313] overflow-hidden flex flex-col justify-center">
-      {/* Full Bleed Background Image */}
+      {/* Full Bleed Background Image Carousel */}
       <div className="absolute inset-0 z-0">
-        <img 
-          src="/banner/hero-banner.jpg" 
-          alt="Misty Amazonian forest canopy at dawn" 
-          className="w-full h-full object-cover object-center animate-fade-in"
-        />
+        {BANNERS.map((banner, idx) => (
+          <img 
+            key={banner.src}
+            src={banner.src} 
+            alt={banner.alt} 
+            className={`absolute inset-0 w-full h-full object-cover object-center transition-opacity duration-1000 ease-in-out ${
+              activeIdx === idx ? 'opacity-100' : 'opacity-0'
+            }`}
+          />
+        ))}
         {/* Radial & Linear Overlays for Premium Contrast and Typography Readability */}
         <div className="absolute inset-0 bg-gradient-to-r from-[#131313] via-[#131313]/75 to-[#131313]/20 opacity-95"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-transparent to-transparent opacity-80"></div>
@@ -51,6 +76,20 @@ export default function Hero({ onOpenApply }) {
 
         </div>
       </section>
+
+      {/* Carousel dots indicators */}
+      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+        {BANNERS.map((_, idx) => (
+          <button
+            key={idx}
+            onClick={() => setActiveIdx(idx)}
+            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer border-0 p-0 ${
+              activeIdx === idx ? 'bg-[#82d6c5] w-6' : 'bg-white/30 hover:bg-white/50'
+            }`}
+            aria-label={`Go to slide ${idx + 1}`}
+          />
+        ))}
+      </div>
     </div>
   );
 }

@@ -1,36 +1,97 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Sacred Connection Wholesale — B2B Portal
 
-## Getting Started
+Welcome to the **Sacred Connection Wholesale B2B Portal**. This is a premium web application built using **Next.js 16**, **React 19**, and **Tailwind CSS v4** to serve B2B clients, distributors, and partners in sourcing sacred Amazonian botanicals, rapé, and related artisanal products.
 
-First, run the development server:
+---
+
+## 🚀 Key Features
+
+*   **Custom B2B Onboarding Flow:** An interactive, multi-step application wizard for retail stores, clinics, and facilitators to request wholesale accounts.
+*   **Dynamic Product Catalog:** Live inventory simulation displaying product categories, tribal lineages, custom pricing tiers, weight options (5g sample to 1kg bulk), and live weight-based pricing calculations.
+*   **Wholesale Cart & Checkout:** Persistent drawer-based cart with dynamic summaries, subtotal calculations, weight details, and a streamlined client-only checkout.
+*   **NGO Integration (Conexão Ancestral):** A bespoke page section supporting the Conexão Ancestral NGO with high-quality visual assets, dynamic 5-photo collage mosaic, custom brand styling, and high-performance SVG watermarks.
+*   **Client Dashboard (My Account):** A personalized client area detailing current B2B account limits, approved discount rates, shipping/billing records, and order history.
+
+---
+
+## 🛠️ Technology Stack
+
+*   **Core Framework:** [Next.js 16 (App Router)](https://nextjs.org/)
+*   **Runtime Library:** [React 19](https://react.dev/)
+*   **Styling Engine:** [Tailwind CSS v4](https://tailwindcss.com/) with PostCSS
+*   **Icons Library:** [Lucide React](https://lucide.dev/)
+*   **State Management:** React Context API ([AuthContext](src/components/AuthContext.jsx), [CartContext](src/components/CartContext.jsx))
+
+---
+
+## 📂 Project Architecture
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+├── public/
+│   ├── banner/        # Homepage and carousel banners
+│   ├── ngo/           # Conexão Ancestral NGO assets (logo, watermark, collage)
+│   ├── products/      # Product images organized by tribe/category
+│   └── tribes/        # Tribal portrait visual cards
+├── src/
+│   ├── app/           # Next.js App Router (Layouts & Pages)
+│   │   ├── catalog/   # Wholesale Catalog Page
+│   │   ├── my-account/# Client Dashboard Profile Page
+│   │   ├── product/   # Dynamic Product Details Page ([id])
+│   │   ├── register/  # Onboarding/Registration Page
+│   │   └── globals.css# Tailwind v4 configuration & Global styling
+│   ├── components/    # Reusable React UI Components
+│   │   ├── AuthContext.jsx # LocalStorage Authentication Context
+│   │   ├── CartContext.jsx # LocalStorage Cart state provider
+│   │   ├── NGOSection.jsx  # Customized NGO block with mosaic and watermark
+│   │   └── ...
+│   └── data/
+│       └── products.js# Centralized product catalog mock data
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+---
 
-You can start editing the page by modifying `app/page.js`. The page auto-updates as you edit the file.
+## 💻 Getting Started
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+### Prerequisites
 
-## Learn More
+*   [Node.js](https://nodejs.org/) (v18.x or later recommended)
+*   npm or yarn
 
-To learn more about Next.js, take a look at the following resources:
+### Installation
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+1. Clone or download the repository.
+2. Open your terminal in the project root directory.
+3. Install dependencies:
+   ```bash
+   npm install
+   ```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### Running Locally (Development)
 
-## Deploy on Vercel
+Start the local development server with Turbopack enabled:
+```bash
+npm run dev
+```
+Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### Building for Production
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Compile the production bundle:
+```bash
+npm run build
+```
+Start the production server:
+```bash
+npm run start
+```
+
+---
+
+## 🔐 B2B Demo Login Credentials
+
+For testing and client review, a simulated default B2B account is preloaded:
+
+*   **Email:** `partner@sacredconnection.com`
+*   **Password:** `ancestral8892`
+
+*Note: In production environments, this mock provider is designed to be replaced with a secure database or headless identity management service (e.g., Auth0, Firebase Auth, or Clerk).*

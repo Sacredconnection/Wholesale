@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { useAuth } from '@/components/AuthContext';
 import { useCart } from '@/components/CartContext';
-import { Menu, X, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Menu, X, ArrowRight, LogOut, ShoppingBag } from 'lucide-react';
 
 export default function Header({ onOpenLogin, onOpenApply }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -55,7 +55,10 @@ export default function Header({ onOpenLogin, onOpenApply }) {
           >
             Wholesale Catalog
           </a>
-          <a className="hover:text-white transition-colors pb-1" href="/#footer">
+          <a 
+            className={`${pathname === '/contact' ? 'text-white border-b-2 border-[#268072]' : 'hover:text-white'} pb-1 transition-colors`} 
+            href="/contact"
+          >
             Contact
           </a>
         </nav>
@@ -85,9 +88,10 @@ export default function Header({ onOpenLogin, onOpenApply }) {
               </a>
               <button 
                 onClick={handleHeaderLogout}
-                className="bg-[#93000a]/10 hover:bg-[#93000a]/25 text-[#ffb4ab] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-[#93000a]/30 hover:border-[#ffb4ab]/30 transition-all duration-300 cursor-pointer"
+                className="bg-[#93000a]/15 hover:bg-[#93000a]/30 text-[#ffb4ab] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-[#93000a]/30 hover:border-[#ffb4ab]/40 transition-all duration-300 flex items-center gap-2 cursor-pointer"
               >
-                Logout
+                Exit Portal
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             </>
           ) : (
@@ -160,8 +164,8 @@ export default function Header({ onOpenLogin, onOpenApply }) {
             Wholesale Catalog
           </a>
           <a 
-            className="text-white/70 hover:text-white text-base font-medium transition-colors" 
-            href="/#footer"
+            className={`${pathname === '/contact' ? 'text-white' : 'text-white/70 hover:text-white'} text-base font-medium transition-colors`} 
+            href="/contact"
             onClick={() => setMobileMenuOpen(false)}
           >
             Contact
@@ -181,9 +185,10 @@ export default function Header({ onOpenLogin, onOpenApply }) {
                   setMobileMenuOpen(false);
                   handleHeaderLogout();
                 }}
-                className="text-left text-[#ffb4ab] text-base font-medium py-2 bg-transparent border-0 cursor-pointer"
+                className="flex items-center gap-2 text-left text-[#ffb4ab] text-base font-medium py-2 bg-transparent border-0 cursor-pointer"
               >
-                Logout
+                <LogOut className="w-4 h-4" />
+                Exit Portal
               </button>
             </>
           ) : (

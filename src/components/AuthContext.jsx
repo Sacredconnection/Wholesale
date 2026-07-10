@@ -24,6 +24,23 @@ export function AuthProvider({ children }) {
   const login = (email, password) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
+        // Check registered users first
+        const registered = JSON.parse(localStorage.getItem('sc_wholesale_registered') || '[]');
+        const found = registered.find(
+          (u) => u.email.toLowerCase() === email.toLowerCase() && u._password === password
+        );
+
+        if (found) {
+          const { _password, ...safeUser } = found;
+          setIsLoggedIn(true);
+          setUser(safeUser);
+          localStorage.setItem('sc_wholesale_auth', 'true');
+          localStorage.setItem('sc_wholesale_user', JSON.stringify(safeUser));
+          resolve(safeUser);
+          return;
+        }
+
+        // Fallback demo account
         if (email === 'partner@sacredconnection.com' && password === 'ancestral8892') {
           const defaultUser = {
             firstName: "Gravina",
@@ -32,10 +49,12 @@ export function AuthProvider({ children }) {
             email: "partner@sacredconnection.com",
             company: "Gravina Design Studio / Sacred Connection Partner",
             phone: "+55 11 99999-9999",
+            country: "Brazil",
             accountId: "SC-WHOLESALE-29983",
             status: "ACTIVE",
             creditLimit: 15000,
             discountRate: 35,
+            avatar: null,
             shippingAddress: {
               street: "Rua da Floresta, 123",
               neighborhood: "Jardim das Almas",
@@ -62,7 +81,44 @@ export function AuthProvider({ children }) {
         } else {
           reject(new Error('Invalid B2B Account credentials. Try using the Demo Account.'));
         }
-      }, 1000);
+      }, 900);
+    });
+  };
+
+  /**
+   * register() — creates a new user account, stores it in localStorage
+   * and immediately logs the user in.
+   */
+  const register = (userData) => {
+    return new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          const registered = JSON.parse(localStorage.getItem('sc_wholesale_registered') || '[]');
+
+          // Check for duplicate email
+          if (registered.some((u) => u.email.toLowerCase() === userData.email.toLowerCase())) {
+            reject(new Error('An account with this email already exists. Please log in.'));
+            return;
+          }
+
+          // Store with password (only in the registry list — never exposed to the UI)
+          const entry = { ...userData, _password: userData.password };
+          const { password, ...safeUser } = entry; // strip plain password from session
+
+          registered.push(entry);
+          localStorage.setItem('sc_wholesale_registered', JSON.stringify(registered));
+
+          // Log in immediately
+          setIsLoggedIn(true);
+          setUser(safeUser);
+          localStorage.setItem('sc_wholesale_auth', 'true');
+          localStorage.setItem('sc_wholesale_user', JSON.stringify(safeUser));
+
+          resolve(safeUser);
+        } catch (err) {
+          reject(new Error('Registration failed. Please try again.'));
+        }
+      }, 800);
     });
   };
 
@@ -77,10 +133,20 @@ export function AuthProvider({ children }) {
     const updatedUser = { ...user, ...updatedFields };
     setUser(updatedUser);
     localStorage.setItem('sc_wholesale_user', JSON.stringify(updatedUser));
+
+    // Also update the registry if user was registered (not demo)
+    try {
+      const registered = JSON.parse(localStorage.getItem('sc_wholesale_registered') || '[]');
+      const idx = registered.findIndex((u) => u.email === updatedUser.email);
+      if (idx !== -1) {
+        registered[idx] = { ...registered[idx], ...updatedFields };
+        localStorage.setItem('sc_wholesale_registered', JSON.stringify(registered));
+      }
+    } catch (_) {}
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, loading, login, logout, updateUser }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, loading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

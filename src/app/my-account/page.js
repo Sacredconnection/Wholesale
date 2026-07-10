@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import Header from "@/components/Header";
@@ -22,15 +22,28 @@ import {
   AlertCircle, 
   FileText, 
   Save,
-  Lock
+  Lock,
+  Camera
 } from "lucide-react";
 
 export default function MyAccountPage() {
   const { isLoggedIn, user, loading, logout, updateUser } = useAuth();
   const router = useRouter();
+  const avatarInputRef = useRef(null);
   
   // Navigation tabs state
   const [activeTab, setActiveTab] = useState("dashboard");
+  
+  // Avatar upload handler
+  const handleAvatarChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 4 * 1024 * 1024) return; // 4MB guard
+    const reader = new FileReader();
+    reader.onload = (ev) => updateUser({ avatar: ev.target.result });
+    reader.readAsDataURL(file);
+  };
+  
   
   // Modal states
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -212,16 +225,37 @@ export default function MyAccountPage() {
       {/* Hero Header Section */}
       <section className="bg-[#1c1c1c] border-b border-white/15 py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#268072]/10 via-transparent to-transparent opacity-60"></div>
-        <div className="max-w-7xl mx-auto px-6 md:px-12 relative">
-          <span className="text-[10px] font-mono tracking-widest text-[#82d6c5] uppercase">
-            B2B Partner Portal
-          </span>
-          <h1 className="font-headline-md text-3xl md:text-4xl font-bold text-white mt-1">
-            My Account
-          </h1>
-          <p className="text-sm text-white/50 mt-1.5 font-mono">
-            Welcome back, <span className="text-[#82d6c5] font-bold">{user.displayName}</span> · ID: {user.accountId}
-          </p>
+        <div className="max-w-7xl mx-auto px-6 md:px-12 relative flex items-center gap-6">
+          {/* Avatar */}
+          <div
+            onClick={() => avatarInputRef.current?.click()}
+            className="relative w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white/20 hover:border-[#268072] cursor-pointer overflow-hidden group shrink-0 bg-[#131313] flex items-center justify-center transition-all"
+          >
+            {user.avatar ? (
+              <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+            ) : (
+              <span className="text-2xl font-bold text-white/40">
+                {(user.firstName || user.displayName || "?")[0]?.toUpperCase()}
+              </span>
+            )}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex flex-col items-center justify-center gap-1 transition-opacity">
+              <Camera className="w-5 h-5 text-white" />
+              <span className="text-[9px] font-mono text-white uppercase">Change</span>
+            </div>
+          </div>
+          <input ref={avatarInputRef} type="file" accept="image/*" onChange={handleAvatarChange} className="hidden" />
+
+          <div>
+            <span className="text-[10px] font-mono tracking-widest text-[#82d6c5] uppercase">
+              B2B Partner Portal
+            </span>
+            <h1 className="font-headline-md text-3xl md:text-4xl font-bold text-white mt-1">
+              My Account
+            </h1>
+            <p className="text-sm text-white/50 mt-1.5 font-mono">
+              Welcome back, <span className="text-[#82d6c5] font-bold">{user.displayName}</span> · ID: {user.accountId}
+            </p>
+          </div>
         </div>
       </section>
 
@@ -463,7 +497,7 @@ export default function MyAccountPage() {
                     { title: "Chemical Purity Lab Reports", desc: "Tsunu & Cumaru gas chromatography tests.", size: "PDF - 2.4 MB" },
                     { title: "Wholesale Catalog & Pricing 2026", desc: "Base and bulk pricing structures.", size: "PDF - 5.1 MB" },
                     { title: "Amazon Rainforest Fair Trade Agreement", desc: "Indigenous alliance certification.", size: "PDF - 1.8 MB" },
-                    { title: "Rapé Administration Guidelines", desc: "Dosages, warnings and best practices.", size: "PDF - 920 KB" }
+                    { title: "Rapeh Administration Guidelines", desc: "Dosages, warnings and best practices.", size: "PDF - 920 KB" }
                   ].map((doc, idx) => (
                     <div key={idx} className="bg-[#131313] border border-white/5 rounded-md p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                       <div className="mb-4">
@@ -696,7 +730,54 @@ export default function MyAccountPage() {
 
             {/* 5. ACCOUNT DETAILS TAB */}
             {activeTab === "details" && (
-              <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl animate-fade-in">
+              <div className="flex flex-col gap-6 animate-fade-in">
+
+                {/* Profile Photo Card */}
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl">
+                  <h3 className="font-headline-md text-sm font-bold uppercase tracking-wider text-white/80 flex items-center gap-2 mb-6">
+                    <Camera className="w-4 h-4 text-[#82d6c5]" />
+                    Profile Photo
+                  </h3>
+                  <div className="flex items-center gap-6">
+                    <div
+                      onClick={() => avatarInputRef.current?.click()}
+                      className="relative w-20 h-20 rounded-full border-2 border-dashed border-white/20 hover:border-[#268072] cursor-pointer overflow-hidden group transition-all bg-[#131313] flex items-center justify-center shrink-0"
+                    >
+                      {user.avatar ? (
+                        <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-2xl font-bold text-white/30">
+                          {(user.firstName || user.displayName || "?")[0]?.toUpperCase()}
+                        </span>
+                      )}
+                      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                        <Camera className="w-5 h-5 text-white" />
+                      </div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        type="button"
+                        onClick={() => avatarInputRef.current?.click()}
+                        className="bg-[#268072]/15 hover:bg-[#268072]/30 text-[#82d6c5] text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded border border-[#268072]/30 cursor-pointer transition-all"
+                      >
+                        Upload New Photo
+                      </button>
+                      {user.avatar && (
+                        <button
+                          type="button"
+                          onClick={() => updateUser({ avatar: null })}
+                          className="text-[#ffb4ab] text-xs font-medium hover:underline bg-transparent border-0 cursor-pointer text-left"
+                        >
+                          Remove photo
+                        </button>
+                      )}
+                      <span className="text-[10px] text-white/30 font-mono">JPG, PNG or WEBP · Max 4MB</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Account Details Form */}
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl">
                 <h3 className="font-headline-md text-lg font-bold text-white mb-6">
                   Account Details
                 </h3>
@@ -841,7 +922,8 @@ export default function MyAccountPage() {
                     Save Account Changes
                   </button>
 
-                </form>
+                  </form>
+                </div>
               </div>
             )}
 

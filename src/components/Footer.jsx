@@ -5,7 +5,7 @@ import { ShieldCheck, Leaf, Globe, Users } from 'lucide-react';
 
 export default function Footer() {
   return (
-    <footer id="footer" className="bg-[#131313] border-t border-white/10 w-full mt-12 scroll-mt-24">
+    <footer id="footer" className="bg-[#212121] border-t border-white/10 w-full mt-12 scroll-mt-24">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-6 md:px-12 py-24 w-full max-w-7xl mx-auto">
         
         {/* Brand Info */}

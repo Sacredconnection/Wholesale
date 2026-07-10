@@ -2,10 +2,10 @@ import HomeClient from "@/components/HomeClient";
 
 export const metadata = {
   title: "Sacred Connection Wholesale | B2B Portal",
-  description: "Direct fair-trade sourcing of sacred Amazonian snuffs (rapé) and traditional forest remedies. Access our verified B2B wholesale platform.",
+  description: "Direct fair-trade sourcing of sacred Amazonian snuffs (rapeh) and traditional forest remedies. Access our verified B2B wholesale platform.",
   keywords: [
     "sacred connection",
-    "wholesale rapé",
+    "wholesale rapeh",
     "shamanic snuff wholesale",
     "huni kuin",
     "yawanawa",
@@ -34,7 +34,7 @@ export const metadata = {
   twitter: {
     card: "summary_large_image",
     title: "Sacred Connection Wholesale | B2B Portal",
-    description: "Direct fair-trade sourcing of sacred Amazonian snuffs (rapé) and traditional forest remedies.",
+    description: "Direct fair-trade sourcing of sacred Amazonian snuffs (rapeh) and traditional forest remedies.",
     images: ["/banner/hero-banner.jpg"],
   },
   robots: {
@@ -52,7 +52,7 @@ export default function Page() {
       "name": "Sacred Connection Wholesale",
       "url": "https://wholesale.sacredconnection.com",
       "logo": "https://wholesale.sacredconnection.com/logo.png",
-      "description": "Direct fair-trade sourcing of sacred Amazonian snuffs (rapé) and traditional forest remedies. Access our verified B2B wholesale platform.",
+      "description": "Direct fair-trade sourcing of sacred Amazonian snuffs (rapeh) and traditional forest remedies. Access our verified B2B wholesale platform.",
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "B2B Support",

@@ -6,6 +6,7 @@ import Hero from '@/components/Hero';
 import TrustBar from '@/components/TrustBar';
 import LineageShowcase from '@/components/LineageShowcase';
 import Onboarding from '@/components/Onboarding';
+import NGOSection from '@/components/NGOSection';
 import Footer from '@/components/Footer';
 import ApplicationModal from '@/components/ApplicationModal';
 import LoginModal from '@/components/LoginModal';
@@ -35,6 +36,9 @@ export default function HomeClient() {
 
         {/* B2B Onboarding Steps */}
         <Onboarding onOpenApply={() => setIsApplyOpen(true)} />
+
+        {/* NGO Partnership Details */}
+        <NGOSection />
       </main>
 
       {/* Footer Details */}

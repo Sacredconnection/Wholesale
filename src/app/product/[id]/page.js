@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -24,6 +24,8 @@ import {
 export default function ProductDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const fromPage = searchParams.get("fromPage") || "1";
   const { id } = params;
 
   const { addToCart, setIsCartOpen } = useCart();
@@ -37,6 +39,7 @@ export default function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isApplyOpen, setIsApplyOpen] = useState(false);
+  const [imgError, setImgError] = useState(false);
 
   // If product doesn't exist
   if (!product) {
@@ -82,11 +85,19 @@ export default function ProductDetailPage() {
       <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-8">
         
         {/* Breadcrumbs / Back button */}
-        <div className="flex items-center gap-2 text-xs text-white/50 font-mono">
-          <Link href="/catalog" className="flex items-center gap-1.5 hover:text-white transition-colors no-underline">
+        <div className="flex items-center gap-2 text-xs text-white/50 font-mono flex-wrap">
+          <Link href={`/catalog?page=${fromPage}`} className="flex items-center gap-1.5 hover:text-white transition-colors no-underline">
             <ArrowLeft className="w-4.5 h-4.5" />
-            Back to Wholesale Catalog
+            Back to Wholesale Catalog (Page {fromPage})
           </Link>
+          {fromPage !== "1" && (
+            <>
+              <span>·</span>
+              <Link href="/catalog" className="hover:text-white transition-colors no-underline">
+                First Page
+              </Link>
+            </>
+          )}
           <span>/</span>
           <span className="text-white/30 capitalize">{product.category}</span>
           <span>/</span>
@@ -97,14 +108,34 @@ export default function ProductDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mt-4">
           
           {/* Left Column: Image Card */}
-          <div className="lg:col-span-6 bg-[#1a1a1a] border border-white/10 rounded-lg aspect-square flex items-center justify-center text-8xl md:text-9xl relative overflow-hidden shadow-2xl group select-none">
+          <div className="lg:col-span-6 bg-[#1a1a1a] border border-white/10 rounded-lg aspect-square flex items-center justify-center relative overflow-hidden shadow-2xl group select-none">
             {/* Ambient Background Glow */}
-            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#268072]/5 via-transparent to-transparent opacity-60"></div>
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#268072]/5 via-transparent to-transparent opacity-60 z-0"></div>
             
-            {/* The Image Graphic */}
-            <span className="relative transform group-hover:scale-105 transition-transform duration-500">
-              {product.image}
-            </span>
+            {/* Real Product Image with Fallback */}
+            {!imgError ? (
+              <img 
+                src={`/products/${product.photoFolder}/${product.photo}.jpg`} 
+                alt={product.name}
+                onError={() => setImgError(true)}
+                className="w-full h-full object-cover rounded-lg relative z-10 transition-transform duration-500 group-hover:scale-105"
+              />
+            ) : (
+              <div className="flex flex-col items-center justify-center gap-4 text-center px-8 relative z-10">
+                <div className="w-16 h-16 rounded-full bg-[#268072]/15 border border-[#268072]/30 flex items-center justify-center text-2xl text-[#82d6c5]">
+                  📷
+                </div>
+                <span className="text-[#82d6c5] text-xs font-bold uppercase tracking-widest block mt-2">
+                  No Image Uploaded
+                </span>
+                <span className="text-[10px] text-white/35 font-mono leading-relaxed block max-w-xs">
+                  Upload a 900x900 jpg image to:<br />
+                  <code className="text-[#82d6c5] bg-black/40 px-1.5 py-0.5 rounded block mt-1.5 break-all select-all">
+                    /public/products/{product.photoFolder}/{product.photo}.jpg
+                  </code>
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Right Column: Content and Options */}

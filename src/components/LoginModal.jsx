@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
 import { Key, Eye, EyeOff, Loader2, ShieldAlert, Sparkles } from 'lucide-react';
 
@@ -152,6 +153,20 @@ export default function LoginModal({ isOpen, onClose }) {
             )}
           </button>
         </form>
+
+        {/* Register link */}
+        <div className="px-8 pb-6 text-center">
+          <p className="text-xs text-white/30">
+            Don&apos;t have an account?{" "}
+            <Link
+              href="/register"
+              onClick={onClose}
+              className="text-[#82d6c5] hover:text-white font-semibold transition-colors"
+            >
+              Register as a wholesale partner
+            </Link>
+          </p>
+        </div>
       </div>
     </div>
   );

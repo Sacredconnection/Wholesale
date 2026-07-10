@@ -28,6 +28,7 @@ export default function RootLayout({ children }) {
     <html
       lang="en"
       className={`${dmSans.variable} ${hankenGrotesk.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col bg-[#131313] text-[#e5e2e1]">
         <AuthProvider>
