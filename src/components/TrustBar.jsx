@@ -48,15 +48,15 @@ export default function TrustBar({ onOpenApply }) {
             <span className="text-sm font-medium text-white/50 tracking-wide uppercase font-label-sm">
               Global batches delivered to verified retail partners.
             </span>
-            <div className="flex -space-x-3 overflow-hidden opacity-90 mt-4">
-              <div className="inline-block h-10 w-10 rounded-full ring-2 ring-[#212121] bg-[#268072] flex items-center justify-center text-xs font-bold text-white font-mono">
-                PT
+            <div className="flex -space-x-2.5 overflow-hidden opacity-90 mt-4">
+              <div className="inline-block h-10 w-10 rounded-full ring-2 ring-[#1a1a1a] bg-white/5 border border-white/10 flex items-center justify-center text-xl select-none" title="Portugal">
+                🇵🇹
               </div>
-              <div className="inline-block h-10 w-10 rounded-full ring-2 ring-[#212121] bg-white/20 flex items-center justify-center text-xs font-bold text-white font-mono">
-                UK
+              <div className="inline-block h-10 w-10 rounded-full ring-2 ring-[#1a1a1a] bg-white/5 border border-white/10 flex items-center justify-center text-xl select-none" title="United Kingdom">
+                🇬🇧
               </div>
-              <div className="inline-block h-10 w-10 rounded-full ring-2 ring-[#212121] bg-white/30 flex items-center justify-center text-xs font-bold text-white font-mono">
-                US
+              <div className="inline-block h-10 w-10 rounded-full ring-2 ring-[#1a1a1a] bg-white/5 border border-white/10 flex items-center justify-center text-xl select-none" title="United States">
+                🇺🇸
               </div>
             </div>
           </div>

@@ -1,0 +1,272 @@
+"use client";
+
+import React, { useState, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import Header from "@/components/Header";
+import Footer from "@/components/Footer";
+import LoginModal from "@/components/LoginModal";
+import ApplicationModal from "@/components/ApplicationModal";
+import { PRODUCTS_DATA } from "@/data/products";
+import { useCart } from "@/components/CartContext";
+import { useAuth } from "@/components/AuthContext";
+import { 
+  ArrowLeft, 
+  ShoppingBag, 
+  Minus, 
+  Plus, 
+  Check, 
+  ShieldCheck, 
+  Leaf, 
+  Globe 
+} from "lucide-react";
+
+export default function ProductDetailPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { id } = params;
+
+  const { addToCart, setIsCartOpen } = useCart();
+  const { isLoggedIn, user } = useAuth();
+
+  // Find product from shared data
+  const product = PRODUCTS_DATA.find((p) => p.id === id);
+
+  // States
+  const [selectedOptIdx, setSelectedOptIdx] = useState(0);
+  const [quantity, setQuantity] = useState(1);
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [isApplyOpen, setIsApplyOpen] = useState(false);
+
+  // If product doesn't exist
+  if (!product) {
+    return (
+      <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+        <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+        <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex flex-col items-center justify-center text-center gap-6">
+          <div className="text-6xl">⚠️</div>
+          <h2 className="font-headline-md text-3xl font-bold text-white">Product Not Found</h2>
+          <p className="text-white/60 text-sm max-w-md">
+            The wholesale remedy you are looking for does not exist or has been removed from our inventory.
+          </p>
+          <Link 
+            href="/catalog"
+            className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider py-4 px-8 rounded-sm transition-all animate-fade-in"
+          >
+            Back to Catalog
+          </Link>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
+  const selectedOption = product.options[selectedOptIdx];
+
+  // Pricing calculations with discount
+  const basePrice = selectedOption?.price || 0;
+  const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
+  const discountAmount = basePrice * (discountPercentage / 100);
+  const finalPrice = basePrice - discountAmount;
+
+  const handleAddToCartClick = () => {
+    addToCart(product, selectedOptIdx, quantity);
+    setIsCartOpen(true);
+  };
+
+  return (
+    <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+
+      {/* Main Container */}
+      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-8">
+        
+        {/* Breadcrumbs / Back button */}
+        <div className="flex items-center gap-2 text-xs text-white/50 font-mono">
+          <Link href="/catalog" className="flex items-center gap-1.5 hover:text-white transition-colors no-underline">
+            <ArrowLeft className="w-4.5 h-4.5" />
+            Back to Wholesale Catalog
+          </Link>
+          <span>/</span>
+          <span className="text-white/30 capitalize">{product.category}</span>
+          <span>/</span>
+          <span className="text-white/80">{product.name}</span>
+        </div>
+
+        {/* Product Details Section */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mt-4">
+          
+          {/* Left Column: Image Card */}
+          <div className="lg:col-span-6 bg-[#1a1a1a] border border-white/10 rounded-lg aspect-square flex items-center justify-center text-8xl md:text-9xl relative overflow-hidden shadow-2xl group select-none">
+            {/* Ambient Background Glow */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#268072]/5 via-transparent to-transparent opacity-60"></div>
+            
+            {/* The Image Graphic */}
+            <span className="relative transform group-hover:scale-105 transition-transform duration-500">
+              {product.image}
+            </span>
+          </div>
+
+          {/* Right Column: Content and Options */}
+          <div className="lg:col-span-6 flex flex-col gap-6">
+            
+            {/* Product Meta Category & Tribe Badges */}
+            <div className="flex gap-2.5">
+              <span className="inline-block text-[10px] font-bold bg-[#268072]/15 text-[#82d6c5] border border-[#268072]/30 px-3 py-1 rounded-full uppercase tracking-wider font-label-sm">
+                {product.category}
+              </span>
+              <span className="inline-block text-[10px] font-bold bg-white/5 text-white/60 border border-white/10 px-3 py-1 rounded-full uppercase tracking-wider font-label-sm">
+                Origin: {product.tribe}
+              </span>
+            </div>
+
+            {/* Product Title */}
+            <div>
+              <h1 className="font-headline-lg text-3xl md:text-4xl font-black text-white leading-tight">
+                {product.name}
+              </h1>
+              <p className="text-[11px] font-mono text-white/40 mt-1">
+                SKU: <span className="text-white/60 font-bold">{selectedOption?.sku || product.sku}</span>
+              </p>
+            </div>
+
+            {/* Price display */}
+            <div className="bg-[#1a1a1a] border border-white/5 p-5 rounded-md flex justify-between items-center">
+              <div>
+                <span className="text-[10px] font-mono text-white/45 uppercase block">Est. B2B Unit Cost</span>
+                <div className="flex items-baseline gap-2 mt-1">
+                  <span className="text-3xl font-black text-[#82d6c5] font-headline-lg">
+                    ${finalPrice.toFixed(2)}
+                  </span>
+                  {isLoggedIn && user && (
+                    <span className="text-xs font-mono text-white/40 line-through">
+                      ${basePrice.toFixed(2)}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {isLoggedIn && user ? (
+                <span className="text-[10px] font-mono font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/25 px-2.5 py-1 rounded-sm uppercase tracking-wider">
+                  Partner {user.discountRate}% Off
+                </span>
+              ) : (
+                <button 
+                  onClick={() => setIsLoginOpen(true)}
+                  className="text-[10px] font-mono text-[#82d6c5] hover:text-white underline bg-transparent border-0 cursor-pointer"
+                >
+                  Log in for partner discounts
+                </button>
+              )}
+            </div>
+
+            {/* Description */}
+            <div className="flex flex-col gap-2">
+              <span className="text-[10px] font-mono text-white/45 uppercase tracking-wider font-label-sm">
+                Product Description
+              </span>
+              <p className="font-body-md text-sm text-white/70 leading-relaxed">
+                {product.description || "Premium wholesale ritual medicine sourced directly through equitable fair-trade agreements with Amazonian community associations. Harvested and processed using traditional forest milling protocols."}
+              </p>
+            </div>
+
+            <div className="h-px bg-white/10 my-1"></div>
+
+            {/* Options Selection form */}
+            <div className="flex flex-col gap-4">
+              
+              {/* Size Select Dropdown */}
+              {product.options.length > 1 && (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[10px] font-mono text-white/45 uppercase tracking-wider font-label-sm">
+                    Weight / Packaging Size
+                  </label>
+                  <select
+                    value={selectedOptIdx}
+                    onChange={(e) => setSelectedOptIdx(parseInt(e.target.value))}
+                    className="bg-[#1a1a1a] border border-white/10 text-sm text-white rounded px-4 py-3.5 focus:border-[#268072] outline-none w-full"
+                  >
+                    {product.options.map((opt, idx) => (
+                      <option key={opt.sku} value={idx}>
+                        {opt.name} (${opt.price.toFixed(2)})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Purchase Box */}
+              <div className="flex items-center gap-4 mt-2">
+                
+                {/* Quantity select */}
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-[10px] font-mono text-white/45 uppercase tracking-wider font-label-sm">
+                    Quantity
+                  </span>
+                  <div className="flex items-center bg-[#1a1a1a] border border-white/10 rounded">
+                    <button
+                      onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                      className="p-3 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
+                    >
+                      <Minus className="w-4 h-4" />
+                    </button>
+                    <span className="w-12 text-center text-sm font-bold text-white font-mono select-none">
+                      {quantity}
+                    </span>
+                    <button
+                      onClick={() => setQuantity(prev => prev + 1)}
+                      className="p-3 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Add to Basket button */}
+                <div className="flex-grow flex flex-col gap-1.5 justify-end h-full pt-5">
+                  <button
+                    onClick={handleAddToCartClick}
+                    className="w-full bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-widest py-4 px-6 rounded shadow-lg shadow-[#268072]/20 hover:shadow-[#268072]/45 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
+                  >
+                    <ShoppingBag className="w-4 h-4" />
+                    Add to Basket
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+
+            <div className="h-px bg-white/10 my-1"></div>
+
+            {/* B2B Certifications Trust Flags */}
+            <div className="grid grid-cols-2 gap-4 mt-2">
+              <div className="flex items-start gap-2.5">
+                <ShieldCheck className="w-5 h-5 text-[#82d6c5] shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[11px] font-bold text-white block">Sustainably Harvested</span>
+                  <span className="text-[10px] text-white/40 leading-relaxed block">Honoring natural cycles</span>
+                </div>
+              </div>
+              <div className="flex items-start gap-2.5">
+                <Globe className="w-5 h-5 text-[#82d6c5] shrink-0 mt-0.5" />
+                <div>
+                  <span className="text-[11px] font-bold text-white block">Direct Indigenous Trade</span>
+                  <span className="text-[10px] text-white/40 leading-relaxed block">Fair compensation share</span>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </main>
+
+      <Footer />
+
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
+      <ApplicationModal isOpen={isApplyOpen} onClose={() => setIsApplyOpen(false)} />
+    </div>
+  );
+}

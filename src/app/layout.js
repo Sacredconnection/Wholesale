@@ -1,4 +1,7 @@
 import { DM_Sans, Hanken_Grotesk, Geist_Mono } from "next/font/google";
+import { AuthProvider } from "@/components/AuthContext";
+import { CartProvider } from "@/components/CartContext";
+import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
 
 const dmSans = DM_Sans({
@@ -27,7 +30,12 @@ export default function RootLayout({ children }) {
       className={`${dmSans.variable} ${hankenGrotesk.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col bg-[#131313] text-[#e5e2e1]">
-        {children}
+        <AuthProvider>
+          <CartProvider>
+            {children}
+            <CartDrawer />
+          </CartProvider>
+        </AuthProvider>
       </body>
     </html>
   );

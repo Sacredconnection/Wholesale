@@ -1,18 +1,28 @@
 "use client";
 
 import React, { useState } from 'react';
-import { usePathname } from 'next/navigation';
-import { Menu, X, ArrowRight } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useAuth } from '@/components/AuthContext';
+import { useCart } from '@/components/CartContext';
+import { Menu, X, ArrowRight, ShoppingBag } from 'lucide-react';
 
 export default function Header({ onOpenLogin, onOpenApply }) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const { isLoggedIn, logout } = useAuth();
+  const { cartTotalItems, setIsCartOpen } = useCart();
 
   const handleHomeClick = (e) => {
     if (pathname === '/') {
       e.preventDefault();
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
+  };
+
+  const handleHeaderLogout = () => {
+    logout();
+    router.push('/');
   };
 
   return (
@@ -52,28 +62,74 @@ export default function Header({ onOpenLogin, onOpenApply }) {
 
         {/* CTA Actions (Right - Desktop Only) */}
         <div className="hidden md:flex items-center gap-6 shrink-0">
-          <button 
-            onClick={onOpenLogin}
-            className="text-sm font-medium text-white/80 hover:text-white transition-colors font-body-md bg-transparent border-0 cursor-pointer text-left"
+          {/* Cart Icon Trigger */}
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0"
           >
-            Client Login
+            <ShoppingBag className="w-4 h-4" />
+            {cartTotalItems > 0 && (
+              <span className="absolute -top-1.5 -right-1.5 bg-[#268072] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border border-[#131313]">
+                {cartTotalItems}
+              </span>
+            )}
           </button>
-          <button 
-            onClick={onOpenApply}
-            className="bg-white/10 hover:bg-white text-white hover:text-[#212121] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-white/10 hover:border-white transition-all duration-300 flex items-center gap-2 font-label-sm cursor-pointer"
-          >
-            Enter Portal 
-            <ArrowRight className="w-3.5 h-3.5" />
-          </button>
+
+          {isLoggedIn ? (
+            <>
+              <a 
+                href="/my-account"
+                className={`text-sm font-medium ${pathname === '/my-account' ? 'text-white border-b-2 border-[#268072]' : 'text-[#82d6c5] hover:text-white'} pb-1 transition-colors`}
+              >
+                My Account
+              </a>
+              <button 
+                onClick={handleHeaderLogout}
+                className="bg-[#93000a]/10 hover:bg-[#93000a]/25 text-[#ffb4ab] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-[#93000a]/30 hover:border-[#ffb4ab]/30 transition-all duration-300 cursor-pointer"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button 
+                onClick={onOpenLogin}
+                className="text-sm font-medium text-white/80 hover:text-white transition-colors font-body-md bg-transparent border-0 cursor-pointer text-left"
+              >
+                Client Login
+              </button>
+              <button 
+                onClick={onOpenApply}
+                className="bg-white/10 hover:bg-white text-white hover:text-[#212121] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-white/10 hover:border-white transition-all duration-300 flex items-center gap-2 font-label-sm cursor-pointer"
+              >
+                Enter Portal 
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            </>
+          )}
         </div>
 
-        {/* Hamburger / Close Toggle (Mobile Only) */}
-        <button 
-          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="md:hidden text-white/80 hover:text-white focus:outline-none cursor-pointer"
-        >
-          {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
+        {/* Mobile Cart and Hamburger Container (Mobile Only) */}
+        <div className="flex items-center gap-3 md:hidden">
+          <button
+            onClick={() => setIsCartOpen(true)}
+            className="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0"
+          >
+            <ShoppingBag className="w-4 h-4" />
+            {cartTotalItems > 0 && (
+              <span className="absolute -top-1 -right-1 bg-[#268072] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#131313]">
+                {cartTotalItems}
+              </span>
+            )}
+          </button>
+          
+          <button 
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="text-white/80 hover:text-white focus:outline-none cursor-pointer"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
       </div>
 
       {/* Mobile Drawer Navigation overlay */}
@@ -111,24 +167,47 @@ export default function Header({ onOpenLogin, onOpenApply }) {
             Contact
           </a>
           <div className="h-px bg-white/10 my-2"></div>
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              onOpenLogin();
-            }}
-            className="text-left text-white/80 hover:text-white text-base font-medium py-2 bg-transparent border-0 cursor-pointer"
-          >
-            Client Login
-          </button>
-          <button
-            onClick={() => {
-              setMobileMenuOpen(false);
-              onOpenApply();
-            }}
-            className="bg-[#268072] text-white text-center text-sm font-bold uppercase tracking-wider py-4 rounded-sm border-0 cursor-pointer w-full"
-          >
-            Start Application
-          </button>
+          {isLoggedIn ? (
+            <>
+              <a 
+                href="/my-account"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`text-base font-medium ${pathname === '/my-account' ? 'text-white' : 'text-[#82d6c5] hover:text-white'} transition-colors`}
+              >
+                My Account
+              </a>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  handleHeaderLogout();
+                }}
+                className="text-left text-[#ffb4ab] text-base font-medium py-2 bg-transparent border-0 cursor-pointer"
+              >
+                Logout
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenLogin();
+                }}
+                className="text-left text-white/80 hover:text-white text-base font-medium py-2 bg-transparent border-0 cursor-pointer"
+              >
+                Client Login
+              </button>
+              <button
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  onOpenApply();
+                }}
+                className="bg-[#268072] text-white text-center text-sm font-bold uppercase tracking-wider py-4 rounded-sm border-0 cursor-pointer w-full"
+              >
+                Start Application
+              </button>
+            </>
+          )}
         </div>
       )}
     </header>

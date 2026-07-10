@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import Link from 'next/link';
 import { ArrowUpRight, Globe, ShieldCheck, HeartHandshake, Eye } from 'lucide-react';
 
 const TRIBES_DATA = [
@@ -8,7 +9,7 @@ const TRIBES_DATA = [
     id: 'huni-kuin',
     name: 'Huni Kuin',
     region: 'Acre, Brazil',
-    image: '/huni-kuin.jpg',
+    image: '/tribes/huni-kuin.jpg',
     description: 'The Huni Kuin (also known as Kaxinawá) are the largest indigenous population in Acre. Their name translates to "True People". They hold deep ancestral knowledge of jungle medicine, botany, and ritualistic spiritual practices.',
     sustainability: '100% Direct Fair Trade',
     harvest: 'Lunar Cycle Harvesting',
@@ -18,7 +19,7 @@ const TRIBES_DATA = [
     id: 'yawanawa',
     name: 'Yawanawá',
     region: 'Gregório River',
-    image: '/yawanawa.jpg',
+    image: '/tribes/yawanawa.jpg',
     description: 'The Yawanawá ("People of the Wild Boar") occupy the Gregório River indigenous territory. They are celebrated globally for their vibrant music, spiritual authority, and pioneering leadership of female shamans.',
     sustainability: 'Equitable Profit Share',
     harvest: 'Sustainably Wild-Harvested',
@@ -28,7 +29,7 @@ const TRIBES_DATA = [
     id: 'katukina',
     name: 'Katukina',
     region: 'Campinas',
-    image: '/katukina.jpg',
+    image: '/tribes/katukina.jpg',
     description: 'The Katukina are ancestral keepers of the Kambo ritual and sacred snuffs in the Campinas area. They maintain a highly traditional, disciplined lifestyle deeply connected to the rhythm of the virgin forest.',
     sustainability: 'Cooperative Managed Sourcing',
     harvest: 'Traditional Hand-Milled',
@@ -38,7 +39,7 @@ const TRIBES_DATA = [
     id: 'nukini',
     name: 'Nukini',
     region: 'Juruá Valley',
-    image: '/nukini.jpg',
+    image: '/tribes/nukini.jpg',
     description: 'Residing in the Juruá Valley, the Nukini are known for their resilience and exquisite artisanal crafts. Nukini women hold a central role in gathering sacred herbs and crafting the tribe’s legendary snuffs.',
     sustainability: '100% Female-Gathered Support',
     harvest: 'Organic Forest Sourced',
@@ -48,7 +49,7 @@ const TRIBES_DATA = [
     id: 'shanenawa',
     name: 'Shanenawa',
     region: 'Feijó, Acre',
-    image: '/shanenawa.jpg',
+    image: '/tribes/shanenawa.jpg',
     description: 'The Shanenawa inhabit the Feijó region. Their name means "People of the Blue Bird". They represent peace, wisdom, and deep alignment with the birds and wind spirits of the high forest.',
     sustainability: 'Direct Community Sourced',
     harvest: 'Traditional Bark Scraping',
@@ -58,7 +59,7 @@ const TRIBES_DATA = [
     id: 'caboclo',
     name: 'Caboclo',
     region: 'Amazon Forest',
-    image: '/caboclo.jpg',
+    image: '/tribes/caboclo.jpg',
     description: 'Caboclo formulations represent the synthesis of traditional indigenous knowledge and forest medicine gathered by rubber tappers and riverside communities throughout the Amazon.',
     sustainability: 'Fair-Trade Co-op Sourced',
     harvest: 'Wild-Harvested Botanicals',
@@ -68,7 +69,7 @@ const TRIBES_DATA = [
     id: 'puyanawa',
     name: 'Puyanawa',
     region: 'Mâncio Lima',
-    image: '/puyanawa.jpg',
+    image: '/tribes/puyanawa.jpg',
     description: 'The Puyanawa reside in Mâncio Lima. They have undergone a profound cultural renaissance, recovering their native language and establishing highly sustainable community agriculture models.',
     sustainability: '100% Reinvested Profits',
     harvest: 'Manual Leaf Selection',
@@ -78,7 +79,7 @@ const TRIBES_DATA = [
     id: 'apurina',
     name: 'Apurinã',
     region: 'Purus River',
-    image: '/apurina.jpg',
+    image: '/tribes/apurina.jpg',
     description: 'The Apurinã live along the Purus River basin. They are the creators of the world-famous "Awiry" green snuff, which is unique in that it contains no tobacco and is never burned.',
     sustainability: 'Ultra-Rare Fair Sourced',
     harvest: 'Green Leaf Sun-Dried',
@@ -88,7 +89,7 @@ const TRIBES_DATA = [
     id: 'kuntanawa',
     name: 'Kuntanawa',
     region: 'Alto Juruá',
-    image: '/kuntanawa.jpg',
+    image: '/tribes/kuntanawa.jpg',
     description: 'The Kuntanawa are located at the headwaters of the Alto Juruá. They are committed to reforestation, planting native sacred trees, and protecting the rich bio-diversity of their reservation.',
     sustainability: '100% Forest Protection Pact',
     harvest: 'Ethical Root Harvesting',
@@ -98,7 +99,7 @@ const TRIBES_DATA = [
     id: 'shawadawa',
     name: 'Shawãdawa',
     region: 'Acre, Brazil',
-    image: '/shawadawa.jpg',
+    image: '/tribes/shawadawa.jpg',
     description: 'The Shawãdawa (also known as Arara) live along the Juruá River basin. Their name represents the sun and the macaw. They preserve deep ancestral songs and botanical expertise.',
     sustainability: '100% Direct Community Sourced',
     harvest: 'Sun-Dried Traditional Milling',
@@ -337,13 +338,20 @@ export default function LineageShowcase() {
               </div>
 
               {/* Bottom Actions */}
-              <div className="flex justify-end pt-2">
+              <div className="flex justify-end gap-3 pt-2">
                 <button
                   onClick={() => setSelectedTribe(null)}
-                  className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-sm transition-colors cursor-pointer border-0"
+                  className="bg-transparent hover:bg-white/5 text-white/70 hover:text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-sm border border-white/10 transition-colors cursor-pointer"
                 >
                   Close Details
                 </button>
+                <Link
+                  href={`/catalog?tribe=${encodeURIComponent(selectedTribe.name)}`}
+                  className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-sm transition-all duration-300 cursor-pointer border-0 flex items-center gap-1.5 no-underline"
+                >
+                  Explore Products
+                  <ArrowUpRight className="w-4 h-4" />
+                </Link>
               </div>
             </div>
           </div>
