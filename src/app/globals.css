@@ -112,12 +112,14 @@ html {
   font-family: var(--font-roboto), Arial, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 body {
   font-family: var(--font-roboto), sans-serif;
   background-color: #131313;
   color: #e5e2e1;
+  overflow-x: hidden;
 }
 
 h1, h2, h3, h4, h5, h6 {
