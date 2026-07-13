@@ -142,10 +142,11 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Product Details Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mt-4 bg-[#1a1a1a] border border-white/10 rounded-lg p-6 md:p-8 shadow-2xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch mt-4 bg-[#1a1a1a] border border-white/10 rounded-lg p-6 md:p-8 shadow-2xl">
           
-          {/* Left Column: Image Card */}
-          <div className="lg:col-span-6 bg-white rounded-lg aspect-square flex items-center justify-center relative overflow-hidden group select-none">
+          {/* Left Column: Image and provenance */}
+          <div className="lg:col-span-6 flex flex-col gap-6">
+          <div className="bg-white rounded-lg aspect-square flex items-center justify-center relative overflow-hidden group select-none">
             {/* Ambient Background Glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#268072]/5 via-transparent to-transparent opacity-60 z-0"></div>
             
@@ -175,6 +176,29 @@ export default function ProductDetailPage() {
                 </span>
               </div>
             )}
+          </div>
+
+            <div className="hidden lg:flex flex-1 min-h-36 relative overflow-hidden rounded-lg border border-[#268072]/25 bg-[linear-gradient(135deg,rgba(38,128,114,0.18),rgba(38,128,114,0.04))] p-6 flex-col justify-between">
+              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-[#82d6c5]/10"></div>
+              <div className="absolute -right-2 -top-8 h-28 w-28 rounded-full border border-[#82d6c5]/10"></div>
+              <div className="relative flex items-center justify-between gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#82d6c5]/25 bg-[#82d6c5]/10">
+                  <Leaf className="h-5 w-5 text-[#82d6c5]" />
+                </div>
+                <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/35">
+                  Sacred provenance
+                </span>
+              </div>
+              <div className="relative mt-6">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-[#82d6c5]/70">
+                  Origin
+                </span>
+                <h2 className="mt-1 text-2xl font-bold text-white font-headline-md">
+                  {product.tribe}
+                </h2>
+                <p className="mt-2 text-xs text-white/45">Direct Indigenous Trade · Fair compensation share</p>
+              </div>
+            </div>
           </div>
 
           {/* Right Column: Content and Options */}
