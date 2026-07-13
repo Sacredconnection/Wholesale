@@ -60,13 +60,13 @@
   --spacing-container-max: 1440px;
   --spacing-margin-desktop: 64px;
 
-  --font-headline-lg: var(--font-hanken-grotesk), sans-serif;
-  --font-label-sm: var(--font-geist-mono), monospace;
-  --font-headline-md: var(--font-hanken-grotesk), sans-serif;
-  --font-body-md: var(--font-dm-sans), sans-serif;
-  --font-body-lg: var(--font-dm-sans), sans-serif;
-  --font-headline-lg-mobile: var(--font-hanken-grotesk), sans-serif;
-  --font-display-lg: var(--font-hanken-grotesk), sans-serif;
+  --font-headline-lg: var(--font-roboto), sans-serif;
+  --font-label-sm: var(--font-roboto), sans-serif;
+  --font-headline-md: var(--font-roboto), sans-serif;
+  --font-body-md: var(--font-roboto), sans-serif;
+  --font-body-lg: var(--font-roboto), sans-serif;
+  --font-headline-lg-mobile: var(--font-roboto), sans-serif;
+  --font-display-lg: var(--font-roboto), sans-serif;
 }
 
 @layer utilities {
@@ -115,17 +115,17 @@ html {
 }
 
 body {
-  font-family: var(--font-dm-sans), sans-serif;
+  font-family: var(--font-roboto), sans-serif;
   background-color: #131313;
   color: #e5e2e1;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-hanken-grotesk), sans-serif;
+  font-family: var(--font-roboto), sans-serif;
 }
 
 code, pre, .font-mono {
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-roboto), sans-serif;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */
