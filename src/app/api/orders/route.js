@@ -14,7 +14,12 @@ import {
   roleBasedPrices,
   toWcAddress,
 } from "@/lib/wc-mappers";
-import { MIN_ORDER_GRAMS } from "@/lib/pricing";
+import {
+  MIN_ORDER_GRAMS,
+  NEW_CUSTOMER_ROLE,
+  progressivePerGramRate,
+  progressiveTableKeyFor,
+} from "@/lib/pricing";
 
 const notConfigured = () =>
   Response.json({ error: "WooCommerce backend is not configured." }, { status: 503 });
@@ -89,12 +94,24 @@ export async function POST(request) {
     const wcCustomer = await getCustomerByEmail(customer.email);
     const role = wcCustomer?.role || null;
 
-    // Resolve each cart item to its WooCommerce payload so price (per access
-    // level) and weight are authoritative. Items from the live catalog carry
-    // ids; otherwise fall back to SKU lookup.
-    const lineItems = [];
+    // Phase 1 — resolve each cart item to its WooCommerce payload so price
+    // (per access level) and weight are authoritative. Items from the live
+    // catalog carry ids; otherwise fall back to SKU lookup.
+    const resolved = [];
     const unresolved = [];
     let totalWeightGrams = 0;
+
+    // Parent products fetched once per request (variations don't carry the
+    // categories that pick the progressive tier table).
+    const productCache = new Map();
+    const getParentProduct = async (id) => {
+      if (!productCache.has(id)) productCache.set(id, await getProductById(id));
+      return productCache.get(id);
+    };
+    const tableKeyFromCategories = (categories = []) =>
+      categories.some((c) => progressiveTableKeyFor(c.name) === "shamanic")
+        ? "shamanic"
+        : "default";
 
     for (const item of items) {
       const quantity = Math.max(1, parseInt(item.quantity) || 1);
@@ -132,18 +149,19 @@ export async function POST(request) {
       const weightGrams = extractWeightGrams(optionText, payload.weight) || 0;
       totalWeightGrams += weightGrams * quantity;
 
-      const rolePrice = role ? roleBasedPrices(payload.meta_data)[role] : undefined;
-      const unitPrice = rolePrice != null ? rolePrice : parseFloat(payload.price) || 0;
-      const lineTotal = (unitPrice * quantity).toFixed(2);
+      // Categories live on the parent product, not the variation
+      const categories = variationId
+        ? (await getParentProduct(productId)).categories
+        : payload.categories;
 
-      lineItems.push({
-        product_id: productId,
-        ...(variationId ? { variation_id: variationId } : {}),
+      resolved.push({
+        productId,
+        variationId,
         quantity,
-        // Explicit totals so the order reflects the buyer's access-level
-        // pricing (the role-pricing plugin only hooks the WP storefront cart).
-        subtotal: lineTotal,
-        total: lineTotal,
+        weightGrams,
+        tableKey: tableKeyFromCategories(categories),
+        rolePrice: role ? roleBasedPrices(payload.meta_data)[role] : undefined,
+        basePrice: parseFloat(payload.price) || 0,
       });
     }
 
@@ -165,6 +183,37 @@ export async function POST(request) {
         { status: 422 }
       );
     }
+
+    // Phase 2 — price each line. New Customer gets progressive per-gram
+    // pricing: the tier is set by the TOTAL order weight, the rate comes from
+    // each item's own table (indigenous vs shamanic). Other levels use their
+    // flat role prices (falling back to the catalog base price).
+    const isProgressive = role === NEW_CUSTOMER_ROLE;
+    const appliedRates = {}; // tableKey → rate, recorded in order meta
+
+    const lineItems = resolved.map((entry) => {
+      let unitPrice;
+      const rate = isProgressive
+        ? progressivePerGramRate(totalWeightGrams, entry.tableKey)
+        : null;
+      if (rate != null && entry.weightGrams > 0) {
+        unitPrice = entry.weightGrams * rate;
+        appliedRates[entry.tableKey] = rate;
+      } else {
+        unitPrice = entry.rolePrice != null ? entry.rolePrice : entry.basePrice;
+      }
+      const lineTotal = (unitPrice * entry.quantity).toFixed(2);
+
+      return {
+        product_id: entry.productId,
+        ...(entry.variationId ? { variation_id: entry.variationId } : {}),
+        quantity: entry.quantity,
+        // Explicit totals so the order reflects the buyer's access-level
+        // pricing (the role-pricing plugin only hooks the WP storefront cart).
+        subtotal: lineTotal,
+        total: lineTotal,
+      };
+    });
 
     // Customer-facing note: payment instructions on every order, plus any
     // note the buyer typed. Internal context goes to meta_data instead.
@@ -195,6 +244,16 @@ export async function POST(request) {
         { key: "sc_channel", value: "wholesale-portal" },
         { key: "sc_access_level", value: role || "none (base prices)" },
         { key: "sc_total_weight_grams", value: String(Math.round(totalWeightGrams)) },
+        ...(Object.keys(appliedRates).length > 0
+          ? [
+              {
+                key: "sc_per_gram_rate",
+                value: Object.entries(appliedRates)
+                  .map(([table, rate]) => `${table}: $${rate.toFixed(2)}/g`)
+                  .join(" · "),
+              },
+            ]
+          : []),
         ...(customer.accountId ? [{ key: "sc_account_id", value: String(customer.accountId) }] : []),
         ...(customer.discountRate
           ? [{ key: "sc_discount_rate", value: String(customer.discountRate) }]

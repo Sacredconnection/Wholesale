@@ -104,7 +104,7 @@ export default function ProductDetailPage() {
   const selectedOption = product.options[selectedOptIdx];
 
   // Pricing calculations with discount
-  const basePrice = optionPriceForUser(selectedOption, user);
+  const basePrice = optionPriceForUser(selectedOption, user, product.category);
   const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
   const discountAmount = basePrice * (discountPercentage / 100);
   const finalPrice = basePrice - discountAmount;
@@ -256,7 +256,7 @@ export default function ProductDetailPage() {
                   >
                     {product.options.map((opt, idx) => (
                       <option key={opt.sku} value={idx}>
-                        {opt.name} (${optionPriceForUser(opt, user).toFixed(2)})
+                        {opt.name} (${optionPriceForUser(opt, user, product.category).toFixed(2)})
                       </option>
                     ))}
                   </select>
@@ -337,7 +337,7 @@ export default function ProductDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((p) => {
               // Find min and max price
-              const prices = p.options.map(opt => optionPriceForUser(opt, user));
+              const prices = p.options.map(opt => optionPriceForUser(opt, user, p.category));
               const minPrice = Math.min(...prices);
               const maxPrice = Math.max(...prices);
               

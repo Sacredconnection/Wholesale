@@ -2,7 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useAuth } from './AuthContext';
-import { optionPriceForUser } from '@/lib/pricing';
+import { optionPriceForUser, cartUnitPrice } from '@/lib/pricing';
 
 const CartContext = createContext();
 
@@ -54,8 +54,10 @@ export function CartProvider({ children }) {
             name: product.name,
             sku: selectedOption.sku,
             optionName: selectedOption.name,
+            // Category picks the progressive tier table (indigenous/shamanic)
+            category: product.category || "",
             // Price for the buyer's access level (role-based pricing)
-            price: optionPriceForUser(selectedOption, user),
+            price: optionPriceForUser(selectedOption, user, product.category),
             weightGrams: selectedOption.weightGrams,
             quantity: quantity,
             image: product.image,
@@ -93,11 +95,6 @@ export function CartProvider({ children }) {
     setCart([]);
   };
 
-  // Cart Metrics
-  const cartSubtotal = useMemo(() => {
-    return cart.reduce((total, item) => total + item.price * item.quantity, 0);
-  }, [cart]);
-
   const cartTotalItems = useMemo(() => {
     return cart.reduce((total, item) => total + item.quantity, 0);
   }, [cart]);
@@ -106,9 +103,23 @@ export function CartProvider({ children }) {
     return cart.reduce((total, item) => total + (item.weightGrams || 0) * item.quantity, 0);
   }, [cart]);
 
+  // Effective prices: New Customer items are re-rated by the total order
+  // weight tier (progressive per-gram pricing); other levels keep the price
+  // captured when the item was added.
+  const pricedCart = useMemo(() => {
+    return cart.map((item) => ({
+      ...item,
+      price: cartUnitPrice(item, user, cartTotalWeightGrams),
+    }));
+  }, [cart, user, cartTotalWeightGrams]);
+
+  const cartSubtotal = useMemo(() => {
+    return pricedCart.reduce((total, item) => total + item.price * item.quantity, 0);
+  }, [pricedCart]);
+
   return (
     <CartContext.Provider value={{
-      cart,
+      cart: pricedCart,
       isCartOpen,
       setIsCartOpen,
       addToCart,

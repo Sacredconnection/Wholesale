@@ -449,7 +449,7 @@ export default function CatalogPage() {
                     {/* Price Column */}
                     <div className="col-span-1 md:col-span-1 text-left md:text-right">
                       <span className="text-base font-bold text-[#82d6c5] font-headline-md whitespace-nowrap">
-                        ${optionPriceForUser(product.options[currentOptIdx], user).toFixed(2)}
+                        ${optionPriceForUser(product.options[currentOptIdx], user, product.category).toFixed(2)}
                       </span>
                     </div>
 
@@ -464,7 +464,7 @@ export default function CatalogPage() {
                         >
                           {product.options.map((opt, idx) => (
                             <option key={opt.sku} value={idx}>
-                              {opt.name} (${optionPriceForUser(opt, user).toFixed(2)})
+                              {opt.name} (${optionPriceForUser(opt, user, product.category).toFixed(2)})
                             </option>
                           ))}
                         </select>
