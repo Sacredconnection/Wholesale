@@ -108,6 +108,27 @@
   animation: fade-in 1s ease-out forwards; 
 }
 
+@keyframes number-rise {
+  from {
+    opacity: 0.2;
+    transform: translateY(45%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-number-rise {
+  animation: number-rise 180ms ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-number-rise {
+    animation: none;
+  }
+}
+
 html {
   font-family: var(--font-roboto), Arial, sans-serif;
   font-synthesis: none;

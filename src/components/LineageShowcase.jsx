@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ArrowUpRight, Globe, ShieldCheck, HeartHandshake, Eye } from 'lucide-react';
 
@@ -195,6 +196,26 @@ export default function LineageShowcase() {
     };
   }, []);
 
+  useEffect(() => {
+    if (!selectedTribe) return;
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setSelectedTribe(null);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [selectedTribe]);
+
   return (
     <section id="tribes" className="relative isolate flex flex-col gap-12 py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
       
@@ -272,11 +293,17 @@ export default function LineageShowcase() {
       </div>
 
       {/* Tribe Detail Modal Overlay */}
-      {selectedTribe && (
-        <div className="fixed inset-0 bg-[#0c0c0c]/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+      {selectedTribe && createPortal(
+        <div
+          className="fixed inset-0 bg-[#0c0c0c]/90 backdrop-blur-md z-[100] flex items-center justify-center p-4 overflow-y-auto overscroll-contain"
+          onClick={() => setSelectedTribe(null)}
+        >
           <div 
-            className="bg-[#1a1a1a] border border-white/15 rounded-lg max-w-2xl w-full overflow-hidden shadow-2xl relative animate-fade-in-up"
+            className="bg-[#1a1a1a] border border-white/15 rounded-lg max-w-2xl w-full max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain shadow-2xl relative animate-fade-in-up my-auto"
             onClick={(e) => e.stopPropagation()}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="tribe-dialog-title"
           >
             {/* Top Image Banner */}
             <div className="h-60 relative w-full">
@@ -288,6 +315,7 @@ export default function LineageShowcase() {
               <button 
                 onClick={() => setSelectedTribe(null)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center font-bold border border-white/10 hover:border-white/30 transition-all cursor-pointer"
+                aria-label="Close tribe details"
               >
                 ✕
               </button>
@@ -296,7 +324,7 @@ export default function LineageShowcase() {
                 <span className="text-xs font-bold tracking-widest text-[#82d6c5] uppercase bg-[#268072]/20 border border-[#268072]/30 px-3 py-1 rounded-full">
                   {selectedTribe.region}
                 </span>
-                <h3 className="font-headline-lg text-3xl font-black text-white mt-2">
+                <h3 id="tribe-dialog-title" className="font-headline-lg text-3xl font-black text-white mt-2">
                   {selectedTribe.name}
                 </h3>
               </div>
@@ -355,7 +383,8 @@ export default function LineageShowcase() {
               </div>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </section>
   );
