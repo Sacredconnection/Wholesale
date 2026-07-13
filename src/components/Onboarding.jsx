@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 
 const steps = [
@@ -78,10 +79,21 @@ export default function Onboarding({ onOpenApply }) {
       <section
         ref={sectionRef}
         id="onboarding"
-        className="bg-[#1a1a1a] border border-white/5 rounded-2xl p-16 flex flex-col gap-16 relative overflow-hidden scroll-mt-24"
+        className="bg-[#1a1a1a] border border-[#82d6c5]/35 rounded-2xl p-16 flex flex-col gap-16 relative overflow-hidden scroll-mt-24 hover:border-[#82d6c5]/60 transition-colors duration-500"
       >
         {/* Glow Effect */}
         <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#268072] opacity-[0.03] blur-[100px] pointer-events-none rounded-full" />
+
+        {/* Background Watermark */}
+        <Image
+          src="/onboarding/watermark-onboarding.svg"
+          alt=""
+          aria-hidden="true"
+          fill
+          sizes="(max-width: 1280px) 100vw, 1184px"
+          unoptimized
+          className="object-cover opacity-50 pointer-events-none select-none z-0"
+        />
 
         {/* Header */}
         <div
