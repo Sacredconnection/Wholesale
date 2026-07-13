@@ -56,7 +56,11 @@ export function CartProvider({ children }) {
             price: selectedOption.price,
             weightGrams: selectedOption.weightGrams,
             quantity: quantity,
-            image: product.image
+            image: product.image,
+            // WooCommerce ids (present when the item came from the live
+            // catalog) — used to register the order via /api/orders.
+            wcProductId: product.wcId || null,
+            wcVariationId: selectedOption.wcVariationId || null
           }
         ];
       }

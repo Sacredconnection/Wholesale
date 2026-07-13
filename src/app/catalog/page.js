@@ -23,7 +23,7 @@ import {
   PackageOpen
 } from "lucide-react";
 
-import { PRODUCTS_DATA } from "@/data/products";
+import { useProducts } from "@/components/ProductsContext";
 
 const TRIBE_COLORS = {
   "apurina": "#4A730D",
@@ -61,6 +61,7 @@ const getTribeBgColor = (tribeName) => {
 };
 
 export default function CatalogPage() {
+  const { products } = useProducts();
   const { isLoggedIn, user } = useAuth();
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -82,7 +83,7 @@ export default function CatalogPage() {
       const params = new URLSearchParams(window.location.search);
       const tribeParam = params.get("tribe");
       if (tribeParam) {
-        const match = PRODUCTS_DATA.find(
+        const match = products.find(
           (p) => normalizeStr(p.tribe) === normalizeStr(tribeParam)
         );
         setTribe(match ? match.tribe : tribeParam);
@@ -95,7 +96,9 @@ export default function CatalogPage() {
         }
       }
     }
-  }, []);
+    // Re-resolve the tribe param when the live catalog swaps in, so URL
+    // filters keep matching against the current dataset.
+  }, [products]);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -132,7 +135,7 @@ export default function CatalogPage() {
   // Extract Categories and Tribes dynamically for dropdowns (A–Z, accent-insensitive dedup)
   const categories = useMemo(() => {
     const seen = new Map(); // normalised key → original string
-    PRODUCTS_DATA.forEach((p) => {
+    products.forEach((p) => {
       const key = normalizeStr(p.category);
       if (!seen.has(key)) seen.set(key, p.category);
     });
@@ -140,11 +143,11 @@ export default function CatalogPage() {
       normalizeStr(a).localeCompare(normalizeStr(b))
     );
     return ["All", "New Arrivals", ...unique];
-  }, []);
+  }, [products]);
 
   const tribes = useMemo(() => {
     const seen = new Map(); // normalised key → original string
-    PRODUCTS_DATA.forEach((p) => {
+    products.forEach((p) => {
       const key = normalizeStr(p.tribe);
       if (!seen.has(key)) seen.set(key, p.tribe);
     });
@@ -152,7 +155,7 @@ export default function CatalogPage() {
       normalizeStr(a).localeCompare(normalizeStr(b))
     );
     return ["All", ...unique];
-  }, []);
+  }, [products]);
 
   // Filtered Products – accent-insensitive matching, sorted A–Z
   const filteredProducts = useMemo(() => {
@@ -160,7 +163,7 @@ export default function CatalogPage() {
     const normCat     = normalizeStr(category);
     const normTribe   = normalizeStr(tribe);
 
-    return PRODUCTS_DATA
+    return products
       .filter((product) => {
         const matchesSearch =
           normalizeStr(product.name).includes(normSearch) ||
@@ -175,7 +178,7 @@ export default function CatalogPage() {
         return matchesSearch && matchesCategory && matchesTribe;
       })
       .sort((a, b) => normalizeStr(a.name).localeCompare(normalizeStr(b.name)));
-  }, [search, category, tribe]);
+  }, [products, search, category, tribe]);
 
 
   // Paginated Products

@@ -27,6 +27,25 @@ import {
   ShieldCheck
 } from "lucide-react";
 
+// WooCommerce order status → UI label/color
+const ORDER_STATUS_STYLES = {
+  "on-hold": { label: "Awaiting Contact", className: "text-yellow-400" },
+  pending: { label: "Pending", className: "text-yellow-400" },
+  processing: { label: "Processing", className: "text-[#82d6c5]" },
+  completed: { label: "Completed", className: "text-emerald-400" },
+  cancelled: { label: "Cancelled", className: "text-[#ffb4ab]" },
+  refunded: { label: "Refunded", className: "text-white/50" },
+  failed: { label: "Failed", className: "text-[#ffb4ab]" },
+};
+
+const orderStatusInfo = (status) =>
+  ORDER_STATUS_STYLES[status] || { label: status, className: "text-white/60" };
+
+const OPEN_ORDER_STATUSES = ["on-hold", "pending", "processing"];
+
+const formatOrderDate = (iso) =>
+  new Date(iso).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" });
+
 export default function MyAccountPage() {
   const { isLoggedIn, user, loading, logout, updateUser } = useAuth();
   const router = useRouter();
@@ -85,6 +104,39 @@ export default function MyAccountPage() {
   });
   const [accountSuccess, setAccountSuccess] = useState("");
   const [accountError, setAccountError] = useState("");
+
+  // Live orders registered in WooCommerce, looked up by billing email
+  const [orders, setOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(true);
+  const [ordersError, setOrdersError] = useState("");
+  const [expandedOrderId, setExpandedOrderId] = useState(null);
+
+  useEffect(() => {
+    if (!user?.email) return;
+    let cancelled = false;
+
+    async function loadOrders() {
+      setOrdersLoading(true);
+      setOrdersError("");
+      try {
+        const res = await fetch(`/api/orders?email=${encodeURIComponent(user.email)}`);
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || "Failed to load orders.");
+        if (!cancelled) setOrders(data.orders || []);
+      } catch (err) {
+        if (!cancelled) setOrdersError(err.message || "Failed to load orders.");
+      } finally {
+        if (!cancelled) setOrdersLoading(false);
+      }
+    }
+
+    loadOrders();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.email]);
+
+  const activeOrder = orders.find((o) => OPEN_ORDER_STATUSES.includes(o.status));
 
   // Sync state with user data once loaded
   useEffect(() => {
@@ -361,31 +413,40 @@ export default function MyAccountPage() {
                   </div>
                 </div>
 
-                {/* Active Tracking Mini-Card */}
+                {/* Active Order Mini-Card */}
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl flex flex-col gap-4">
                   <h3 className="font-headline-md text-sm font-bold uppercase tracking-wider text-white/80 flex items-center gap-2">
                     <Truck className="w-4 h-4 text-[#82d6c5]" />
-                    Active Shipment Tracking
+                    Active Orders
                   </h3>
-                  <div className="bg-[#131313] border border-white/5 rounded-md p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-                    <div className="flex-grow">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-bold text-white">Order #8890-HK</span>
-                        <span className="text-[10px] font-mono bg-[#268072]/20 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded">
-                          In Transit
-                        </span>
+                  {activeOrder ? (
+                    <div className="bg-[#131313] border border-white/5 rounded-md p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                      <div className="flex-grow">
+                        <div className="flex items-center gap-2 mb-1">
+                          <span className="text-sm font-bold text-white">Order #{activeOrder.number}</span>
+                          <span className="text-[10px] font-mono bg-[#268072]/20 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded">
+                            {orderStatusInfo(activeOrder.status).label}
+                          </span>
+                        </div>
+                        <p className="text-xs text-white/50 leading-relaxed max-w-lg">
+                          {activeOrder.items.map((i) => `${i.name} x ${i.quantity}`).join(" · ")}
+                          {" — "}${Number(activeOrder.total).toFixed(2)}
+                        </p>
                       </div>
-                      <p className="text-xs text-white/50 leading-relaxed max-w-lg">
-                        Huni Kuin Tsunu Blend x 40 Units. Carrier: DHL Express (Tracking: SC991823). Est. Arrival: July 15.
-                      </p>
+                      <button
+                        onClick={() => setActiveTab("orders")}
+                        className="bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/30 text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded transition-all shrink-0 cursor-pointer"
+                      >
+                        View Order Details
+                      </button>
                     </div>
-                    <button 
-                      onClick={() => setActiveTab("orders")}
-                      className="bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/30 text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded transition-all shrink-0 cursor-pointer"
-                    >
-                      View Order Details
-                    </button>
-                  </div>
+                  ) : (
+                    <p className="text-xs text-white/40 leading-relaxed">
+                      {ordersLoading
+                        ? "Loading your orders…"
+                        : "No open orders at the moment. New wholesale orders appear here once submitted."}
+                    </p>
+                  )}
                 </div>
               </div>
             )}
@@ -394,96 +455,143 @@ export default function MyAccountPage() {
             {activeTab === "orders" && (
               <div className="flex flex-col gap-6 animate-fade-in">
                 {/* Active Order Tracker Detail */}
-                <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl">
-                  <h3 className="font-headline-md text-lg font-bold text-white mb-6 flex items-center gap-2.5">
-                    <ClipboardList className="w-5 h-5 text-[#82d6c5]" />
-                    Active Order Tracking
-                  </h3>
-                  
-                  <div className="border border-white/5 bg-[#131313] rounded p-6 flex flex-col gap-6">
-                    <div className="flex flex-col md:flex-row justify-between gap-4 border-b border-white/5 pb-4">
-                      <div>
-                        <span className="text-[10px] font-mono text-white/50">Tracking Reference</span>
-                        <p className="text-sm font-bold text-white mt-0.5">Order #8890-HK · DHL SC991823</p>
-                      </div>
-                      <div>
-                        <span className="text-[10px] font-mono text-white/50">Est. Shipment Arrival</span>
-                        <p className="text-sm font-bold text-[#82d6c5] mt-0.5">July 15, 2026</p>
-                      </div>
-                    </div>
+                {activeOrder && (
+                  <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl">
+                    <h3 className="font-headline-md text-lg font-bold text-white mb-6 flex items-center gap-2.5">
+                      <ClipboardList className="w-5 h-5 text-[#82d6c5]" />
+                      Active Order Tracking
+                    </h3>
 
-                    {/* Simple visual steps */}
-                    <div className="grid grid-cols-3 gap-2 mt-2">
-                      <div className="flex flex-col gap-2">
-                        <div className="h-1.5 bg-[#268072] rounded-full"></div>
-                        <span className="text-[9px] font-mono text-white/80 font-bold uppercase">1. Draft Approved</span>
+                    <div className="border border-white/5 bg-[#131313] rounded p-6 flex flex-col gap-6">
+                      <div className="flex flex-col md:flex-row justify-between gap-4 border-b border-white/5 pb-4">
+                        <div>
+                          <span className="text-[10px] font-mono text-white/50">Order Reference</span>
+                          <p className="text-sm font-bold text-white mt-0.5">
+                            Order #{activeOrder.number} · {formatOrderDate(activeOrder.dateCreated)}
+                          </p>
+                        </div>
+                        <div>
+                          <span className="text-[10px] font-mono text-white/50">Est. Total</span>
+                          <p className="text-sm font-bold text-[#82d6c5] mt-0.5">
+                            ${Number(activeOrder.total).toFixed(2)}
+                          </p>
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        <div className="h-1.5 bg-[#268072] rounded-full"></div>
-                        <span className="text-[9px] font-mono text-[#82d6c5] font-bold uppercase">2. In Transit (DHL)</span>
+
+                      {/* Progress steps driven by the WooCommerce status */}
+                      <div className="grid grid-cols-3 gap-2 mt-2">
+                        <div className="flex flex-col gap-2">
+                          <div className="h-1.5 bg-[#268072] rounded-full"></div>
+                          <span className="text-[9px] font-mono text-white/80 font-bold uppercase">1. Order Received</span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <div className={`h-1.5 rounded-full ${activeOrder.status === "processing" ? "bg-[#268072]" : "bg-white/10"}`}></div>
+                          <span className={`text-[9px] font-mono uppercase ${activeOrder.status === "processing" ? "text-[#82d6c5] font-bold" : "text-white/40"}`}>
+                            2. Payment Arranged
+                          </span>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <div className="h-1.5 bg-white/10 rounded-full"></div>
+                          <span className="text-[9px] font-mono text-white/40 uppercase">3. Shipped & Completed</span>
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        <div className="h-1.5 bg-white/10 rounded-full"></div>
-                        <span className="text-[9px] font-mono text-white/40 uppercase">3. Delivery</span>
-                      </div>
+
+                      {OPEN_ORDER_STATUSES.slice(0, 2).includes(activeOrder.status) && (
+                        <p className="text-[11px] text-white/50 leading-relaxed border-t border-white/5 pt-4">
+                          No online payment is required — our team will contact you to
+                          arrange payment and confirm shipping for this order.
+                        </p>
+                      )}
                     </div>
                   </div>
-                </div>
+                )}
 
                 {/* Orders List Table */}
                 <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl">
                   <h3 className="font-headline-md text-lg font-bold text-white mb-4">
                     Order History
                   </h3>
-                  
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs border-collapse">
-                      <thead>
-                        <tr className="border-b border-white/10 text-white/50 font-mono uppercase tracking-wider">
-                          <th className="py-3 px-4 font-normal">Order</th>
-                          <th className="py-3 px-4 font-normal">Date</th>
-                          <th className="py-3 px-4 font-normal">Total</th>
-                          <th className="py-3 px-4 font-normal">Status</th>
-                          <th className="py-3 px-4 text-right font-normal">Actions</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5 font-body-md text-white/80">
-                        <tr>
-                          <td className="py-4 px-4 font-bold text-white">#8890-HK</td>
-                          <td className="py-4 px-4">July 10, 2026</td>
-                          <td className="py-4 px-4">$1,240.00</td>
-                          <td className="py-4 px-4"><span className="text-yellow-400">In Transit</span></td>
-                          <td className="py-4 px-4 text-right">
-                            <button className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer">
-                              View Invoice
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="py-4 px-4 font-bold text-white">#8421-HK</td>
-                          <td className="py-4 px-4">May 15, 2026</td>
-                          <td className="py-4 px-4">$3,500.00</td>
-                          <td className="py-4 px-4"><span className="text-emerald-400">Completed</span></td>
-                          <td className="py-4 px-4 text-right">
-                            <button className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer">
-                              View Invoice
-                            </button>
-                          </td>
-                        </tr>
-                        <tr>
-                          <td className="py-4 px-4 font-bold text-white">#8109-YW</td>
-                          <td className="py-4 px-4">March 02, 2026</td>
-                          <td className="py-4 px-4">$850.00</td>
-                          <td className="py-4 px-4"><span className="text-emerald-400">Completed</span></td>
-                          <td className="py-4 px-4 text-right">
-                            <button className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer">
-                              View Invoice
-                            </button>
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
+
+                  {ordersLoading ? (
+                    <div className="flex items-center justify-center py-12">
+                      <div className="w-8 h-8 border-4 border-[#268072] border-t-transparent rounded-full animate-spin"></div>
+                    </div>
+                  ) : ordersError ? (
+                    <div className="bg-[#93000a]/15 border border-[#ffb4ab]/20 text-[#ffb4ab] text-xs p-4 rounded flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0" />
+                      {ordersError}
+                    </div>
+                  ) : orders.length === 0 ? (
+                    <p className="text-sm text-white/40 py-8 text-center">
+                      No orders yet. Submit a wholesale order sheet from the catalog and it will appear here.
+                    </p>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left text-xs border-collapse">
+                        <thead>
+                          <tr className="border-b border-white/10 text-white/50 font-mono uppercase tracking-wider">
+                            <th className="py-3 px-4 font-normal">Order</th>
+                            <th className="py-3 px-4 font-normal">Date</th>
+                            <th className="py-3 px-4 font-normal">Total</th>
+                            <th className="py-3 px-4 font-normal">Status</th>
+                            <th className="py-3 px-4 text-right font-normal">Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5 font-body-md text-white/80">
+                          {orders.map((order) => (
+                            <React.Fragment key={order.id}>
+                              <tr>
+                                <td className="py-4 px-4 font-bold text-white">#{order.number}</td>
+                                <td className="py-4 px-4">{formatOrderDate(order.dateCreated)}</td>
+                                <td className="py-4 px-4">${Number(order.total).toFixed(2)}</td>
+                                <td className="py-4 px-4">
+                                  <span className={orderStatusInfo(order.status).className}>
+                                    {orderStatusInfo(order.status).label}
+                                  </span>
+                                </td>
+                                <td className="py-4 px-4 text-right">
+                                  <button
+                                    onClick={() =>
+                                      setExpandedOrderId(expandedOrderId === order.id ? null : order.id)
+                                    }
+                                    className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer"
+                                  >
+                                    {expandedOrderId === order.id ? "Hide Details" : "View Details"}
+                                  </button>
+                                </td>
+                              </tr>
+                              {expandedOrderId === order.id && (
+                                <tr>
+                                  <td colSpan={5} className="py-4 px-4 bg-[#131313]">
+                                    <div className="flex flex-col gap-2">
+                                      {order.items.map((item, idx) => (
+                                        <div key={idx} className="flex justify-between items-center text-[11px]">
+                                          <span className="text-white/70">
+                                            {item.name}
+                                            {item.sku && (
+                                              <span className="text-white/35 font-mono ml-2">{item.sku}</span>
+                                            )}
+                                          </span>
+                                          <span className="text-white/70 font-mono shrink-0 ml-4">
+                                            x{item.quantity} · ${Number(item.total).toFixed(2)}
+                                          </span>
+                                        </div>
+                                      ))}
+                                      {order.paymentMethodTitle && (
+                                        <p className="text-[10px] text-white/40 border-t border-white/5 pt-2 mt-1">
+                                          Payment: {order.paymentMethodTitle}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </td>
+                                </tr>
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               </div>
             )}

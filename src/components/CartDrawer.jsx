@@ -1,32 +1,73 @@
 "use client";
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
-import { ShoppingBag, X, Minus, Plus, ArrowRight, Check } from 'lucide-react';
+import LoginModal from './LoginModal';
+import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, Loader2 } from 'lucide-react';
 
 export default function CartDrawer() {
   const { isLoggedIn, user } = useAuth();
-  const { 
-    cart, 
-    isCartOpen, 
-    setIsCartOpen, 
-    updateQuantity, 
-    removeFromCart, 
+  const router = useRouter();
+  const {
+    cart,
+    isCartOpen,
+    setIsCartOpen,
+    updateQuantity,
+    removeFromCart,
     clearCart,
-    cartSubtotal, 
-    cartTotalItems, 
-    cartTotalWeightGrams 
+    cartSubtotal,
+    cartTotalItems,
+    cartTotalWeightGrams
   } = useCart();
 
-  const [showOrderSuccess, setShowOrderSuccess] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [orderError, setOrderError] = useState("");
+  const [isLoginOpen, setIsLoginOpen] = useState(false);
 
-  if (!isCartOpen && !showOrderSuccess) return null;
+  if (!isCartOpen && !isLoginOpen) return null;
 
-  const handleCheckout = () => {
-    clearCart();
-    setIsCartOpen(false);
-    setShowOrderSuccess(true);
+  const handleCheckout = async () => {
+    if (!isLoggedIn || !user) {
+      setIsLoginOpen(true);
+      return;
+    }
+
+    setIsSubmitting(true);
+    setOrderError("");
+
+    try {
+      const res = await fetch("/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          customer: user,
+          items: cart.map(({ sku, name, optionName, quantity, wcProductId, wcVariationId }) => ({
+            sku,
+            name: `${name} — ${optionName}`,
+            quantity,
+            wcProductId,
+            wcVariationId,
+          })),
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Order submission failed. Please try again.");
+      }
+
+      clearCart();
+      setIsCartOpen(false);
+      router.push(
+        `/order-received?number=${encodeURIComponent(data.order.number)}&total=${encodeURIComponent(data.order.total)}`
+      );
+    } catch (err) {
+      setOrderError(err.message || "Order submission failed. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
@@ -170,13 +211,42 @@ export default function CartDrawer() {
                 </div>
               </div>
 
+              {/* Offline payment notice */}
+              <div className="bg-[#268072]/10 border border-[#268072]/25 rounded-sm px-4 py-3 flex items-start gap-3">
+                <PhoneCall className="w-4 h-4 text-[#82d6c5] shrink-0 mt-0.5" />
+                <p className="text-[11px] text-white/70 leading-relaxed">
+                  No online payment is taken. Once submitted, your order is registered
+                  and a member of our team will contact you to arrange payment and shipping.
+                </p>
+              </div>
+
+              {orderError && (
+                <div className="bg-[#93000a]/15 border border-[#ffb4ab]/25 text-[#ffb4ab] text-xs px-4 py-3 rounded-sm leading-relaxed">
+                  {orderError}
+                </div>
+              )}
+
               <button
                 onClick={handleCheckout}
-                disabled={cart.length === 0}
+                disabled={cart.length === 0 || isSubmitting}
                 className="w-full bg-[#268072] hover:bg-[#1f665b] disabled:opacity-40 disabled:hover:bg-[#268072] text-white text-xs font-bold uppercase tracking-widest py-5 rounded-sm transition-all duration-300 shadow-lg shadow-[#268072]/20 hover:shadow-[#268072]/40 flex items-center justify-center gap-3 cursor-pointer disabled:cursor-not-allowed border-0"
               >
-                Submit Wholesale Order
-                <ArrowRight className="w-4 h-4" />
+                {isSubmitting ? (
+                  <>
+                    Submitting Order…
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  </>
+                ) : isLoggedIn ? (
+                  <>
+                    Submit Wholesale Order
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                ) : (
+                  <>
+                    Sign In to Submit Order
+                    <ArrowRight className="w-4 h-4" />
+                  </>
+                )}
               </button>
             </div>
 
@@ -184,34 +254,8 @@ export default function CartDrawer() {
         </div>
       )}
 
-      {/* Success Notification Modal */}
-      {showOrderSuccess && (
-        <div className="fixed inset-0 bg-black/85 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-          <div 
-            className="bg-[#1a1a1a] border border-white/10 rounded-md max-w-md w-full p-8 text-center shadow-2xl relative animate-fade-in-up"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="w-16 h-16 rounded-full bg-[#268072]/20 border border-[#268072]/45 flex items-center justify-center text-3xl mx-auto mb-6">
-              <Check className="w-8 h-8 text-[#82d6c5]" />
-            </div>
-            
-            <h3 className="font-headline-md text-2xl font-bold text-white mb-2">
-              Order Draft Submitted
-            </h3>
-            
-            <p className="font-body-md text-sm text-white/70 leading-relaxed mb-6">
-              Your wholesale order request has been received. Our vetting team will check product availability, calculate shipping weight costs, and contact you within 24 hours to confirm.
-            </p>
-
-            <button 
-              onClick={() => setShowOrderSuccess(false)}
-              className="bg-[#268072] text-white font-label-sm text-xs font-bold uppercase tracking-widest py-4 px-8 rounded-sm hover:bg-[#1f665b] transition-all duration-300 cursor-pointer border-0 w-full"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Login prompt for guests trying to submit */}
+      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </>
   );
 }

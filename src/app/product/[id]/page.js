@@ -7,7 +7,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import ApplicationModal from "@/components/ApplicationModal";
-import { PRODUCTS_DATA } from "@/data/products";
+import { useProducts } from "@/components/ProductsContext";
 import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
 import { 
@@ -30,23 +30,24 @@ export default function ProductDetailPage() {
 
   const { addToCart, setIsCartOpen } = useCart();
   const { isLoggedIn, user } = useAuth();
+  const { products, loading: productsLoading } = useProducts();
 
-  // Find product from shared data
-  const product = PRODUCTS_DATA.find((p) => p.id === id);
+  // Find product from shared data (static fallback or live WooCommerce catalog)
+  const product = products.find((p) => p.id === id);
 
   // Get related products randomly from the entire product list (excluding current product)
   const [relatedProducts, setRelatedProducts] = useState([]);
 
   useEffect(() => {
     if (!product) return;
-    
+
     // Filter out current product from all products
-    const candidates = PRODUCTS_DATA.filter((p) => p.id !== product.id);
-    
+    const candidates = products.filter((p) => p.id !== product.id);
+
     // Shuffle and pick 4
     const shuffled = [...candidates].sort(() => 0.5 - Math.random());
     setRelatedProducts(shuffled.slice(0, 4));
-  }, [product]);
+  }, [product, products]);
 
   // States
   const [selectedOptIdx, setSelectedOptIdx] = useState(0);
@@ -54,6 +55,21 @@ export default function ProductDetailPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isApplyOpen, setIsApplyOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
+
+  // Product not in the static catalog yet — it may exist only in WooCommerce,
+  // so hold off on "not found" until the live catalog finishes loading.
+  if (!product && productsLoading) {
+    return (
+      <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+        <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+        <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex flex-col items-center justify-center text-center gap-4">
+          <div className="w-10 h-10 border-2 border-[#268072] border-t-transparent rounded-full animate-spin" />
+          <p className="text-white/50 text-xs font-mono uppercase tracking-widest">Loading product…</p>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
 
   // If product doesn't exist
   if (!product) {
@@ -128,8 +144,8 @@ export default function ProductDetailPage() {
             
             {/* Real Product Image with Fallback */}
             {!imgError ? (
-              <img 
-                src={`/products/${product.photoFolder}/${product.photo}.jpg`} 
+              <img
+                src={product.image || `/products/${product.photoFolder}/${product.photo}.jpg`}
                 alt={product.name}
                 onError={() => setImgError(true)}
                 className="w-full h-full object-cover rounded-lg relative z-10 transition-transform duration-500 group-hover:scale-105"
@@ -329,8 +345,8 @@ export default function ProductDetailPage() {
                 <div key={p.id} className="bg-[#131313] border border-white/5 rounded-sm p-5 flex flex-col gap-4 hover:border-[#268072]/30 hover:shadow-lg hover:shadow-[#268072]/5 transition-all duration-300 group text-left">
                   {/* Product Image */}
                   <Link href={`/product/${p.id}?fromPage=${fromPage}`} className="block aspect-square overflow-hidden rounded-sm bg-[#1a1a1a] border border-white/5 relative">
-                    <img 
-                      src={`/products/${p.photoFolder}/${p.photo}.jpg`} 
+                    <img
+                      src={p.image || `/products/${p.photoFolder}/${p.photo}.jpg`}
                       alt={p.name}
                       className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                       onError={(e) => {

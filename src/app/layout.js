@@ -1,6 +1,7 @@
 import { DM_Sans, Hanken_Grotesk, Geist_Mono } from "next/font/google";
 import { AuthProvider } from "@/components/AuthContext";
 import { CartProvider } from "@/components/CartContext";
+import { ProductsProvider } from "@/components/ProductsContext";
 import CartDrawer from "@/components/CartDrawer";
 import "./globals.css";
 
@@ -32,10 +33,12 @@ export default function RootLayout({ children }) {
     >
       <body className="min-h-full flex flex-col bg-[#131313] text-[#e5e2e1]">
         <AuthProvider>
-          <CartProvider>
-            {children}
-            <CartDrawer />
-          </CartProvider>
+          <ProductsProvider>
+            <CartProvider>
+              {children}
+              <CartDrawer />
+            </CartProvider>
+          </ProductsProvider>
         </AuthProvider>
       </body>
     </html>
