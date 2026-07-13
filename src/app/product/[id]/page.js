@@ -142,16 +142,16 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Product Details Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mt-4">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start mt-4 bg-[#1a1a1a] border border-white/10 rounded-lg p-6 md:p-8 shadow-2xl">
           
           {/* Left Column: Image Card */}
-          <div className="lg:col-span-6 bg-[#1a1a1a] border border-white/10 rounded-lg aspect-square p-4 md:p-6 flex items-center justify-center relative overflow-hidden shadow-2xl group select-none">
+          <div className="lg:col-span-6 bg-white rounded-lg aspect-square flex items-center justify-center relative overflow-hidden group select-none">
             {/* Ambient Background Glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#268072]/5 via-transparent to-transparent opacity-60 z-0"></div>
             
             {/* Real Product Image with Fallback */}
             {!imgError ? (
-              <div className="w-full h-full overflow-hidden rounded-md bg-white relative z-10">
+              <div className="w-full h-full overflow-hidden rounded-lg bg-white relative z-10">
                 <img
                   src={product.image || `/products/${product.photoFolder}/${product.photo}.jpg`}
                   alt={product.name}
