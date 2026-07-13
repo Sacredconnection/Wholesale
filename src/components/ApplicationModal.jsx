@@ -258,7 +258,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider px-8 py-4 rounded-sm transition-all flex items-center gap-2 cursor-pointer border-0 shadow-lg shadow-[#268072]/15 hover:shadow-[#268072]/30 disabled:opacity-50"
+                className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider px-8 py-4 rounded-sm transition-all flex items-center gap-2 cursor-pointer border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 disabled:opacity-50"
               >
                 {submitting ? (
                   <>
@@ -313,7 +313,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
 
             <button
               onClick={handleClose}
-              className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider px-8 py-4 rounded-sm transition-all border-0 cursor-pointer w-full max-w-sm shadow-md"
+              className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider px-8 py-4 rounded-sm transition-all border-0 cursor-pointer w-full max-w-sm shadow-md"
             >
               Return to Portal
             </button>

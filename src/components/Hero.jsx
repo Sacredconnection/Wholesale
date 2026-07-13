@@ -26,7 +26,7 @@ export default function Hero({ onOpenApply }) {
   }, []);
 
   return (
-    <div className="relative w-full min-h-screen bg-[#131313] overflow-hidden flex flex-col justify-center">
+    <div className="relative w-full min-h-screen bg-[#23403B] overflow-hidden flex flex-col justify-center">
       {/* Full Bleed Background Image Carousel */}
       <div className="absolute inset-0 z-0">
         {BANNERS.map((banner, idx) => (
@@ -68,7 +68,7 @@ export default function Hero({ onOpenApply }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto pt-4">
             <Link 
               href="/register"
-              className="bg-[#268072] hover:bg-[#1f665b] text-white text-sm font-bold tracking-wide px-10 py-5 rounded-sm shadow-lg shadow-[#268072]/10 hover:shadow-[#268072]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase no-underline cursor-pointer border-0"
+              className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-sm font-bold tracking-wide px-10 py-5 rounded-sm shadow-lg shadow-[#EC2300]/10 hover:shadow-[#EC2300]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase no-underline cursor-pointer border-0"
             >
               Register B2B Account
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />

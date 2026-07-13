@@ -115,7 +115,7 @@ export default function LoginModal({ isOpen, onClose }) {
           <button
             type="submit"
             disabled={submitting}
-            className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all flex items-center justify-center gap-2 cursor-pointer border-0 shadow-lg shadow-[#268072]/15 hover:shadow-[#268072]/30 disabled:opacity-50 mt-2"
+            className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all flex items-center justify-center gap-2 cursor-pointer border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 disabled:opacity-50 mt-2"
           >
             {submitting ? (
               <>

@@ -50,7 +50,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-12">
@@ -156,7 +156,7 @@ export default function ContactPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-[#268072] hover:bg-[#1f665b] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all border-0 shadow-lg shadow-[#268072]/15 hover:shadow-[#268072]/30 cursor-pointer flex items-center justify-center gap-2 mt-2"
+                className="bg-[#EC2300] hover:bg-[#c51d00] disabled:opacity-50 text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 cursor-pointer flex items-center justify-center gap-2 mt-2"
               >
                 {loading ? (
                   <>

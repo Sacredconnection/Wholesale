@@ -160,7 +160,7 @@ export default function MyAccountPage() {
   // Handle Loading State
   if (loading) {
     return (
-      <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
         <div className="flex-grow flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-[#268072] border-t-transparent rounded-full animate-spin"></div>
@@ -173,7 +173,7 @@ export default function MyAccountPage() {
   // Handle Not Logged In State
   if (!isLoggedIn) {
     return (
-      <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
         
         <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex items-center justify-center">
@@ -194,7 +194,7 @@ export default function MyAccountPage() {
             <div className="flex flex-col gap-4">
               <button
                 onClick={() => setIsLoginOpen(true)}
-                className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider py-4 rounded transition-all cursor-pointer border-0 w-full shadow-lg shadow-[#268072]/15"
+                className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-4 rounded transition-all cursor-pointer border-0 w-full shadow-lg shadow-[#EC2300]/15"
               >
                 Access Portal Login
               </button>
@@ -272,7 +272,7 @@ export default function MyAccountPage() {
   };
 
   return (
-    <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
 
       {/* Hero Header Section */}
@@ -734,7 +734,7 @@ export default function MyAccountPage() {
                         </div>
                         <button 
                           type="submit"
-                          className="bg-[#268072] hover:bg-[#1f665b] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded mt-2 cursor-pointer border-0 flex items-center justify-center gap-1.5 transition-colors"
+                          className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded mt-2 cursor-pointer border-0 flex items-center justify-center gap-1.5 transition-colors"
                         >
                           <Save className="w-3.5 h-3.5" /> Save Shipping
                         </button>
@@ -832,7 +832,7 @@ export default function MyAccountPage() {
                         </div>
                         <button 
                           type="submit"
-                          className="bg-[#268072] hover:bg-[#1f665b] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded mt-2 cursor-pointer border-0 flex items-center justify-center gap-1.5 transition-colors"
+                          className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded mt-2 cursor-pointer border-0 flex items-center justify-center gap-1.5 transition-colors"
                         >
                           <Save className="w-3.5 h-3.5" /> Save Billing
                         </button>
@@ -873,7 +873,7 @@ export default function MyAccountPage() {
                       <button
                         type="button"
                         onClick={() => avatarInputRef.current?.click()}
-                        className="bg-[#268072]/15 hover:bg-[#268072]/30 text-[#82d6c5] text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded border border-[#268072]/30 cursor-pointer transition-all"
+                        className="bg-[#EC2300]/15 hover:bg-[#EC2300]/30 text-[#EC2300] text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded border border-[#EC2300]/30 cursor-pointer transition-all"
                       >
                         Upload New Photo
                       </button>
@@ -1031,7 +1031,7 @@ export default function MyAccountPage() {
 
                   <button 
                     type="submit"
-                    className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all border-0 shadow-lg shadow-[#268072]/15 hover:shadow-[#268072]/30 cursor-pointer flex items-center justify-center gap-2 mt-4"
+                    className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 cursor-pointer flex items-center justify-center gap-2 mt-4"
                   >
                     <Save className="w-4 h-4" />
                     Save Account Changes
@@ -1143,7 +1143,7 @@ function AdminApprovalsPanel() {
                   {u.status !== 'ACTIVE' && (
                     <button 
                       onClick={() => handleApprove(u.email)}
-                      className="bg-[#268072] hover:bg-[#1f665b] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm transition-colors border-0 cursor-pointer"
+                      className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm transition-colors border-0 cursor-pointer"
                     >
                       Approve Account
                     </button>

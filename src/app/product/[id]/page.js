@@ -67,7 +67,7 @@ export default function ProductDetailPage() {
   // so hold off on "not found" until the live catalog finishes loading.
   if (!product && productsLoading) {
     return (
-      <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
         <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex flex-col items-center justify-center text-center gap-4">
           <div className="w-10 h-10 border-2 border-[#268072] border-t-transparent rounded-full animate-spin" />
@@ -81,7 +81,7 @@ export default function ProductDetailPage() {
   // If product doesn't exist
   if (!product) {
     return (
-      <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
         <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex flex-col items-center justify-center text-center gap-6">
           <div className="text-6xl">⚠️</div>
@@ -91,7 +91,7 @@ export default function ProductDetailPage() {
           </p>
           <Link 
             href="/catalog"
-            className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider py-4 px-8 rounded-sm transition-all animate-fade-in"
+            className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-4 px-8 rounded-sm transition-all animate-fade-in"
           >
             Back to Catalog
           </Link>
@@ -115,7 +115,7 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
 
       {/* Main Container */}
@@ -294,7 +294,7 @@ export default function ProductDetailPage() {
                 <div className="flex-grow flex flex-col gap-1.5 justify-end h-full pt-5">
                   <button
                     onClick={handleAddToCartClick}
-                    className="w-full bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-widest py-4 px-6 rounded shadow-lg shadow-[#268072]/20 hover:shadow-[#268072]/45 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
+                    className="w-full bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-widest py-4 px-6 rounded shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/45 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
                   >
                     <ShoppingBag className="w-4 h-4" />
                     Add to Basket

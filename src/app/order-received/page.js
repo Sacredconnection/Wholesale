@@ -55,7 +55,7 @@ function OrderReceivedContent() {
       <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
         <Link
           href="/my-account"
-          className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-widest py-4 px-8 rounded-sm transition-all duration-300 flex items-center justify-center gap-2 no-underline"
+          className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-widest py-4 px-8 rounded-sm transition-all duration-300 flex items-center justify-center gap-2 no-underline"
         >
           <ClipboardList className="w-4 h-4" />
           View My Orders
@@ -77,7 +77,7 @@ export default function OrderReceivedPage() {
   const [isApplyOpen, setIsApplyOpen] = useState(false);
 
   return (
-    <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
+    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
       <Suspense fallback={<main className="flex-grow" />}>
         <OrderReceivedContent />

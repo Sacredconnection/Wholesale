@@ -206,7 +206,7 @@ export default function Header({ onOpenLogin, onOpenApply }) {
               <Link
                 href="/register"
                 onClick={() => setMobileMenuOpen(false)}
-                className="bg-[#268072] text-white text-center text-sm font-bold uppercase tracking-wider py-4 rounded-sm border-0 cursor-pointer w-full no-underline block"
+                className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-center text-sm font-bold uppercase tracking-wider py-4 rounded-sm border-0 cursor-pointer w-full no-underline block transition-colors"
               >
                 Register Account
               </Link>

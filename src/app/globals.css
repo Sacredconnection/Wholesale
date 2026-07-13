@@ -27,7 +27,7 @@
   --color-error-container: #93000a;
   --color-secondary-fixed: #e2e2e2;
   --color-secondary-container: #454747;
-  --color-surface: #131313;
+  --color-surface: #23403b;
   --color-secondary: #c6c6c7;
   --color-surface-bright: #393939;
   --color-surface-variant: #353535;
@@ -37,14 +37,14 @@
   --color-on-primary-container: #e7fff8;
   --color-tertiary-fixed: #e2e2e2;
   --color-outline-variant: #3e4946;
-  --color-background: #131313;
+  --color-background: #23403b;
   --color-surface-container-high: #2a2a2a;
   --color-inverse-primary: #006b5e;
   --color-surface-container-lowest: #0e0e0e;
   --color-primary-container: #268072;
   --color-inverse-on-surface: #303030;
   --color-primary: #82d6c5;
-  --color-surface-dim: #131313;
+  --color-surface-dim: #23403b;
   --color-on-tertiary-container: #fafafa;
   --color-tertiary-fixed-dim: #c6c6c7;
   --color-on-error: #690005;
@@ -60,13 +60,28 @@
   --spacing-container-max: 1440px;
   --spacing-margin-desktop: 64px;
 
-  --font-headline-lg: var(--font-hanken-grotesk), sans-serif;
-  --font-label-sm: var(--font-geist-mono), monospace;
-  --font-headline-md: var(--font-hanken-grotesk), sans-serif;
-  --font-body-md: var(--font-dm-sans), sans-serif;
-  --font-body-lg: var(--font-dm-sans), sans-serif;
-  --font-headline-lg-mobile: var(--font-hanken-grotesk), sans-serif;
-  --font-display-lg: var(--font-hanken-grotesk), sans-serif;
+  --font-sans: var(--font-roboto), Arial, sans-serif;
+  --font-mono: var(--font-roboto), Arial, sans-serif;
+  --font-headline-lg: var(--font-roboto), Arial, sans-serif;
+  --font-label-sm: var(--font-roboto), Arial, sans-serif;
+  --font-headline-md: var(--font-roboto), Arial, sans-serif;
+  --font-body-md: var(--font-roboto), Arial, sans-serif;
+  --font-body-lg: var(--font-roboto), Arial, sans-serif;
+  --font-headline-lg-mobile: var(--font-roboto), Arial, sans-serif;
+  --font-display-lg: var(--font-roboto), Arial, sans-serif;
+
+  --tracking-tighter: -0.035em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.06em;
+  --tracking-widest: 0.1em;
+
+  --leading-none: 1.05;
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.65;
 }
 
 @layer utilities {
@@ -108,18 +123,61 @@
   animation: fade-in 1s ease-out forwards; 
 }
 
+html {
+  font-family: var(--font-roboto), Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+}
+
 body {
-  font-family: var(--font-dm-sans), sans-serif;
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.6;
+  letter-spacing: 0.005em;
   background-color: #131313;
   color: #e5e2e1;
 }
 
 h1, h2, h3, h4, h5, h6 {
-  font-family: var(--font-hanken-grotesk), sans-serif;
+  font-family: inherit;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  text-wrap: balance;
+}
+
+h1 {
+  font-weight: 800;
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+}
+
+h2 {
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+}
+
+h3, h4 {
+  line-height: 1.2;
+  letter-spacing: -0.015em;
+}
+
+p {
+  text-wrap: pretty;
+}
+
+button, input, select, textarea {
+  font: inherit;
+}
+
+label, small {
+  line-height: 1.4;
 }
 
 code, pre, .font-mono {
-  font-family: var(--font-geist-mono), monospace;
+  font-family: var(--font-roboto), Arial, sans-serif;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Hide scrollbar for Chrome, Safari and Opera */

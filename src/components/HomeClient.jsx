@@ -16,7 +16,7 @@ export default function HomeClient() {
   const [isApplyOpen, setIsApplyOpen] = useState(false);
 
   return (
-    <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
+    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       {/* Navigation Header */}
       <Header 
         onOpenLogin={() => setIsLoginOpen(true)} 
@@ -30,7 +30,7 @@ export default function HomeClient() {
       <TrustBar onOpenApply={() => setIsApplyOpen(true)} />
 
       {/* Main Page Area */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-24 bg-[#131313]">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-24 bg-[#23403B]">
         {/* B2B Onboarding Steps */}
         <Onboarding onOpenApply={() => setIsApplyOpen(true)} />
 

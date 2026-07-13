@@ -205,7 +205,7 @@ export default function CatalogPage() {
   }
 
   return (
-    <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
+    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       {/* Navigation Header */}
       <Header 
         onOpenLogin={() => setIsLoginOpen(true)} 
@@ -234,7 +234,7 @@ export default function CatalogPage() {
             {/* Download Catalog PDF Button */}
             <button 
               onClick={() => alert("Downloading Wholesale Catalog & Pricing PDF...")}
-              className="flex items-center gap-3 bg-[#268072] hover:bg-[#1f665b] text-white border-0 py-3.5 px-6 rounded-sm text-sm font-bold tracking-wide uppercase transition-all duration-300 cursor-pointer shadow-lg shadow-[#268072]/15 grow sm:grow-0 justify-center"
+              className="flex items-center gap-3 bg-[#EC2300] hover:bg-[#c51d00] text-white border-0 py-3.5 px-6 rounded-sm text-sm font-bold tracking-wide uppercase transition-all duration-300 cursor-pointer shadow-lg shadow-[#EC2300]/15 grow sm:grow-0 justify-center"
             >
               <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               PDF Catalog
@@ -501,7 +501,7 @@ export default function CatalogPage() {
                           setQuantities(prev => ({ ...prev, [product.id]: 1 }));
                           setIsCartOpen(true);
                         }}
-                        className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shrink-0"
+                        className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shrink-0"
                       >
                         Add
                       </button>

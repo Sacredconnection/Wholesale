@@ -46,7 +46,7 @@ export default function AuthGate({ loading = false }) {
             <div className="flex flex-col gap-3">
               <button
                 onClick={() => setIsLoginOpen(true)}
-                className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-widest py-4 rounded-sm transition-all duration-300 cursor-pointer border-0 w-full flex items-center justify-center gap-2 shadow-lg shadow-[#268072]/15"
+                className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-widest py-4 rounded-sm transition-all duration-300 cursor-pointer border-0 w-full flex items-center justify-center gap-2 shadow-lg shadow-[#EC2300]/15"
               >
                 Sign In to Your Account
                 <ArrowRight className="w-4 h-4" />

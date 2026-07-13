@@ -135,7 +135,7 @@ export default function Onboarding({ onOpenApply }) {
         >
           <Link
             href="/register"
-            className="bg-[#268072] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-6 px-16 rounded-sm hover:bg-[#1f665b] transition-all duration-300 shadow-lg shadow-[#268072]/20 hover:shadow-[#268072]/40 cursor-pointer border-0 no-underline text-center"
+            className="bg-[#EC2300] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-6 px-16 rounded-sm hover:bg-[#c51d00] transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 cursor-pointer border-0 no-underline text-center"
           >
             Create B2B Account
           </Link>

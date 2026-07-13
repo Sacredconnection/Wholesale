@@ -78,7 +78,7 @@ export default function NGOSection() {
       <section
         ref={sectionRef}
         id="ngo-partnership"
-        className="bg-[#1a1a1a] border border-[#268072]/35 rounded-2xl p-8 md:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#268072]/5 hover:border-[#268072]/60 transition-colors duration-500"
+        className="bg-[#1a1a1a] border border-[#284e32]/35 rounded-2xl p-8 md:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-[#284e32]/60 transition-colors duration-500"
       >
         {/* Ambient background glow */}
         <div className="absolute -top-36 -left-36 w-[500px] h-[500px] bg-[#268072] opacity-[0.09] blur-[130px] pointer-events-none rounded-full" />
@@ -119,7 +119,7 @@ export default function NGOSection() {
             {/* Titles */}
             <div className="flex flex-col gap-4">
               <h2 className="font-headline-lg text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
-                Bridges of Support for the <span className="text-[#268072]">Amazon Rainforest</span>
+                Bridges of Support for the <span className="text-[#284e32]">Amazon Rainforest</span>
               </h2>
               <p className="font-body-md text-base md:text-lg text-white/70 leading-relaxed">
                 Conexão Ancestral acts as a vital bridge between the wisdom of the forest and the modern world. We support indigenous self-determination in Acre, Brazil, safeguarding ancestral knowledge and protecting traditional territories.
@@ -131,7 +131,7 @@ export default function NGOSection() {
               
               {/* Pillar 1 */}
               <div className="flex flex-col gap-3 group">
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#268072] group-hover:bg-[#268072]/20 transition-all duration-300">
+                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#284e32] group-hover:bg-[#284e32]/20 transition-all duration-300">
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
@@ -144,7 +144,7 @@ export default function NGOSection() {
 
               {/* Pillar 2 */}
               <div className="flex flex-col gap-3 group">
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#268072] group-hover:bg-[#268072]/20 transition-all duration-300">
+                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#284e32] group-hover:bg-[#284e32]/20 transition-all duration-300">
                   <Leaf className="w-5 h-5" />
                 </div>
                 <div>
@@ -157,7 +157,7 @@ export default function NGOSection() {
 
               {/* Pillar 3 */}
               <div className="flex flex-col gap-3 group">
-                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#268072] group-hover:bg-[#268072]/20 transition-all duration-300">
+                <div className="w-10 h-10 rounded-lg bg-white/5 flex items-center justify-center text-[#284e32] group-hover:bg-[#284e32]/20 transition-all duration-300">
                   <Droplets className="w-5 h-5" />
                 </div>
                 <div>
@@ -176,7 +176,7 @@ export default function NGOSection() {
                 href="https://www.conexaoancestral.org/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-[#DC251E] hover:bg-[#b81d17] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-5 px-10 rounded-sm transition-all duration-300 shadow-lg shadow-black/20 hover:shadow-[#DC251E]/20 cursor-pointer no-underline group border-0"
+                className="inline-flex items-center gap-3 bg-[#284e32] hover:bg-[#1f3d27] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-5 px-10 rounded-sm transition-all duration-300 shadow-lg shadow-black/20 hover:shadow-[#284e32]/20 cursor-pointer no-underline group border-0"
               >
                 Visit Conexão Ancestral
                 <ArrowUpRight className="w-4 h-4 text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

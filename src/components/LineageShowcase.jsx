@@ -196,7 +196,7 @@ export default function LineageShowcase() {
   }, []);
 
   return (
-    <section id="tribes" className="flex flex-col gap-12 pt-12 border-t border-white/10 scroll-mt-24 w-full">
+    <section id="tribes" className="relative isolate flex flex-col gap-12 py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
       
       {/* Header and Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 w-full">
@@ -347,7 +347,7 @@ export default function LineageShowcase() {
                 </button>
                 <Link
                   href={`/catalog?tribe=${encodeURIComponent(selectedTribe.name)}`}
-                  className="bg-[#268072] hover:bg-[#1f665b] text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-sm transition-all duration-300 cursor-pointer border-0 flex items-center gap-1.5 no-underline"
+                  className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-sm transition-all duration-300 cursor-pointer border-0 flex items-center gap-1.5 no-underline"
                 >
                   Explore Products
                   <ArrowUpRight className="w-4 h-4" />
