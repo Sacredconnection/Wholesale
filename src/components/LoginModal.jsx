@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
-import { Key, Eye, EyeOff, Loader2, ShieldAlert, Sparkles } from 'lucide-react';
+import { Key, Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-react';
 
 export default function LoginModal({ isOpen, onClose }) {
   const { isLoggedIn, login } = useAuth();
@@ -17,12 +17,6 @@ export default function LoginModal({ isOpen, onClose }) {
   const [error, setError] = useState('');
 
   if (!isOpen) return null;
-
-  const handleDemoFill = () => {
-    setEmail('partner@sacredconnection.com');
-    setPassword('ancestral8892');
-    setError('');
-  };
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -41,7 +35,7 @@ export default function LoginModal({ isOpen, onClose }) {
       router.push('/catalog');
     } catch (err) {
       setSubmitting(false);
-      setError(err.message || 'Invalid B2B Account credentials. Try using the Demo Account.');
+      setError(err.message || 'Invalid B2B Account credentials.');
     }
   };
 
@@ -116,26 +110,6 @@ export default function LoginModal({ isOpen, onClose }) {
                 </button>
               </div>
             </div>
-          </div>
-
-          {/* Quick Demo Assist */}
-          <div className="bg-[#268072]/5 border border-[#268072]/20 rounded p-4 flex flex-col gap-2">
-            <div className="flex justify-between items-center">
-              <span className="text-[10px] font-mono text-[#82d6c5] uppercase tracking-wider flex items-center gap-1 font-bold">
-                <Sparkles className="w-3.5 h-3.5" />
-                Testing Sandbox credentials
-              </span>
-              <button
-                type="button"
-                onClick={handleDemoFill}
-                className="text-[10px] font-mono bg-[#268072] hover:bg-[#1f665b] text-white px-2 py-1 rounded transition-colors uppercase border-0 cursor-pointer font-bold"
-              >
-                Fill Demo
-              </button>
-            </div>
-            <p className="text-[11px] text-white/50 leading-relaxed">
-              Click <strong>Fill Demo</strong> to instantly populate credentials and redirect to the Wholesale Catalog.
-            </p>
           </div>
 
           <button
