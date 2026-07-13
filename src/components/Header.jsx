@@ -41,23 +41,23 @@ export default function Header({ onOpenLogin, onOpenApply }) {
         {/* Navigation Links (Center - Desktop Only) */}
         <nav className="hidden lg:flex items-center gap-8 text-sm font-medium tracking-wide text-white/70 font-body-md">
           <a 
-            className={`${pathname === '/' ? 'text-white border-b-2 border-[#268072]' : 'hover:text-white'} pb-1 transition-colors`} 
+            className={`${pathname === '/' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative py-2 transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/"
             onClick={handleHomeClick}
           >
             Home
           </a>
-          <a className="hover:text-white transition-colors pb-1" href="/#tribes">
+          <a className="relative py-2 hover:text-white transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:scale-x-0 after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:after:scale-x-100 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none" href="/#tribes">
             About the Tribes
           </a>
           <a 
-            className={`${pathname === '/catalog' ? 'text-white border-b-2 border-[#268072]' : 'hover:text-white'} pb-1 transition-colors`} 
+            className={`${pathname === '/catalog' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative py-2 transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/catalog"
           >
             Wholesale Catalog
           </a>
           <a 
-            className={`${pathname === '/contact' ? 'text-white border-b-2 border-[#268072]' : 'hover:text-white'} pb-1 transition-colors`} 
+            className={`${pathname === '/contact' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative py-2 transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/contact"
           >
             Contact
@@ -141,7 +141,7 @@ export default function Header({ onOpenLogin, onOpenApply }) {
       {mobileMenuOpen && (
         <div className="absolute top-[100%] left-0 w-full bg-[#212121] border-b border-white/10 px-6 py-8 flex flex-col gap-6 md:hidden z-40 backdrop-blur-md shadow-xl animate-fade-in">
           <a 
-            className={`${pathname === '/' ? 'text-white' : 'text-white/70 hover:text-white'} text-base font-medium transition-colors`} 
+            className={`${pathname === '/' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/"
             onClick={(e) => {
               setMobileMenuOpen(false);
@@ -151,21 +151,21 @@ export default function Header({ onOpenLogin, onOpenApply }) {
             Home
           </a>
           <a 
-            className="text-white/70 hover:text-white text-base font-medium transition-colors" 
+            className="text-white/70 text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none"
             href="/#tribes"
             onClick={() => setMobileMenuOpen(false)}
           >
             About the Tribes
           </a>
           <a 
-            className={`${pathname === '/catalog' ? 'text-white' : 'text-white/70 hover:text-white'} text-base font-medium transition-colors`} 
+            className={`${pathname === '/catalog' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/catalog"
             onClick={() => setMobileMenuOpen(false)}
           >
             Wholesale Catalog
           </a>
           <a 
-            className={`${pathname === '/contact' ? 'text-white' : 'text-white/70 hover:text-white'} text-base font-medium transition-colors`} 
+            className={`${pathname === '/contact' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/contact"
             onClick={() => setMobileMenuOpen(false)}
           >
