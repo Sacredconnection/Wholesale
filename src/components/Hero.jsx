@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
 const BANNERS = [
@@ -65,13 +66,13 @@ export default function Hero({ onOpenApply }) {
           </p>
           
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto pt-4">
-            <button 
-              onClick={onOpenApply}
-              className="bg-[#268072] hover:bg-[#1f665b] text-white text-sm font-bold tracking-wide px-10 py-5 rounded-sm shadow-lg shadow-[#268072]/10 hover:shadow-[#268072]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase cursor-pointer border-0"
+            <Link 
+              href="/register"
+              className="bg-[#268072] hover:bg-[#1f665b] text-white text-sm font-bold tracking-wide px-10 py-5 rounded-sm shadow-lg shadow-[#268072]/10 hover:shadow-[#268072]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase no-underline cursor-pointer border-0"
             >
-              Apply for Wholesale Account
+              Register B2B Account
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
-            </button>
+            </Link>
           </div>
 
         </div>

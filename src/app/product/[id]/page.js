@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -33,6 +33,20 @@ export default function ProductDetailPage() {
 
   // Find product from shared data
   const product = PRODUCTS_DATA.find((p) => p.id === id);
+
+  // Get related products randomly from the entire product list (excluding current product)
+  const [relatedProducts, setRelatedProducts] = useState([]);
+
+  useEffect(() => {
+    if (!product) return;
+    
+    // Filter out current product from all products
+    const candidates = PRODUCTS_DATA.filter((p) => p.id !== product.id);
+    
+    // Shuffle and pick 4
+    const shuffled = [...candidates].sort(() => 0.5 - Math.random());
+    setRelatedProducts(shuffled.slice(0, 4));
+  }, [product]);
 
   // States
   const [selectedOptIdx, setSelectedOptIdx] = useState(0);
@@ -291,6 +305,65 @@ export default function ProductDetailPage() {
           </div>
 
         </div>
+
+        {/* Related Products Section */}
+        {relatedProducts.length > 0 && (
+          <div className="bg-[#1a1a1a] border border-white/5 rounded-sm p-6 md:p-8 my-8 shadow-2xl">
+          <h2 className="text-white text-2xl font-bold font-headline-md mb-8">Related products</h2>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {relatedProducts.map((p) => {
+              // Find min and max price
+              const prices = p.options.map(opt => opt.price);
+              const minPrice = Math.min(...prices);
+              const maxPrice = Math.max(...prices);
+              
+              // Format the name to start with "Rapé" if it ends with "Rapeh"
+              let displayName = p.name;
+              if (displayName.endsWith(" Rapeh")) {
+                const baseName = displayName.slice(0, -6);
+                displayName = `Rapé ${baseName}`;
+              }
+
+              return (
+                <div key={p.id} className="bg-[#131313] border border-white/5 rounded-sm p-5 flex flex-col gap-4 hover:border-[#268072]/30 hover:shadow-lg hover:shadow-[#268072]/5 transition-all duration-300 group text-left">
+                  {/* Product Image */}
+                  <Link href={`/product/${p.id}?fromPage=${fromPage}`} className="block aspect-square overflow-hidden rounded-sm bg-[#1a1a1a] border border-white/5 relative">
+                    <img 
+                      src={`/products/${p.photoFolder}/${p.photo}.jpg`} 
+                      alt={p.name}
+                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                      onError={(e) => {
+                        e.target.src = "/logo.svg";
+                        e.target.className = "w-full h-full object-contain p-8 opacity-20";
+                      }}
+                    />
+                  </Link>
+                  
+                  <div className="flex flex-col gap-2">
+                    {/* Product Title */}
+                    <Link href={`/product/${p.id}?fromPage=${fromPage}`} className="font-headline-md text-base font-bold text-white group-hover:text-[#82d6c5] transition-colors line-clamp-2 no-underline min-h-[48px] flex items-center">
+                      {displayName}
+                    </Link>
+                    
+                    {/* Price Range */}
+                    <span className="text-[#82d6c5] font-headline-md font-bold text-sm">
+                      ${minPrice.toFixed(2)} – ${maxPrice.toFixed(2)}
+                    </span>
+                  </div>
+                  
+                  {/* Select Options Button */}
+                  <div className="mt-auto pt-2">
+                    <Link href={`/product/${p.id}?fromPage=${fromPage}`} className="w-full inline-block text-center bg-white/5 hover:bg-white/10 text-white font-bold text-[10px] py-3.5 px-4 rounded-sm transition-colors uppercase tracking-widest no-underline border border-white/10 font-label-sm">
+                      Select options
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+        )}
 
       </main>
 

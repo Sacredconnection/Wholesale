@@ -1,22 +1,23 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
+import Link from 'next/link';
 
 const steps = [
   {
     num: "01",
-    title: "Submit Application",
-    desc: "Provide your business details and resale intent through our secure portal.",
+    title: "Register B2B Account",
+    desc: "Fill out the 3-step registration form with your identity, business information, and secure password.",
   },
   {
     num: "02",
-    title: "Verification",
-    desc: "Our team reviews your application within 48 hours for ethical alignment.",
+    title: "Vetting & Approval",
+    desc: "Our compliance team reviews your business credentials and tax ID/business license within 48 hours.",
   },
   {
     num: "03",
-    title: "Direct Access",
-    desc: "Unlock wholesale pricing, bulk ordering, and dedicated account management.",
+    title: "Access Wholesale Portal",
+    desc: "Once approved, log in with your credentials to unlock bulk prices, Net-30 credit limits, and custom discounts.",
   },
 ];
 
@@ -132,12 +133,12 @@ export default function Onboarding({ onOpenApply }) {
           className={`flex justify-center mt-8 z-10 step-item${visible ? ' animate' : ''}`}
           style={visible ? { animationDelay: '0.75s' } : {}}
         >
-          <button
-            onClick={onOpenApply}
-            className="bg-[#268072] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-6 px-16 rounded-sm hover:bg-[#1f665b] transition-all duration-300 shadow-lg shadow-[#268072]/20 hover:shadow-[#268072]/40 cursor-pointer border-0"
+          <Link
+            href="/register"
+            className="bg-[#268072] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-6 px-16 rounded-sm hover:bg-[#1f665b] transition-all duration-300 shadow-lg shadow-[#268072]/20 hover:shadow-[#268072]/40 cursor-pointer border-0 no-underline text-center"
           >
-            Start Application
-          </button>
+            Create B2B Account
+          </Link>
         </div>
       </section>
     </>

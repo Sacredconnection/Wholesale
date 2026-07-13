@@ -31,6 +31,10 @@ export function AuthProvider({ children }) {
         );
 
         if (found) {
+          if (found.status === 'PENDING') {
+            reject(new Error('Your wholesale account is pending approval by the administration.'));
+            return;
+          }
           const { _password, ...safeUser } = found;
           setIsLoggedIn(true);
           setUser(safeUser);
@@ -55,6 +59,7 @@ export function AuthProvider({ children }) {
             creditLimit: 15000,
             discountRate: 35,
             avatar: null,
+            isAdmin: true, // Mark demo partner as admin
             shippingAddress: {
               street: "Rua da Floresta, 123",
               neighborhood: "Jardim das Almas",
@@ -86,8 +91,7 @@ export function AuthProvider({ children }) {
   };
 
   /**
-   * register() — creates a new user account, stores it in localStorage
-   * and immediately logs the user in.
+   * register() — creates a new user account, stores it in localStorage.
    */
   const register = (userData) => {
     return new Promise((resolve, reject) => {
@@ -107,12 +111,6 @@ export function AuthProvider({ children }) {
 
           registered.push(entry);
           localStorage.setItem('sc_wholesale_registered', JSON.stringify(registered));
-
-          // Log in immediately
-          setIsLoggedIn(true);
-          setUser(safeUser);
-          localStorage.setItem('sc_wholesale_auth', 'true');
-          localStorage.setItem('sc_wholesale_user', JSON.stringify(safeUser));
 
           resolve(safeUser);
         } catch (err) {

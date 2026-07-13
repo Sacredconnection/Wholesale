@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { useAuth } from '@/components/AuthContext';
 import { useCart } from '@/components/CartContext';
 import { Menu, X, ArrowRight, LogOut, ShoppingBag } from 'lucide-react';
@@ -102,13 +103,13 @@ export default function Header({ onOpenLogin, onOpenApply }) {
               >
                 Client Login
               </button>
-              <button 
-                onClick={onOpenApply}
-                className="bg-white/10 hover:bg-white text-white hover:text-[#212121] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-white/10 hover:border-white transition-all duration-300 flex items-center gap-2 font-label-sm cursor-pointer"
+              <Link 
+                href="/register"
+                className="bg-white/10 hover:bg-white text-white hover:text-[#212121] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-white/10 hover:border-white transition-all duration-300 flex items-center gap-2 font-label-sm cursor-pointer no-underline"
               >
-                Enter Portal 
+                Register Account 
                 <ArrowRight className="w-3.5 h-3.5" />
-              </button>
+              </Link>
             </>
           )}
         </div>
@@ -202,15 +203,13 @@ export default function Header({ onOpenLogin, onOpenApply }) {
               >
                 Client Login
               </button>
-              <button
-                onClick={() => {
-                  setMobileMenuOpen(false);
-                  onOpenApply();
-                }}
-                className="bg-[#268072] text-white text-center text-sm font-bold uppercase tracking-wider py-4 rounded-sm border-0 cursor-pointer w-full"
+              <Link
+                href="/register"
+                onClick={() => setMobileMenuOpen(false)}
+                className="bg-[#268072] text-white text-center text-sm font-bold uppercase tracking-wider py-4 rounded-sm border-0 cursor-pointer w-full no-underline block"
               >
-                Start Application
-              </button>
+                Register Account
+              </Link>
             </>
           )}
         </div>

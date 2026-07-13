@@ -23,7 +23,8 @@ import {
   FileText, 
   Save,
   Lock,
-  Camera
+  Camera,
+  ShieldCheck
 } from "lucide-react";
 
 export default function MyAccountPage() {
@@ -267,6 +268,7 @@ export default function MyAccountPage() {
           <aside className="bg-[#1a1a1a] border border-white/10 rounded-md p-3 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible shrink-0 scrollbar-none">
             {[
               { id: "dashboard", label: "Dashboard", icon: User },
+              ...(user?.isAdmin ? [{ id: "admin", label: "Admin Approvals", icon: ShieldCheck }] : []),
               { id: "orders", label: "Orders", icon: ShoppingBag },
               { id: "downloads", label: "Downloads", icon: Download },
               { id: "addresses", label: "Addresses", icon: MapPin },
@@ -301,6 +303,11 @@ export default function MyAccountPage() {
 
           {/* Tab Panel Content Area */}
           <div className="lg:col-span-3 flex flex-col gap-6">
+            
+            {/* ADMIN APPROVALS TAB */}
+            {activeTab === "admin" && user?.isAdmin && (
+              <AdminApprovalsPanel />
+            )}
             
             {/* 1. DASHBOARD TAB */}
             {activeTab === "dashboard" && (
@@ -937,6 +944,114 @@ export default function MyAccountPage() {
       {/* Modals for restricted access actions */}
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
       <ApplicationModal isOpen={isApplyOpen} onClose={() => setIsApplyOpen(false)} />
+    </div>
+  );
+}
+
+function AdminApprovalsPanel() {
+  const [registeredUsers, setRegisteredUsers] = useState([]);
+
+  useEffect(() => {
+    try {
+      const users = JSON.parse(localStorage.getItem('sc_wholesale_registered') || '[]');
+      setRegisteredUsers(Array.isArray(users) ? users : []);
+    } catch (e) {
+      setRegisteredUsers([]);
+    }
+  }, []);
+
+  const handleApprove = (email) => {
+    try {
+      const users = JSON.parse(localStorage.getItem('sc_wholesale_registered') || '[]');
+      if (Array.isArray(users)) {
+        const idx = users.findIndex(u => u?.email === email);
+        if (idx !== -1) {
+          users[idx].status = 'ACTIVE';
+          localStorage.setItem('sc_wholesale_registered', JSON.stringify(users));
+          setRegisteredUsers(users);
+          alert(`User ${email} approved successfully! They can now log in to the wholesale portal.`);
+        }
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleReject = (email) => {
+    try {
+      const users = JSON.parse(localStorage.getItem('sc_wholesale_registered') || '[]');
+      if (Array.isArray(users)) {
+        const filtered = users.filter(u => u?.email !== email);
+        localStorage.setItem('sc_wholesale_registered', JSON.stringify(filtered));
+        setRegisteredUsers(filtered);
+        alert(`Registration request for ${email} rejected.`);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  return (
+    <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl animate-fade-in flex flex-col gap-6">
+      <div>
+        <h3 className="font-headline-md text-lg font-bold text-white mb-1">
+          B2B Wholesale Registrations Vetting
+        </h3>
+        <p className="text-xs text-white/50 leading-relaxed">
+          Manage B2B registration requests. Approving a user activates their account so they can log in and place orders.
+        </p>
+      </div>
+
+      {registeredUsers.length === 0 ? (
+        <div className="text-center py-8 text-white/40 text-sm">
+          No custom wholesale registrations found. Try registering a new user first.
+        </div>
+      ) : (
+        <div className="flex flex-col gap-4">
+          {registeredUsers.map((u, i) => {
+            if (!u) return null;
+            return (
+              <div key={i} className="bg-[#131313] border border-white/5 rounded-sm p-5 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div className="flex-grow flex flex-col gap-1 text-left">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <span className="text-sm font-bold text-white">
+                      {u.displayName || `${u.firstName || ''} ${u.lastName || ''}`.trim() || u.email || 'Unnamed User'}
+                    </span>
+                    <span className={`text-[10px] font-mono border px-2 py-0.5 rounded font-bold uppercase ${
+                      u.status === 'ACTIVE' 
+                        ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' 
+                        : 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30'
+                    }`}>
+                      {u.status || 'PENDING'}
+                    </span>
+                  </div>
+                  <p className="text-xs text-white/50">{u.email || 'No Email'} · {u.phone || 'No Phone'}</p>
+                  <p className="text-xs text-white/40 mt-1">
+                    <strong>Address:</strong> {u.shippingAddress?.street || 'No Street'}, {u.shippingAddress?.city || 'No City'}, {u.shippingAddress?.zip || 'No ZIP'} ({u.shippingAddress?.country || 'No Country'})
+                  </p>
+                </div>
+                
+                <div className="flex items-center gap-2 shrink-0">
+                  {u.status !== 'ACTIVE' && (
+                    <button 
+                      onClick={() => handleApprove(u.email)}
+                      className="bg-[#268072] hover:bg-[#1f665b] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm transition-colors border-0 cursor-pointer"
+                    >
+                      Approve Account
+                    </button>
+                  )}
+                  <button 
+                    onClick={() => handleReject(u.email)}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm transition-colors border border-red-500/20 cursor-pointer"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

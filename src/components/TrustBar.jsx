@@ -1,6 +1,7 @@
 "use client";
 
 import React from 'react';
+import Link from 'next/link';
 import { ShieldAlert, Users, ArrowRight } from 'lucide-react';
 
 export default function TrustBar({ onOpenApply }) {
@@ -17,12 +18,12 @@ export default function TrustBar({ onOpenApply }) {
             <h3 className="text-xl font-bold tracking-tight text-white font-headline-md">
               Start your custom wholesale partnership today
             </h3>
-            <button 
-              onClick={onOpenApply}
-              className="text-base font-semibold underline decoration-[#268072] underline-offset-4 hover:text-[#268072] transition-colors flex items-center gap-2 font-body-md bg-transparent border-0 cursor-pointer text-white text-left p-0"
+            <Link 
+              href="/register"
+              className="text-base font-semibold underline decoration-[#268072] underline-offset-4 hover:text-[#268072] transition-colors flex items-center gap-2 font-body-md text-white text-left p-0 no-underline cursor-pointer"
             >
               Commercial Application <ArrowRight className="w-4 h-4" />
-            </button>
+            </Link>
           </div>
 
           {/* Card 2: Sustainability */}

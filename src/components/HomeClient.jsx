@@ -31,11 +31,11 @@ export default function HomeClient() {
 
       {/* Main Page Area */}
       <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-24 bg-[#131313]">
-        {/* Tribe Lineage Details */}
-        <LineageShowcase />
-
         {/* B2B Onboarding Steps */}
         <Onboarding onOpenApply={() => setIsApplyOpen(true)} />
+
+        {/* Tribe Lineage Details */}
+        <LineageShowcase />
 
         {/* NGO Partnership Details */}
         <NGOSection />
