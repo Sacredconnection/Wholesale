@@ -8,9 +8,16 @@ import "./globals.css";
 const roboto = Roboto({
   variable: "--font-roboto",
   subsets: ["latin"],
-  weight: "variable",
-  display: "swap",
-  fallback: ["Arial", "sans-serif"],
+});
+
+const hankenGrotesk = Hanken_Grotesk({
+  variable: "--font-hanken-grotesk",
+  subsets: ["latin"],
+});
+
+const geistMono = Geist_Mono({
+  variable: "--font-geist-mono",
+  subsets: ["latin"],
 });
 
 export const metadata = {
@@ -21,10 +28,10 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${roboto.variable} ${roboto.className} h-full antialiased`}
+      className={`${dmSans.variable} ${hankenGrotesk.variable} ${geistMono.variable} h-full antialiased`}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-[#23403B] text-[#e5e2e1]">
+      <body className="min-h-full flex flex-col bg-[#131313] text-[#e5e2e1]">
         <AuthProvider>
           <ProductsProvider>
             <CartProvider>
