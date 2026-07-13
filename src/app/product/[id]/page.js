@@ -192,8 +192,6 @@ export default function ProductDetailPage() {
                 className="pointer-events-none absolute inset-0 bg-center bg-cover bg-no-repeat opacity-[0.08]"
                 style={{ backgroundImage: "url('/product-watermarks/provenance-watermark.svg')" }}
               ></div>
-              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-white/10"></div>
-              <div className="absolute -right-2 -top-8 h-28 w-28 rounded-full border border-white/10"></div>
               <div className="relative flex items-center justify-between gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10">
                   <Leaf className="h-5 w-5 text-white/80" />
