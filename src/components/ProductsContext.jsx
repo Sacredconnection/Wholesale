@@ -1,47 +1,50 @@
 "use client";
 
-// Provides the product catalog to client components. Starts with the static
-// dataset (src/data/products.js) so the UI renders instantly, then swaps in
-// live WooCommerce data from /api/products once it responds. If the backend
-// is unconfigured or unreachable, the static catalog stays in place.
+// Provides the product catalog to client components. Products come exclusively
+// from the WooCommerce API (/api/products) — nothing is pre-loaded, so the UI
+// must render a loading state until the fetch resolves.
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { PRODUCTS_DATA } from "@/data/products";
+import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const ProductsContext = createContext(null);
 
 export function ProductsProvider({ children }) {
-  const [products, setProducts] = useState(PRODUCTS_DATA);
-  const [source, setSource] = useState("static");
+  const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
 
   useEffect(() => {
     let cancelled = false;
 
-    async function loadLiveCatalog() {
+    async function loadCatalog() {
+      setLoading(true);
+      setError("");
       try {
         const res = await fetch("/api/products");
-        if (!res.ok) throw new Error(`API responded ${res.status}`);
-        const { products: liveProducts } = await res.json();
-        if (!cancelled && Array.isArray(liveProducts) && liveProducts.length > 0) {
-          setProducts(liveProducts);
-          setSource("woocommerce");
-        }
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.error || `Catalog API responded ${res.status}`);
+        if (!cancelled) setProducts(Array.isArray(data.products) ? data.products : []);
       } catch (err) {
-        console.info(`Using static catalog (WooCommerce unavailable: ${err.message})`);
+        if (!cancelled) {
+          setProducts([]);
+          setError(err.message || "Could not load the catalog.");
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
     }
 
-    loadLiveCatalog();
+    loadCatalog();
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [reloadKey]);
 
   return (
-    <ProductsContext.Provider value={{ products, source, loading }}>
+    <ProductsContext.Provider value={{ products, loading, error, reload }}>
       {children}
     </ProductsContext.Provider>
   );

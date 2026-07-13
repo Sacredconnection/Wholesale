@@ -1,10 +1,11 @@
 import {
+  getCategories,
   getProductBySlug,
   getProductVariations,
   isWooCommerceConfigured,
   WooCommerceApiError,
 } from "@/lib/woocommerce";
-import { mapProduct } from "@/lib/wc-mappers";
+import { buildCategoryContext, mapProduct } from "@/lib/wc-mappers";
 
 export async function GET(request, { params }) {
   if (!isWooCommerceConfigured()) {
@@ -21,9 +22,13 @@ export async function GET(request, { params }) {
     if (!wcProduct) {
       return Response.json({ error: "Product not found." }, { status: 404 });
     }
-    const variations =
-      wcProduct.type === "variable" ? await getProductVariations(wcProduct.id) : [];
-    return Response.json({ product: mapProduct(wcProduct, variations) });
+    const [variations, categories] = await Promise.all([
+      wcProduct.type === "variable" ? getProductVariations(wcProduct.id) : [],
+      getCategories(),
+    ]);
+    return Response.json({
+      product: mapProduct(wcProduct, variations, buildCategoryContext(categories)),
+    });
   } catch (err) {
     console.error(`GET /api/products/${id} failed:`, err);
     const status = err instanceof WooCommerceApiError && err.status >= 400 ? 502 : 500;

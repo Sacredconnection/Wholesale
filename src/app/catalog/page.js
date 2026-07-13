@@ -6,6 +6,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import ApplicationModal from "@/components/ApplicationModal";
 import LoginModal from "@/components/LoginModal";
+import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
 import { 
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 
 import { useProducts } from "@/components/ProductsContext";
+import { optionPriceForUser } from "@/lib/pricing";
 
 const TRIBE_COLORS = {
   "apurina": "#4A730D",
@@ -61,8 +63,8 @@ const getTribeBgColor = (tribeName) => {
 };
 
 export default function CatalogPage() {
-  const { products } = useProducts();
-  const { isLoggedIn, user } = useAuth();
+  const { products, loading: productsLoading, error: productsError, reload } = useProducts();
+  const { isLoggedIn, user, loading: authLoading } = useAuth();
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isApplyOpen, setIsApplyOpen] = useState(false);
@@ -196,6 +198,11 @@ export default function CatalogPage() {
     setTribe("All");
     setCurrentPage(1);
   };
+
+  // Catalog is partner-only: block until authenticated
+  if (authLoading || !isLoggedIn) {
+    return <AuthGate loading={authLoading} />;
+  }
 
   return (
     <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
@@ -356,7 +363,27 @@ export default function CatalogPage() {
           </div>
 
           {/* Product Items */}
-          {paginatedProducts.length > 0 ? (
+          {productsLoading ? (
+            <div className="flex flex-col items-center justify-center py-24 gap-4">
+              <div className="w-10 h-10 border-4 border-[#268072] border-t-transparent rounded-full animate-spin"></div>
+              <p className="text-xs text-white/40 font-mono uppercase tracking-widest">
+                Loading live catalog…
+              </p>
+            </div>
+          ) : productsError ? (
+            <div className="flex flex-col items-center justify-center py-24 px-6 gap-4 text-center">
+              <PackageOpen className="w-16 h-16 text-white/20" />
+              <p className="text-sm text-white/50 font-medium max-w-md">
+                We could not load the wholesale catalog right now. Please try again shortly.
+              </p>
+              <button
+                onClick={reload}
+                className="text-xs font-bold text-[#82d6c5] uppercase tracking-widest hover:underline bg-transparent border-0 cursor-pointer"
+              >
+                Retry
+              </button>
+            </div>
+          ) : paginatedProducts.length > 0 ? (
             <div className="divide-y divide-white/5">
               {paginatedProducts.map((product) => {
                 const currentOptIdx = selectedOptions[product.id] !== undefined ? selectedOptions[product.id] : 0;
@@ -365,17 +392,28 @@ export default function CatalogPage() {
                     key={product.id}
                     className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-8 py-6 hover:bg-white/[0.01] transition-colors"
                   >
-                    {/* Image Column */}
+                    {/* Image Column — product thumbnail, tribe-letter fallback */}
                     <div className="col-span-1 md:col-span-1 flex items-center">
                       <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="block">
-                        <div 
-                          className="w-14 h-14 rounded-full border border-white/10 hover:border-[#268072]/45 flex items-center justify-center text-lg font-black text-white select-none transition-all duration-300 relative shadow-md hover:shadow-lg font-mono uppercase"
-                          style={{ backgroundColor: getTribeBgColor(product.tribe) }}
-                        >
-                          <span className="transform hover:scale-110 transition-transform duration-300">
-                            {product.tribe ? product.tribe.charAt(0).toUpperCase() : ""}
-                          </span>
-                        </div>
+                        {product.image ? (
+                          <div className="w-14 h-14 rounded-full border border-white/10 hover:border-[#268072]/45 overflow-hidden relative shadow-md hover:shadow-lg transition-all duration-300 bg-[#131313]">
+                            <img
+                              src={product.image}
+                              alt={product.name}
+                              loading="lazy"
+                              className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
+                            />
+                          </div>
+                        ) : (
+                          <div
+                            className="w-14 h-14 rounded-full border border-white/10 hover:border-[#268072]/45 flex items-center justify-center text-lg font-black text-white select-none transition-all duration-300 relative shadow-md hover:shadow-lg font-mono uppercase"
+                            style={{ backgroundColor: getTribeBgColor(product.tribe) }}
+                          >
+                            <span className="transform hover:scale-110 transition-transform duration-300">
+                              {product.tribe ? product.tribe.charAt(0).toUpperCase() : ""}
+                            </span>
+                          </div>
+                        )}
                       </Link>
                     </div>
 
@@ -411,7 +449,7 @@ export default function CatalogPage() {
                     {/* Price Column */}
                     <div className="col-span-1 md:col-span-1 text-left md:text-right">
                       <span className="text-base font-bold text-[#82d6c5] font-headline-md whitespace-nowrap">
-                        ${(product.options[currentOptIdx]?.price || 0).toFixed(2)}
+                        ${optionPriceForUser(product.options[currentOptIdx], user).toFixed(2)}
                       </span>
                     </div>
 
@@ -426,7 +464,7 @@ export default function CatalogPage() {
                         >
                           {product.options.map((opt, idx) => (
                             <option key={opt.sku} value={idx}>
-                              {opt.name} (${opt.price.toFixed(2)})
+                              {opt.name} (${optionPriceForUser(opt, user).toFixed(2)})
                             </option>
                           ))}
                         </select>

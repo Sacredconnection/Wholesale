@@ -136,7 +136,7 @@ export default function RegisterPage() {
                   Wholesale Registration
                 </h1>
                 <p className="text-xs text-white/50 mt-1 leading-relaxed">
-                  Submit your details below. Your account will be approved by the administration.
+                  Submit your details below to create your wholesale B2B account.
                 </p>
               </div>
 
@@ -317,10 +317,12 @@ export default function RegisterPage() {
                   Registration Submitted!
                 </h3>
                 <p className="text-sm text-white/60 font-body-md max-w-sm mx-auto leading-relaxed">
-                  Your wholesale partner registration was successfully received and is currently **pending administrator review**.
+                  Your wholesale account has been created and is <strong className="text-white">pending
+                  approval by the administration</strong>.
                 </p>
                 <p className="text-xs text-white/40 font-body-md max-w-sm mx-auto leading-relaxed mt-2">
-                  A compliance officer will review your details within 24–48 hours. You will receive an email once your account has been approved and activated.
+                  Our team will review your business profile and assign your wholesale
+                  access level. You will be able to sign in once your account is approved.
                 </p>
               </div>
 
@@ -335,7 +337,7 @@ export default function RegisterPage() {
                 </div>
                 <div className="flex justify-between text-xs">
                   <span className="text-white/40">STATUS:</span>
-                  <span className="text-yellow-400 font-bold uppercase">PENDING REVIEW</span>
+                  <span className="text-yellow-400 font-bold uppercase">PENDING APPROVAL</span>
                 </div>
               </div>
 

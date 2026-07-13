@@ -1,10 +1,11 @@
 import {
   getAllProducts,
+  getCategories,
   getProductVariations,
   isWooCommerceConfigured,
   WooCommerceApiError,
 } from "@/lib/woocommerce";
-import { mapProduct } from "@/lib/wc-mappers";
+import { buildCategoryContext, mapProduct } from "@/lib/wc-mappers";
 
 export async function GET() {
   if (!isWooCommerceConfigured()) {
@@ -15,11 +16,15 @@ export async function GET() {
   }
 
   try {
-    const wcProducts = await getAllProducts();
+    const [wcProducts, categories] = await Promise.all([
+      getAllProducts(),
+      getCategories(),
+    ]);
+    const categoryContext = buildCategoryContext(categories);
     const products = await Promise.all(
       wcProducts.map(async (p) => {
         const variations = p.type === "variable" ? await getProductVariations(p.id) : [];
-        return mapProduct(p, variations);
+        return mapProduct(p, variations, categoryContext);
       })
     );
     return Response.json({ products });

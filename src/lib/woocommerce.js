@@ -120,11 +120,40 @@ export async function findProductBySku(sku) {
   return data[0] || null;
 }
 
+export async function getProductById(productId) {
+  const { data } = await wcFetch(`products/${productId}`, { revalidate: 0 });
+  return data;
+}
+
+export async function getVariationById(productId, variationId) {
+  const { data } = await wcFetch(`products/${productId}/variations/${variationId}`, {
+    revalidate: 0,
+  });
+  return data;
+}
+
 export async function getCategories() {
   const { data } = await wcFetch("products/categories", {
     params: { per_page: 100, hide_empty: true },
   });
   return data;
+}
+
+// ── Customers ───────────────────────────────────────────────────────
+
+export async function createCustomer(customer) {
+  const { data } = await wcFetch("customers", { method: "POST", body: customer });
+  return data;
+}
+
+export async function getCustomerByEmail(email) {
+  const { data } = await wcFetch("customers", {
+    params: { email, role: "all", per_page: 10 },
+    revalidate: 0,
+  });
+  return (
+    data.find((c) => (c.email || "").toLowerCase() === email.toLowerCase()) || null
+  );
 }
 
 // ── Orders ──────────────────────────────────────────────────────────

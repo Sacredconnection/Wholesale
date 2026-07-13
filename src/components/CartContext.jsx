@@ -2,6 +2,7 @@
 
 import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
 import { useAuth } from './AuthContext';
+import { optionPriceForUser } from '@/lib/pricing';
 
 const CartContext = createContext();
 
@@ -53,7 +54,8 @@ export function CartProvider({ children }) {
             name: product.name,
             sku: selectedOption.sku,
             optionName: selectedOption.name,
-            price: selectedOption.price,
+            // Price for the buyer's access level (role-based pricing)
+            price: optionPriceForUser(selectedOption, user),
             weightGrams: selectedOption.weightGrams,
             quantity: quantity,
             image: product.image,
@@ -101,7 +103,7 @@ export function CartProvider({ children }) {
   }, [cart]);
 
   const cartTotalWeightGrams = useMemo(() => {
-    return cart.reduce((total, item) => total + (item.weightGrams * item.quantity), 0);
+    return cart.reduce((total, item) => total + (item.weightGrams || 0) * item.quantity, 0);
   }, [cart]);
 
   return (

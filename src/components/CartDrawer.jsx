@@ -5,7 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
-import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, Loader2 } from 'lucide-react';
+import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, Loader2, Scale } from 'lucide-react';
+import { MIN_ORDER_GRAMS } from '@/lib/pricing';
 
 export default function CartDrawer() {
   const { isLoggedIn, user } = useAuth();
@@ -28,11 +29,14 @@ export default function CartDrawer() {
 
   if (!isCartOpen && !isLoginOpen) return null;
 
+  const meetsMinimumWeight = cartTotalWeightGrams >= MIN_ORDER_GRAMS;
+
   const handleCheckout = async () => {
     if (!isLoggedIn || !user) {
       setIsLoginOpen(true);
       return;
     }
+    if (!meetsMinimumWeight) return;
 
     setIsSubmitting(true);
     setOrderError("");
@@ -110,8 +114,20 @@ export default function CartDrawer() {
                   {cart.map((item, index) => (
                     <div key={item.sku} className={`flex justify-between items-start gap-4 ${index > 0 ? "pt-5" : ""}`}>
                       <div className="flex-grow flex gap-3">
-                        <div className="w-10 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center text-xl shrink-0 select-none">
-                          {item.image || "🍃"}
+                        <div className="w-10 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center text-xl shrink-0 select-none overflow-hidden">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                e.target.parentElement.textContent = "🍃";
+                              }}
+                            />
+                          ) : (
+                            "🍃"
+                          )}
                         </div>
                         <div>
                           <h4 className="text-sm font-bold text-white leading-snug">
@@ -185,13 +201,24 @@ export default function CartDrawer() {
                 </div>
                 <div className="flex justify-between items-center text-xs text-white/50 font-mono">
                   <span>EST. WEIGHT</span>
-                  <span className="font-bold text-white font-mono">
-                    {cartTotalWeightGrams >= 1000 
+                  <span className={`font-bold font-mono ${meetsMinimumWeight ? "text-white" : "text-yellow-400"}`}>
+                    {cartTotalWeightGrams >= 1000
                       ? `${(cartTotalWeightGrams / 1000).toFixed(2)} kg`
-                      : `${cartTotalWeightGrams} g`
+                      : `${Math.round(cartTotalWeightGrams)} g`
                     }
                   </span>
                 </div>
+
+                {/* Minimum order weight indicator */}
+                {cart.length > 0 && !meetsMinimumWeight && (
+                  <div className="flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/25 text-yellow-400 text-[11px] px-3 py-2.5 rounded-sm mt-1">
+                    <Scale className="w-3.5 h-3.5 shrink-0" />
+                    <span>
+                      Minimum wholesale order is <strong>{MIN_ORDER_GRAMS}g</strong> — add{" "}
+                      {Math.ceil(MIN_ORDER_GRAMS - cartTotalWeightGrams)}g more to submit.
+                    </span>
+                  </div>
+                )}
                 
                 {isLoggedIn && user && (
                   <div className="flex justify-between items-center text-xs text-[#82d6c5] font-mono mt-1">
@@ -228,7 +255,7 @@ export default function CartDrawer() {
 
               <button
                 onClick={handleCheckout}
-                disabled={cart.length === 0 || isSubmitting}
+                disabled={cart.length === 0 || isSubmitting || (isLoggedIn && !meetsMinimumWeight)}
                 className="w-full bg-[#268072] hover:bg-[#1f665b] disabled:opacity-40 disabled:hover:bg-[#268072] text-white text-xs font-bold uppercase tracking-widest py-5 rounded-sm transition-all duration-300 shadow-lg shadow-[#268072]/20 hover:shadow-[#268072]/40 flex items-center justify-center gap-3 cursor-pointer disabled:cursor-not-allowed border-0"
               >
                 {isSubmitting ? (

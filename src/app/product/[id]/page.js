@@ -7,7 +7,9 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import ApplicationModal from "@/components/ApplicationModal";
+import AuthGate from "@/components/AuthGate";
 import { useProducts } from "@/components/ProductsContext";
+import { optionPriceForUser } from "@/lib/pricing";
 import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
 import { 
@@ -29,7 +31,7 @@ export default function ProductDetailPage() {
   const { id } = params;
 
   const { addToCart, setIsCartOpen } = useCart();
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, loading: authLoading } = useAuth();
   const { products, loading: productsLoading } = useProducts();
 
   // Find product from shared data (static fallback or live WooCommerce catalog)
@@ -55,6 +57,11 @@ export default function ProductDetailPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isApplyOpen, setIsApplyOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
+
+  // Product pages are partner-only: block until authenticated
+  if (authLoading || !isLoggedIn) {
+    return <AuthGate loading={authLoading} />;
+  }
 
   // Product not in the static catalog yet — it may exist only in WooCommerce,
   // so hold off on "not found" until the live catalog finishes loading.
@@ -97,7 +104,7 @@ export default function ProductDetailPage() {
   const selectedOption = product.options[selectedOptIdx];
 
   // Pricing calculations with discount
-  const basePrice = selectedOption?.price || 0;
+  const basePrice = optionPriceForUser(selectedOption, user);
   const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
   const discountAmount = basePrice * (discountPercentage / 100);
   const finalPrice = basePrice - discountAmount;
@@ -249,7 +256,7 @@ export default function ProductDetailPage() {
                   >
                     {product.options.map((opt, idx) => (
                       <option key={opt.sku} value={idx}>
-                        {opt.name} (${opt.price.toFixed(2)})
+                        {opt.name} (${optionPriceForUser(opt, user).toFixed(2)})
                       </option>
                     ))}
                   </select>
@@ -330,7 +337,7 @@ export default function ProductDetailPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {relatedProducts.map((p) => {
               // Find min and max price
-              const prices = p.options.map(opt => opt.price);
+              const prices = p.options.map(opt => optionPriceForUser(opt, user));
               const minPrice = Math.min(...prices);
               const maxPrice = Math.max(...prices);
               

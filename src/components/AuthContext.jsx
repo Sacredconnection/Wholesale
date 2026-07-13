@@ -21,7 +21,45 @@ export function AuthProvider({ children }) {
     setLoading(false);
   }, []);
 
-  const login = (email, password) => {
+  const persistSession = (safeUser) => {
+    setIsLoggedIn(true);
+    setUser(safeUser);
+    localStorage.setItem('sc_wholesale_auth', 'true');
+    localStorage.setItem('sc_wholesale_user', JSON.stringify(safeUser));
+  };
+
+  /**
+   * login() — authenticates against the WordPress/WooCommerce backend via
+   * /api/auth/login. Falls back to the local demo mode only when the backend
+   * is not configured (503) or unreachable, so local dev keeps working.
+   */
+  const login = async (email, password) => {
+    let res;
+    try {
+      res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch {
+      return demoLogin(email, password); // network failure — offline/dev fallback
+    }
+
+    if (res.status === 503) {
+      return demoLogin(email, password); // backend not configured
+    }
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Invalid B2B Account credentials.');
+    }
+
+    persistSession(data.user);
+    return data.user;
+  };
+
+  // Legacy localStorage-based login, kept as the dev/demo fallback.
+  const demoLogin = (email, password) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         // Check registered users first
@@ -36,10 +74,7 @@ export function AuthProvider({ children }) {
             return;
           }
           const { _password, ...safeUser } = found;
-          setIsLoggedIn(true);
-          setUser(safeUser);
-          localStorage.setItem('sc_wholesale_auth', 'true');
-          localStorage.setItem('sc_wholesale_user', JSON.stringify(safeUser));
+          persistSession(safeUser);
           resolve(safeUser);
           return;
         }
@@ -77,11 +112,8 @@ export function AuthProvider({ children }) {
               country: "Brazil"
             }
           };
-          
-          setIsLoggedIn(true);
-          setUser(defaultUser);
-          localStorage.setItem('sc_wholesale_auth', 'true');
-          localStorage.setItem('sc_wholesale_user', JSON.stringify(defaultUser));
+
+          persistSession(defaultUser);
           resolve(defaultUser);
         } else {
           reject(new Error('Invalid B2B Account credentials. Try using the Demo Account.'));
@@ -91,9 +123,36 @@ export function AuthProvider({ children }) {
   };
 
   /**
-   * register() — creates a new user account, stores it in localStorage.
+   * register() — creates the wholesale account as a WooCommerce customer via
+   * /api/auth/register (the buyer can immediately log in with the same
+   * credentials). Falls back to localStorage when the backend is unavailable.
    */
-  const register = (userData) => {
+  const register = async (userData) => {
+    let res;
+    try {
+      res = await fetch('/api/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData),
+      });
+    } catch {
+      return demoRegister(userData); // network failure — offline/dev fallback
+    }
+
+    if (res.status === 503) {
+      return demoRegister(userData); // backend not configured
+    }
+
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.error || 'Registration failed. Please try again.');
+    }
+
+    return data.user;
+  };
+
+  // Legacy localStorage-based registration, kept as the dev/demo fallback.
+  const demoRegister = (userData) => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
         try {
