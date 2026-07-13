@@ -10,6 +10,7 @@ import ApplicationModal from "@/components/ApplicationModal";
 import AuthGate from "@/components/AuthGate";
 import { useProducts } from "@/components/ProductsContext";
 import { optionPriceForUser } from "@/lib/pricing";
+import { getEthnicityColor } from "@/lib/ethnicity-colors";
 import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
 import { 
@@ -102,6 +103,7 @@ export default function ProductDetailPage() {
   }
 
   const selectedOption = product.options[selectedOptIdx];
+  const provenanceColor = getEthnicityColor(product.tribe, product.category);
 
   // Pricing calculations with discount
   const basePrice = optionPriceForUser(selectedOption, user, product.category);
@@ -178,19 +180,30 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-            <div className="hidden lg:flex flex-1 min-h-36 relative overflow-hidden rounded-lg border border-[#268072]/25 bg-[linear-gradient(135deg,rgba(38,128,114,0.18),rgba(38,128,114,0.04))] p-6 flex-col justify-between">
-              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-[#82d6c5]/10"></div>
-              <div className="absolute -right-2 -top-8 h-28 w-28 rounded-full border border-[#82d6c5]/10"></div>
+            <div
+              className="hidden lg:flex flex-1 min-h-36 relative overflow-hidden rounded-lg border border-white/15 p-6 flex-col justify-between"
+              style={{
+                backgroundColor: provenanceColor,
+                backgroundImage: "linear-gradient(135deg, rgba(0,0,0,0.08), rgba(0,0,0,0.45))",
+              }}
+            >
+              <div
+                aria-hidden="true"
+                className="pointer-events-none absolute inset-0 bg-center bg-cover bg-no-repeat opacity-[0.08]"
+                style={{ backgroundImage: "url('/product-watermarks/provenance-watermark.svg')" }}
+              ></div>
+              <div className="absolute -right-12 -top-16 h-44 w-44 rounded-full border border-white/10"></div>
+              <div className="absolute -right-2 -top-8 h-28 w-28 rounded-full border border-white/10"></div>
               <div className="relative flex items-center justify-between gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#82d6c5]/25 bg-[#82d6c5]/10">
-                  <Leaf className="h-5 w-5 text-[#82d6c5]" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10">
+                  <Leaf className="h-5 w-5 text-white/80" />
                 </div>
                 <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/35">
                   Sacred provenance
                 </span>
               </div>
               <div className="relative mt-6">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-[#82d6c5]/70">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-white/60">
                   Origin
                 </span>
                 <h2 className="mt-1 text-2xl font-bold text-white font-headline-md">

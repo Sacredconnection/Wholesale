@@ -26,22 +26,7 @@ import {
 
 import { useProducts } from "@/components/ProductsContext";
 import { optionPriceForUser } from "@/lib/pricing";
-
-const TRIBE_COLORS = {
-  "apurina": "#4A730D",
-  "caboclo": "#40271E",
-  "huni-kuin": "#A67244",
-  "katukina": "#214001",
-  "kuntanawa": "#54575C",
-  "nukini": "#E09A1E",
-  "puyanawa": "#402C23",
-  "shanenawa": "#0367A6",
-  "shawadawa": "#731414",
-  "yawanawa": "#BF7E04",
-  "shamanic-blend": "#2C4A52",
-  "sacred-medicines": "#3A2040",
-  "sacred-connection": "#1A3A2A",
-};
+import { getEthnicityColor } from "@/lib/ethnicity-colors";
 
 // Normalize string for accent-insensitive comparison
 // Strips diacritics, lowercases and trims — used ONLY for comparison, never for display
@@ -51,16 +36,6 @@ const normalizeStr = (str) =>
     .toLowerCase()
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
-
-const getTribeBgColor = (tribeName) => {
-  if (!tribeName) return "#1c1c1c";
-  const slug = tribeName
-    .toLowerCase()
-    .replace(/\s+/g, "-")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-  return TRIBE_COLORS[slug] || "#1c1c1c";
-};
 
 export default function CatalogPage() {
   const { products, loading: productsLoading, error: productsError, reload } = useProducts();
@@ -407,7 +382,7 @@ export default function CatalogPage() {
                         ) : (
                           <div
                             className="w-14 h-14 rounded-full border border-white/10 hover:border-[#268072]/45 flex items-center justify-center text-lg font-black text-white select-none transition-all duration-300 relative shadow-md hover:shadow-lg font-mono uppercase"
-                            style={{ backgroundColor: getTribeBgColor(product.tribe) }}
+                            style={{ backgroundColor: getEthnicityColor(product.tribe, product.category) }}
                           >
                             <span className="transform hover:scale-110 transition-transform duration-300">
                               {product.tribe ? product.tribe.charAt(0).toUpperCase() : ""}
