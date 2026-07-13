@@ -27,7 +27,7 @@ export default function Header({ onOpenLogin, onOpenApply }) {
   };
 
   return (
-    <header className="sticky top-0 w-full bg-[#212121] border-b border-white/10 z-50 relative">
+    <header className="sticky top-0 w-full bg-[#212121] border-b-2 border-[#268072] z-50 relative">
       <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between w-full">
         {/* Logotipo (Left) */}
         <a className="flex items-center group shrink-0" href="/" onClick={handleHomeClick}>
