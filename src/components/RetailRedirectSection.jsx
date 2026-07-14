@@ -4,9 +4,12 @@ export default function RetailRedirectSection() {
   return (
     <section
       aria-label="Retail Store Redirection"
-      className="relative isolate w-full overflow-hidden border-y border-white/10 bg-[#111616] bg-cover bg-center"
+      className="relative isolate w-full overflow-hidden bg-[#111616] bg-[url('/banner/retail-sanctuary/retail-sanctuary-banner-mobile.webp')] bg-cover bg-center md:bg-[url('/banner/retail-sanctuary/retail-sanctuary-banner-desktop.webp')]"
     >
-      <div aria-hidden="true" className="absolute inset-0 -z-10 bg-black/20" />
+      <div
+        aria-hidden="true"
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-[#111616]/95 via-[#111616]/80 to-black/45 md:bg-gradient-to-r md:from-[#111616]/98 md:via-[#111616]/75 md:to-black/30"
+      />
 
       <div className="mx-auto flex min-h-[340px] w-full max-w-7xl items-center px-4 py-14 sm:min-h-[380px] sm:px-6 sm:py-16 lg:min-h-[420px] lg:px-8 lg:py-20">
           <div className="max-w-xl">
