@@ -78,7 +78,7 @@ export default function Onboarding({ onOpenApply }) {
       <section
         ref={sectionRef}
         id="onboarding"
-            className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-10 pt-12 sm:gap-12 sm:pt-14 lg:gap-16 lg:pt-16 scroll-mt-24"
+        className="relative mx-auto mt-12 flex w-full max-w-6xl scroll-mt-24 flex-col items-center gap-10 rounded-2xl border border-white/10 bg-[#1a1a1a] px-5 py-10 shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:mt-14 sm:gap-12 sm:px-8 sm:py-12 lg:mt-16 lg:gap-16 lg:px-12 lg:py-16"
       >
         {/* Header */}
         <div
