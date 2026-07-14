@@ -5,6 +5,7 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import TrustBar from '@/components/TrustBar';
 import LineageShowcase from '@/components/LineageShowcase';
+import TestimonialSection from '@/components/TestimonialSection';
 import Onboarding from '@/components/Onboarding';
 import NGOSection from '@/components/NGOSection';
 import RetailRedirectSection from '@/components/RetailRedirectSection';
@@ -33,6 +34,9 @@ export default function HomeClient() {
 
           {/* Tribe Lineage Details */}
           <LineageShowcase />
+
+          {/* Retail Partner Testimonial */}
+          <TestimonialSection />
 
           {/* NGO Partnership Details */}
           <NGOSection />
