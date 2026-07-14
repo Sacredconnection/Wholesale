@@ -6,8 +6,8 @@ import Link from 'next/link';
 import { ArrowRight, BriefcaseBusiness, Leaf, TrendingUp } from 'lucide-react';
 
 const COUNTRY_FLAGS = [
-  { name: 'Portugal', src: '/flags/portugal.svg' },
-  { name: 'United Kingdom', src: '/flags/united-kingdom.svg' },
+  { name: 'Brazil', src: '/flags/brazil.svg' },
+  { name: 'Netherlands', src: '/flags/netherlands.svg' },
   { name: 'United States', src: '/flags/united-states.svg' },
 ];
 

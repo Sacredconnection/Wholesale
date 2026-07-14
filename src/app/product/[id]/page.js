@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { useParams, useRouter, useSearchParams } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -10,7 +10,6 @@ import ApplicationModal from "@/components/ApplicationModal";
 import AuthGate from "@/components/AuthGate";
 import { useProducts } from "@/components/ProductsContext";
 import { optionPriceForUser } from "@/lib/pricing";
-import { getEthnicityColor } from "@/lib/ethnicity-colors";
 import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
 import { 
@@ -18,15 +17,12 @@ import {
   ShoppingBag, 
   Minus, 
   Plus, 
-  Check, 
   ShieldCheck, 
-  Leaf, 
   Globe 
 } from "lucide-react";
 
 export default function ProductDetailPage() {
   const params = useParams();
-  const router = useRouter();
   const searchParams = useSearchParams();
   const fromPage = searchParams.get("fromPage") || "1";
   const { id } = params;
@@ -58,6 +54,7 @@ export default function ProductDetailPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isApplyOpen, setIsApplyOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
+  const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
   // Product pages are partner-only: block until authenticated
   if (authLoading || !isLoggedIn) {
@@ -103,7 +100,8 @@ export default function ProductDetailPage() {
   }
 
   const selectedOption = product.options[selectedOptIdx];
-  const provenanceColor = getEthnicityColor(product.tribe, product.category);
+  const productDescription = product.description || "Premium wholesale ritual medicine sourced directly through equitable fair-trade agreements with Amazonian community associations. Harvested and processed using traditional forest milling protocols.";
+  const hasLongDescription = productDescription.length > 280;
 
   // Pricing calculations with discount
   const basePrice = optionPriceForUser(selectedOption, user, product.category);
@@ -144,11 +142,11 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Product Details Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-stretch mt-4 bg-[#1a1a1a] border border-white/10 rounded-lg p-6 md:p-8 shadow-2xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start mt-4 bg-[#1a1a1a] border border-white/10 rounded-lg p-5 sm:p-6 md:p-8 shadow-2xl">
           
-          {/* Left Column: Image and provenance */}
-          <div className="lg:col-span-6 flex flex-col gap-6">
-          <div className="bg-white rounded-lg aspect-square flex items-center justify-center relative overflow-hidden group select-none">
+          {/* Product image */}
+          <div className="lg:col-span-6 w-full">
+          <div className="bg-white rounded-lg aspect-square flex items-center justify-center relative overflow-hidden group select-none shadow-lg shadow-black/15">
             {/* Ambient Background Glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#268072]/5 via-transparent to-transparent opacity-60 z-0"></div>
             
@@ -180,40 +178,10 @@ export default function ProductDetailPage() {
             )}
           </div>
 
-            <div
-              className="hidden lg:flex flex-1 min-h-36 relative overflow-hidden rounded-lg border border-white/15 p-6 flex-col justify-between"
-              style={{
-                backgroundColor: provenanceColor,
-                backgroundImage: "linear-gradient(135deg, rgba(0,0,0,0.08), rgba(0,0,0,0.45))",
-              }}
-            >
-              <div
-                aria-hidden="true"
-                className="pointer-events-none absolute inset-0 bg-center bg-cover bg-no-repeat opacity-[0.08]"
-                style={{ backgroundImage: "url('/product-watermarks/provenance-watermark.svg')" }}
-              ></div>
-              <div className="relative flex items-center justify-between gap-4">
-                <div className="flex h-10 w-10 items-center justify-center rounded-full border border-white/25 bg-white/10">
-                  <Leaf className="h-5 w-5 text-white/80" />
-                </div>
-                <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-white/35">
-                  Sacred provenance
-                </span>
-              </div>
-              <div className="relative mt-6">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-white/60">
-                  Origin
-                </span>
-                <h2 className="mt-1 text-2xl font-bold text-white font-headline-md">
-                  {product.tribe}
-                </h2>
-                <p className="mt-2 text-xs text-white/45">Direct Indigenous Trade · Fair compensation share</p>
-              </div>
-            </div>
           </div>
 
           {/* Right Column: Content and Options */}
-          <div className="lg:col-span-6 flex flex-col gap-6">
+          <div className="lg:col-span-6 flex flex-col gap-4">
             
             {/* Product Meta Category & Tribe Badges */}
             <div className="flex gap-2.5">
@@ -236,7 +204,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Price display */}
-            <div className="bg-[#1a1a1a] border border-white/5 p-5 rounded-md flex justify-between items-center">
+            <div className="bg-white/[0.02] border border-white/5 p-4 sm:p-5 rounded-md flex justify-between items-center gap-4">
               <div>
                 <span className="text-[10px] font-mono text-white/45 uppercase block">Est. B2B Unit Cost</span>
                 <div className="flex items-baseline gap-2 mt-1">
@@ -270,9 +238,19 @@ export default function ProductDetailPage() {
               <span className="text-[10px] font-mono text-white/45 uppercase tracking-wider font-label-sm">
                 Product Description
               </span>
-              <p className="font-body-md text-sm text-white/70 leading-relaxed">
-                {product.description || "Premium wholesale ritual medicine sourced directly through equitable fair-trade agreements with Amazonian community associations. Harvested and processed using traditional forest milling protocols."}
+              <p className={`font-body-md text-sm text-white/70 leading-relaxed ${!isDescriptionExpanded && hasLongDescription ? "line-clamp-5 sm:line-clamp-4" : ""}`}>
+                {productDescription}
               </p>
+              {hasLongDescription && (
+                <button
+                  type="button"
+                  onClick={() => setIsDescriptionExpanded((expanded) => !expanded)}
+                  aria-expanded={isDescriptionExpanded}
+                  className="self-start bg-transparent border-0 p-0 text-[10px] font-bold uppercase tracking-wider text-[#82d6c5] hover:text-white transition-colors cursor-pointer"
+                >
+                  {isDescriptionExpanded ? "Show less" : "Read full description"}
+                </button>
+              )}
             </div>
 
             <div className="h-px bg-white/10 my-1"></div>
@@ -301,14 +279,14 @@ export default function ProductDetailPage() {
               )}
 
               {/* Purchase Box */}
-              <div className="flex items-center gap-4 mt-2">
+              <div className="flex flex-col sm:flex-row sm:items-end gap-4 mt-1">
                 
                 {/* Quantity select */}
-                <div className="flex flex-col gap-1.5">
+                <div className="flex flex-col gap-1.5 sm:shrink-0">
                   <span className="text-[10px] font-mono text-white/45 uppercase tracking-wider font-label-sm">
                     Quantity
                   </span>
-                  <div className="flex items-center bg-[#1a1a1a] border border-white/10 rounded">
+                  <div className="flex items-center justify-between sm:justify-start bg-[#1a1a1a] border border-white/10 rounded">
                     <button
                       onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
                       className="p-3 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
@@ -328,7 +306,7 @@ export default function ProductDetailPage() {
                 </div>
 
                 {/* Add to Basket button */}
-                <div className="flex-grow flex flex-col gap-1.5 justify-end h-full pt-5">
+                <div className="flex-grow w-full">
                   <button
                     onClick={handleAddToCartClick}
                     className="w-full bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-widest py-4 px-6 rounded shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/45 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
