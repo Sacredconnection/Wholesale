@@ -4,21 +4,19 @@
 // Render it instead of the page content while auth is loading or when the
 // visitor is not signed in.
 
-import React, { useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import Header from "./Header";
 import Footer from "./Footer";
 import LoginModal from "./LoginModal";
-import ApplicationModal from "./ApplicationModal";
 import { Lock, ArrowRight } from "lucide-react";
 
 export default function AuthGate({ loading = false }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isApplyOpen, setIsApplyOpen] = useState(false);
 
   return (
     <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
-      <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+      <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex items-center justify-center">
         {loading ? (
@@ -65,7 +63,6 @@ export default function AuthGate({ loading = false }) {
       <Footer />
 
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <ApplicationModal isOpen={isApplyOpen} onClose={() => setIsApplyOpen(false)} />
     </div>
   );
 }

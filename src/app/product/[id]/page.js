@@ -1,12 +1,11 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
-import ApplicationModal from "@/components/ApplicationModal";
 import AuthGate from "@/components/AuthGate";
 import { useProducts } from "@/components/ProductsContext";
 import { optionPriceForUser } from "@/lib/pricing";
@@ -52,7 +51,6 @@ export default function ProductDetailPage() {
   const [selectedOptIdx, setSelectedOptIdx] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isApplyOpen, setIsApplyOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
 
@@ -66,7 +64,7 @@ export default function ProductDetailPage() {
   if (!product && productsLoading) {
     return (
       <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
-        <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+        <Header onOpenLogin={() => setIsLoginOpen(true)} />
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex flex-col items-center justify-center text-center gap-4">
           <div className="w-10 h-10 border-2 border-[#268072] border-t-transparent rounded-full animate-spin" />
           <p className="text-white/50 text-xs font-mono uppercase tracking-widest">Loading product…</p>
@@ -80,7 +78,7 @@ export default function ProductDetailPage() {
   if (!product) {
     return (
       <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
-        <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+        <Header onOpenLogin={() => setIsLoginOpen(true)} />
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex flex-col items-center justify-center text-center gap-6">
           <div className="text-6xl">⚠️</div>
           <h2 className="font-headline-md text-3xl font-bold text-white">Product Not Found</h2>
@@ -116,7 +114,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
-      <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+      <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       {/* Main Container */}
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
@@ -408,7 +406,6 @@ export default function ProductDetailPage() {
       <Footer />
 
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <ApplicationModal isOpen={isApplyOpen} onClose={() => setIsApplyOpen(false)} />
     </div>
   );
 }

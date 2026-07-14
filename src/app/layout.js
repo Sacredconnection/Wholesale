@@ -12,6 +12,17 @@ const roboto = Roboto({
   display: "swap",
 });
 
+const themeBootScript = `
+  (function () {
+    try {
+      var savedTheme = localStorage.getItem('sacred-wholesale-theme');
+      document.documentElement.dataset.theme = savedTheme === 'light' ? 'light' : 'dark';
+    } catch (error) {
+      document.documentElement.dataset.theme = 'dark';
+    }
+  })();
+`;
+
 export const metadata = {
   metadataBase: new URL("https://wholesale.sacredconnection.com"),
 };
@@ -20,9 +31,13 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
+      data-theme="dark"
       className={`${roboto.variable} ${roboto.className} h-full antialiased`}
       suppressHydrationWarning
     >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
+      </head>
       <body
         className="min-h-full flex flex-col bg-[#131313] text-[#e5e2e1]"
         suppressHydrationWarning

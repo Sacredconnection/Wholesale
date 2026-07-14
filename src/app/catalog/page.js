@@ -1,10 +1,9 @@
 "use client";
 
-import React, { useState, useMemo, useEffect, useRef } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
-import ApplicationModal from "@/components/ApplicationModal";
 import LoginModal from "@/components/LoginModal";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/components/AuthContext";
@@ -42,7 +41,6 @@ export default function CatalogPage() {
   const { isLoggedIn, user, loading: authLoading } = useAuth();
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isApplyOpen, setIsApplyOpen] = useState(false);
 
   // Inline Option and Quantity States
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -52,6 +50,10 @@ export default function CatalogPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [tribe, setTribe] = useState("All");
+
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 8;
 
   // Read URL query parameters to set initial tribe filter and page
   // Resolve accent-insensitively against actual data so URL params always match
@@ -76,10 +78,6 @@ export default function CatalogPage() {
     // Re-resolve the tribe param when the live catalog swaps in, so URL
     // filters keep matching against the current dataset.
   }, [products]);
-
-  // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 8;
 
   // Smooth scroll ref
   const productListRef = useRef(null);
@@ -183,8 +181,7 @@ export default function CatalogPage() {
     <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       {/* Navigation Header */}
       <Header 
-        onOpenLogin={() => setIsLoginOpen(true)} 
-        onOpenApply={() => setIsApplyOpen(true)} 
+        onOpenLogin={() => setIsLoginOpen(true)}
       />
 
       {/* Main Container */}
@@ -540,10 +537,6 @@ export default function CatalogPage() {
       </main>
 
       {/* Shared Modals */}
-      <ApplicationModal 
-        isOpen={isApplyOpen} 
-        onClose={() => setIsApplyOpen(false)} 
-      />
       <LoginModal 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 

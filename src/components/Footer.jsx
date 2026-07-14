@@ -1,6 +1,5 @@
 "use client";
 
-import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ShieldCheck, Leaf, Globe, Users } from 'lucide-react';
@@ -17,7 +16,7 @@ export default function Footer() {
   };
 
   return (
-    <footer id="footer" className="bg-[#212121] border-t border-white/10 w-full scroll-mt-24">
+    <footer id="footer" className="theme-dark-zone bg-[#212121] border-t border-white/10 w-full scroll-mt-24">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20 w-full max-w-7xl mx-auto">
         
         {/* Brand Info */}
@@ -53,12 +52,12 @@ export default function Footer() {
             Resources
           </h5>
           <nav className="flex flex-col gap-4">
-            <a className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/catalog">
+            <Link className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/catalog">
               Catalog
-            </a>
-            <a className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="#" onClick={(e) => { e.preventDefault(); alert("Contacting B2B Support..."); }}>
-              Support
-            </a>
+            </Link>
+            <Link className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/contact">
+              Contact
+            </Link>
           </nav>
         </div>
 

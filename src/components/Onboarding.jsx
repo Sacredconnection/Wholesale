@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 
 const steps = [
@@ -21,7 +21,7 @@ const steps = [
   },
 ];
 
-export default function Onboarding({ onOpenApply }) {
+export default function Onboarding() {
   const sectionRef = useRef(null);
   const [visible, setVisible] = useState(false);
 

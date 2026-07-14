@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { ArrowRight } from 'lucide-react';
 
@@ -17,10 +17,10 @@ const BANNERS = [
   }
 ];
 
-export default function Hero({ onOpenApply }) {
-  const [activeIdx, setActiveIdx] = React.useState(0);
+export default function Hero() {
+  const [activeIdx, setActiveIdx] = useState(0);
 
-  React.useEffect(() => {
+  useEffect(() => {
     const timer = setInterval(() => {
       setActiveIdx((prev) => (prev + 1) % BANNERS.length);
     }, 6000);
@@ -28,7 +28,7 @@ export default function Hero({ onOpenApply }) {
   }, []);
 
   return (
-    <div className="relative flex min-h-[calc(100svh-66px)] w-full flex-col justify-center overflow-hidden bg-[#23403B] md:min-h-screen">
+    <div className="theme-dark-zone relative flex min-h-[calc(100svh-66px)] w-full flex-col justify-center overflow-hidden bg-[#23403B] md:min-h-screen">
       {/* Full Bleed Background Image Carousel */}
       <div className="absolute inset-0 z-0">
         {BANNERS.map((banner, idx) => (

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { ArrowRight, BriefcaseBusiness, Leaf, TrendingUp } from 'lucide-react';
@@ -11,7 +11,7 @@ const COUNTRY_FLAGS = [
   { name: 'United States', src: '/flags/united-states.svg' },
 ];
 
-export default function TrustBar({ onOpenApply }) {
+export default function TrustBar() {
   const metricRef = useRef(null);
   const animationFrameRef = useRef(null);
   const [batchCount, setBatchCount] = useState(0);

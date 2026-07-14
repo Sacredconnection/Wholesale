@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import { Fragment, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
 import Header from "@/components/Header";
@@ -161,7 +161,7 @@ export default function MyAccountPage() {
   if (loading) {
     return (
       <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
-        <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+        <Header onOpenLogin={() => setIsLoginOpen(true)} />
         <div className="flex-grow flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-[#268072] border-t-transparent rounded-full animate-spin"></div>
         </div>
@@ -174,7 +174,7 @@ export default function MyAccountPage() {
   if (!isLoggedIn) {
     return (
       <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
-        <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+        <Header onOpenLogin={() => setIsLoginOpen(true)} />
         
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex items-center justify-center">
           <div className="bg-[#1a1a1a] border border-white/10 rounded-lg p-6 sm:p-8 lg:p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl">
@@ -273,7 +273,7 @@ export default function MyAccountPage() {
 
   return (
     <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
-      <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+      <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       {/* Hero Header Section */}
       <section className="bg-[#1c1c1c] border-b border-white/15 py-8 sm:py-10 lg:py-12 relative overflow-hidden">
@@ -539,7 +539,7 @@ export default function MyAccountPage() {
                         </thead>
                         <tbody className="divide-y divide-white/5 font-body-md text-white/80">
                           {orders.map((order) => (
-                            <React.Fragment key={order.id}>
+                            <Fragment key={order.id}>
                               <tr>
                                 <td className="py-4 px-4 font-bold text-white">#{order.number}</td>
                                 <td className="py-4 px-4">{formatOrderDate(order.dateCreated)}</td>
@@ -586,7 +586,7 @@ export default function MyAccountPage() {
                                   </td>
                                 </tr>
                               )}
-                            </React.Fragment>
+                            </Fragment>
                           ))}
                         </tbody>
                       </table>

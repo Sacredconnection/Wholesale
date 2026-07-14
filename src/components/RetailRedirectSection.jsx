@@ -1,10 +1,8 @@
-import React from 'react';
-
 export default function RetailRedirectSection() {
   return (
     <section
       aria-label="Retail Store Redirection"
-      className="relative isolate w-full overflow-hidden bg-[#111616] bg-[url('/banner/retail-sanctuary/retail-sanctuary-banner-mobile.webp')] bg-cover bg-center md:bg-[url('/banner/retail-sanctuary/retail-sanctuary-banner-desktop.webp')]"
+      className="theme-dark-zone relative isolate w-full overflow-hidden bg-[#111616] bg-[url('/banner/retail-sanctuary/retail-sanctuary-banner-mobile.webp')] bg-cover bg-center md:bg-[url('/banner/retail-sanctuary/retail-sanctuary-banner-desktop.webp')]"
     >
       <div
         aria-hidden="true"

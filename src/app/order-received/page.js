@@ -1,12 +1,11 @@
 "use client";
 
-import React, { Suspense, useState } from "react";
+import { Suspense, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
-import ApplicationModal from "@/components/ApplicationModal";
 import { Check, PhoneCall, ClipboardList, ArrowRight } from "lucide-react";
 
 function OrderReceivedContent() {
@@ -74,17 +73,15 @@ function OrderReceivedContent() {
 
 export default function OrderReceivedPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [isApplyOpen, setIsApplyOpen] = useState(false);
 
   return (
     <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
-      <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
+      <Header onOpenLogin={() => setIsLoginOpen(true)} />
       <Suspense fallback={<main className="flex-grow" />}>
         <OrderReceivedContent />
       </Suspense>
       <Footer />
       <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
-      <ApplicationModal isOpen={isApplyOpen} onClose={() => setIsApplyOpen(false)} />
     </div>
   );
 }

@@ -4,7 +4,7 @@
 // from the WooCommerce API (/api/products) — nothing is pre-loaded, so the UI
 // must render a loading state until the fetch resolves.
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
 
 const ProductsContext = createContext(null);
 

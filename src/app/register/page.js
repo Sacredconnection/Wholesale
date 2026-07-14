@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "@/components/AuthContext";
@@ -111,7 +111,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-[#e5e2e1] flex flex-col antialiased">
       {/* Top Header */}
-      <div className="w-full border-b border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-[#131313] z-10">
+      <div className="theme-dark-zone w-full border-b border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-[#131313] z-10">
         <Link href="/" className="flex items-center gap-2">
           <img src="/logo.svg" alt="Sacred Connection Wholesale Logo" className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity" />
         </Link>

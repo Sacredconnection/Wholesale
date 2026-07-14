@@ -1,9 +1,12 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ArrowUpRight, Globe, ShieldCheck, HeartHandshake, Eye } from 'lucide-react';
+import { ETHNICITY_COLORS } from '@/lib/ethnicity-colors';
+
+const DEFAULT_CARD_ACCENT = '#268072';
 
 const TRIBES_DATA = [
   {
@@ -217,7 +220,7 @@ export default function LineageShowcase() {
   }, [selectedTribe]);
 
   return (
-    <section id="tribes" className="relative isolate flex flex-col gap-8 sm:gap-10 lg:gap-12 py-10 sm:py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
+    <section id="tribes" className="theme-dark-zone relative isolate flex flex-col gap-8 sm:gap-10 lg:gap-12 py-10 sm:py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
       
       {/* Header and Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 w-full">
@@ -256,39 +259,48 @@ export default function LineageShowcase() {
           onMouseMove={handleMouseMove}
           className="flex gap-4 sm:gap-6 py-3 sm:py-4 overflow-x-auto scrollbar-none select-none cursor-grab active:cursor-grabbing"
         >
-          {[...TRIBES_DATA, ...TRIBES_DATA].map((tribe, index) => (
-            <div 
-              key={`${tribe.id}-${index}`}
-              onClick={() => {
-                if (!hasMoved) {
-                  setSelectedTribe(tribe);
-                }
-              }}
-              className="group cursor-pointer relative overflow-hidden rounded bg-[#1a1a1a] border border-white/5 aspect-[3/4] w-[280px] sm:w-[320px] shrink-0 transition-all duration-300 hover:border-[#268072]/50 hover:shadow-lg hover:shadow-[#268072]/5 select-none"
-            >
-              {/* Image Overlay */}
-              <div 
-                className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-60 mix-blend-luminosity group-hover:mix-blend-normal object-cover"
-                style={{ backgroundImage: `url('${tribe.image}')` }}
-              ></div>
-              <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/40 to-transparent"></div>
-              
-              {/* Hover Eye Badge */}
-              <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                <Eye className="w-4 h-4 text-[#82d6c5]" />
-              </div>
+          {[...TRIBES_DATA, ...TRIBES_DATA].map((tribe, index) => {
+            const accentColor = ETHNICITY_COLORS[tribe.id] || DEFAULT_CARD_ACCENT;
+            const readableAccentColor = `color-mix(in srgb, ${accentColor} 55%, white 45%)`;
 
-              {/* Bottom details */}
-              <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col gap-2 backdrop-blur-sm bg-[#131313]/50 border-t border-white/10">
-                <span className="font-label-sm text-xs text-[#82d6c5] uppercase tracking-widest">
-                  {tribe.region}
-                </span>
-                <h3 className="font-headline-md text-2xl font-bold text-white group-hover:text-[#82d6c5] transition-colors">
-                  {tribe.name}
-                </h3>
+            return (
+              <div 
+                key={`${tribe.id}-${index}`}
+                onClick={() => {
+                  if (!hasMoved) {
+                    setSelectedTribe(tribe);
+                  }
+                }}
+                className="group cursor-pointer relative overflow-hidden rounded bg-[#1a1a1a] border border-white/5 aspect-[3/4] w-[280px] sm:w-[320px] shrink-0 transition-all duration-300 hover:[border-color:var(--ethnicity-accent)] hover:shadow-xl hover:shadow-black/30 select-none"
+                style={{
+                  '--ethnicity-accent': accentColor,
+                  '--ethnicity-readable': readableAccentColor,
+                }}
+              >
+                {/* Image Overlay */}
+                <div 
+                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-60 mix-blend-luminosity group-hover:mix-blend-normal object-cover"
+                  style={{ backgroundImage: `url('${tribe.image}')` }}
+                ></div>
+                <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/40 to-transparent"></div>
+                
+                {/* Hover Eye Badge */}
+                <div className="absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <Eye className="w-4 h-4" style={{ color: readableAccentColor }} />
+                </div>
+
+                {/* Bottom details */}
+                <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col gap-2 backdrop-blur-sm bg-[#131313]/50 border-t border-white/10">
+                  <span className="font-label-sm text-xs text-[#82d6c5] uppercase tracking-widest transition-colors group-hover:[color:var(--ethnicity-readable)]">
+                    {tribe.region}
+                  </span>
+                  <h3 className="font-headline-md text-2xl font-bold text-white">
+                    {tribe.name}
+                  </h3>
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       </div>
 
