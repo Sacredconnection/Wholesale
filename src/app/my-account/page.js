@@ -176,8 +176,8 @@ export default function MyAccountPage() {
       <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
         
-        <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex items-center justify-center">
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-lg p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl">
+        <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex items-center justify-center">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-lg p-6 sm:p-8 lg:p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#268072]/10 blur-xl pointer-events-none rounded-full"></div>
             
             <div className="w-16 h-16 rounded-full bg-[#93000a]/10 border border-[#93000a]/30 flex items-center justify-center text-3xl mx-auto mb-6">
@@ -276,9 +276,9 @@ export default function MyAccountPage() {
       <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
 
       {/* Hero Header Section */}
-      <section className="bg-[#1c1c1c] border-b border-white/15 py-12 relative overflow-hidden">
+      <section className="bg-[#1c1c1c] border-b border-white/15 py-8 sm:py-10 lg:py-12 relative overflow-hidden">
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#268072]/10 via-transparent to-transparent opacity-60"></div>
-        <div className="max-w-7xl mx-auto px-6 md:px-12 relative flex items-center gap-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center gap-4 sm:gap-6">
           {/* Avatar */}
           <div
             onClick={() => avatarInputRef.current?.click()}
@@ -313,8 +313,8 @@ export default function MyAccountPage() {
       </section>
 
       {/* Main Account Portal Area */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 items-start">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8 items-start">
           
           {/* Tabs Sidebar */}
           <aside className="bg-[#1a1a1a] border border-white/10 rounded-md p-3 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible shrink-0 scrollbar-none">

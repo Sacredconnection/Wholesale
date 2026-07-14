@@ -93,7 +93,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
         </button>
 
         {!submitted ? (
-          <form onSubmit={handleSubmit} className="p-8 flex flex-col gap-6">
+          <form onSubmit={handleSubmit} className="p-5 sm:p-8 flex flex-col gap-5 sm:gap-6">
             
             {/* Header */}
             <div>
@@ -247,18 +247,18 @@ export default function ApplicationModal({ isOpen, onClose }) {
             </div>
 
             {/* Footer Buttons */}
-            <div className="flex items-center gap-4 pt-4 border-t border-white/5 justify-between">
+            <div className="flex flex-col-reverse sm:flex-row sm:items-center gap-3 sm:gap-4 pt-4 border-t border-white/5 sm:justify-between">
               <button
                 type="button"
                 onClick={handleClose}
-                className="bg-white/5 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-wider px-6 py-4 rounded-sm transition-all border border-white/10 hover:border-white/20 cursor-pointer"
+                className="w-full sm:w-auto bg-white/5 hover:bg-white/10 text-white text-xs font-bold uppercase tracking-wider px-6 py-4 rounded-sm transition-all border border-white/10 hover:border-white/20 cursor-pointer"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 disabled={submitting}
-                className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider px-8 py-4 rounded-sm transition-all flex items-center gap-2 cursor-pointer border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 disabled:opacity-50"
+                className="w-full sm:w-auto bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider px-8 py-4 rounded-sm transition-all flex items-center justify-center gap-2 cursor-pointer border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 disabled:opacity-50"
               >
                 {submitting ? (
                   <>
@@ -277,7 +277,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
           </form>
         ) : (
           /* Success Screen */
-          <div className="p-10 flex flex-col items-center text-center gap-6 animate-fade-in">
+          <div className="p-6 sm:p-10 flex flex-col items-center text-center gap-5 sm:gap-6 animate-fade-in">
             <div className="w-16 h-16 rounded-full bg-[#268072]/10 border border-[#268072]/20 flex items-center justify-center text-[#82d6c5]">
               <CheckCircle2 className="w-8 h-8" />
             </div>

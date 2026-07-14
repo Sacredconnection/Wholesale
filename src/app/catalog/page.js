@@ -188,15 +188,15 @@ export default function CatalogPage() {
       />
 
       {/* Main Container */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-10">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
         
         {/* Page Title Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-8 gap-6 mt-6">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-6 sm:pb-8 gap-4 sm:gap-6">
           <div>
             <div className="inline-flex items-center gap-2 bg-[#268072]/15 border border-[#268072]/30 px-3 py-1 rounded-full text-xs font-semibold tracking-wider text-[#82d6c5] uppercase font-label-sm mb-3">
               B2B Portal
             </div>
-            <h1 className="font-headline-lg text-4xl md:text-5xl font-black tracking-tighter text-white">
+            <h1 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white">
               Wholesale Product Catalog
             </h1>
             <p className="font-body-md text-base text-white/60 max-w-2xl mt-2 leading-relaxed">
@@ -232,13 +232,13 @@ export default function CatalogPage() {
         </div>
 
         {/* Filters Panel */}
-        <div className="bg-[#1a1a1a] border border-white/5 rounded-sm p-6 md:p-8 flex flex-col gap-6">
+        <div className="bg-[#1a1a1a] border border-white/5 rounded-sm p-5 sm:p-6 lg:p-8 flex flex-col gap-5 sm:gap-6">
           <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider font-label-sm">
             <Filter className="w-4 h-4 text-[#82d6c5]" />
             Filter Products
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6 items-end">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-end">
             
             {/* Search Input */}
             <div className="flex flex-col gap-2 w-full">
@@ -329,7 +329,7 @@ export default function CatalogPage() {
         {/* Product Table Grid */}
         <div ref={productListRef} className="border border-white/10 rounded-sm overflow-hidden bg-[#1a1a1a]">
           {/* Header Row */}
-          <div className="hidden md:grid grid-cols-12 gap-4 px-8 py-3 bg-[#131313] border-b border-white/10 text-[10px] font-mono text-white/40 uppercase tracking-widest font-bold">
+          <div className="hidden lg:grid grid-cols-12 gap-4 px-8 py-3 bg-[#131313] border-b border-white/10 text-[10px] font-mono text-white/40 uppercase tracking-widest font-bold">
             <div className="col-span-1">Image</div>
             <div className="col-span-4">Product details</div>
             <div className="col-span-2 text-center">SKU Code</div>
@@ -339,14 +339,14 @@ export default function CatalogPage() {
 
           {/* Product Items */}
           {productsLoading ? (
-            <div className="flex flex-col items-center justify-center py-24 gap-4">
+            <div className="flex flex-col items-center justify-center py-16 sm:py-20 lg:py-24 gap-4">
               <div className="w-10 h-10 border-4 border-[#268072] border-t-transparent rounded-full animate-spin"></div>
               <p className="text-xs text-white/40 font-mono uppercase tracking-widest">
                 Loading live catalog…
               </p>
             </div>
           ) : productsError ? (
-            <div className="flex flex-col items-center justify-center py-24 px-6 gap-4 text-center">
+            <div className="flex flex-col items-center justify-center py-16 sm:py-20 lg:py-24 px-4 sm:px-6 gap-4 text-center">
               <PackageOpen className="w-16 h-16 text-white/20" />
               <p className="text-sm text-white/50 font-medium max-w-md">
                 We could not load the wholesale catalog right now. Please try again shortly.
@@ -365,10 +365,10 @@ export default function CatalogPage() {
                 return (
                   <div 
                     key={product.id}
-                    className="grid grid-cols-1 md:grid-cols-12 gap-4 items-center px-8 py-6 hover:bg-white/[0.01] transition-colors"
+                    className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center px-4 sm:px-6 lg:px-8 py-5 sm:py-6 hover:bg-white/[0.01] transition-colors"
                   >
                     {/* Image Column — product thumbnail, tribe-letter fallback */}
-                    <div className="col-span-1 md:col-span-1 flex items-center">
+                    <div className="col-span-1 lg:col-span-1 flex items-center">
                       <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="block">
                         {product.image ? (
                           <div className="w-14 h-14 rounded-full border border-white/10 hover:border-[#268072]/45 overflow-hidden relative shadow-md hover:shadow-lg transition-all duration-300 bg-[#131313]">
@@ -393,7 +393,7 @@ export default function CatalogPage() {
                     </div>
 
                     {/* Name Column */}
-                    <div className="col-span-1 md:col-span-4 flex flex-col gap-1">
+                    <div className="col-span-1 lg:col-span-4 flex flex-col gap-1">
                       <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="hover:text-[#82d6c5] transition-colors text-left no-underline group">
                         <h3 className="font-headline-md text-lg font-bold text-white group-hover:text-[#82d6c5] transition-colors flex items-center gap-2 flex-wrap">
                           {product.name}
@@ -415,27 +415,27 @@ export default function CatalogPage() {
                     </div>
 
                     {/* SKU Column */}
-                    <div className="col-span-1 md:col-span-2 text-left md:text-center">
+                    <div className="col-span-1 lg:col-span-2 text-left lg:text-center">
                       <span className="text-[11px] font-mono text-white/45 bg-[#131313] border border-white/5 px-2 py-1.5 rounded-sm tracking-wide">
                         {product.options[currentOptIdx]?.sku || product.sku}
                       </span>
                     </div>
 
                     {/* Price Column */}
-                    <div className="col-span-1 md:col-span-1 text-left md:text-right">
+                    <div className="col-span-1 lg:col-span-1 text-left lg:text-right">
                       <span className="text-base font-bold text-[#82d6c5] font-headline-md whitespace-nowrap">
                         ${optionPriceForUser(product.options[currentOptIdx], user, product.category).toFixed(2)}
                       </span>
                     </div>
 
                     {/* Actions Column */}
-                    <div className="col-span-1 md:col-span-4 flex items-center justify-end gap-3 flex-wrap md:flex-nowrap">
+                    <div className="col-span-1 lg:col-span-4 flex items-center justify-start lg:justify-end gap-3 flex-wrap lg:flex-nowrap">
                       {/* Option Select Dropdown */}
                       {product.options.length > 1 ? (
                         <select
                           value={currentOptIdx}
                           onChange={(e) => setSelectedOptions(prev => ({ ...prev, [product.id]: parseInt(e.target.value) }))}
-                          className="bg-[#131313] border border-white/10 text-white text-xs rounded-sm px-3 py-2.5 focus:border-[#268072] outline-none max-w-[150px] shrink-0"
+                          className="w-full sm:w-auto bg-[#131313] border border-white/10 text-white text-xs rounded-sm px-3 py-2.5 focus:border-[#268072] outline-none sm:max-w-[180px] shrink-0"
                         >
                           {product.options.map((opt, idx) => (
                             <option key={opt.sku} value={idx}>

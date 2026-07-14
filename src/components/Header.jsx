@@ -28,13 +28,13 @@ export default function Header({ onOpenLogin, onOpenApply }) {
 
   return (
     <header className="sticky top-0 w-full bg-[#212121] border-b-2 border-[#268072] z-50 relative">
-      <div className="max-w-7xl mx-auto px-6 md:px-12 py-4 flex items-center justify-between w-full">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 sm:py-4 flex items-center justify-between w-full">
         {/* Logotipo (Left) */}
         <a className="flex items-center group shrink-0" href="/" onClick={handleHomeClick}>
           <img 
             src="/logo.svg" 
             alt="Sacred Connection Wholesale Logo" 
-            className="h-12 md:h-16 w-auto transition-all duration-300 group-hover:opacity-90"
+            className="h-10 sm:h-12 lg:h-14 w-auto transition-all duration-300 group-hover:opacity-90"
           />
         </a>
 
@@ -139,7 +139,7 @@ export default function Header({ onOpenLogin, onOpenApply }) {
 
       {/* Mobile Drawer Navigation overlay */}
       {mobileMenuOpen && (
-        <div className="absolute top-[100%] left-0 w-full bg-[#212121] border-b border-white/10 px-6 py-8 flex flex-col gap-6 md:hidden z-40 backdrop-blur-md shadow-xl animate-fade-in">
+        <div className="absolute top-[100%] left-0 w-full bg-[#212121] border-b border-white/10 px-4 sm:px-6 py-6 flex flex-col gap-5 md:hidden z-40 backdrop-blur-md shadow-xl animate-fade-in">
           <a 
             className={`${pathname === '/' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/"

@@ -17,11 +17,11 @@ export default function Footer() {
   };
 
   return (
-    <footer id="footer" className="bg-[#212121] border-t border-white/10 w-full mt-12 scroll-mt-24">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-6 md:px-12 py-24 w-full max-w-7xl mx-auto">
+    <footer id="footer" className="bg-[#212121] border-t border-white/10 w-full scroll-mt-24">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20 w-full max-w-7xl mx-auto">
         
         {/* Brand Info */}
-        <div className="md:col-span-2 flex flex-col gap-6 pr-8">
+        <div className="md:col-span-2 flex flex-col gap-5 sm:gap-6 md:pr-6 lg:pr-8">
           <div className="flex flex-col items-start gap-2">
             <Link
               href="#top"
@@ -81,7 +81,7 @@ export default function Footer() {
 
       {/* Under Footer Icons */}
       <div className="border-t border-white/5 py-8">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col md:flex-row justify-between items-center gap-4 w-full">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4 w-full">
           <p className="text-xs text-white/40 font-label-sm uppercase tracking-widest">
             Absolute Chemical Purity &amp; Cultural Authenticity
           </p>

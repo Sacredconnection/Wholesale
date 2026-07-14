@@ -57,7 +57,7 @@ export default function LoginModal({ isOpen, onClose }) {
         </button>
 
         {/* Login Form */}
-        <form onSubmit={handleLogin} className="p-8 flex flex-col gap-6">
+        <form onSubmit={handleLogin} className="p-5 sm:p-8 flex flex-col gap-5 sm:gap-6">
           <div>
             <span className="text-[10px] font-mono tracking-widest text-[#82d6c5] uppercase flex items-center gap-1.5 mb-1">
               <Key className="w-3.5 h-3.5" />
@@ -129,7 +129,7 @@ export default function LoginModal({ isOpen, onClose }) {
         </form>
 
         {/* Register link */}
-        <div className="px-8 pb-6 text-center">
+        <div className="px-5 sm:px-8 pb-5 sm:pb-6 text-center">
           <p className="text-xs text-white/30">
             Don&apos;t have an account?{" "}
             <Link

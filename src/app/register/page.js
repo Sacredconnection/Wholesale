@@ -111,7 +111,7 @@ export default function RegisterPage() {
   return (
     <div className="min-h-screen bg-[#0f0f0f] text-[#e5e2e1] flex flex-col antialiased">
       {/* Top Header */}
-      <div className="w-full border-b border-white/5 px-6 py-4 flex items-center justify-between bg-[#131313] z-10">
+      <div className="w-full border-b border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-[#131313] z-10">
         <Link href="/" className="flex items-center gap-2">
           <img src="/logo.svg" alt="Sacred Connection Wholesale Logo" className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity" />
         </Link>
@@ -121,12 +121,12 @@ export default function RegisterPage() {
       </div>
 
       {/* Main Container */}
-      <div className="flex-grow flex items-center justify-center py-12 px-4 relative">
+      <div className="flex-grow flex items-center justify-center py-8 sm:py-10 lg:py-12 px-4 sm:px-6 relative">
         <div className="absolute top-1/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-[#268072]/5 blur-3xl pointer-events-none rounded-full" />
 
         <div className="w-full max-w-md z-10">
           {!submitted ? (
-            <form onSubmit={handleSubmit} className="bg-[#1a1a1a] border border-white/10 rounded-sm p-8 shadow-2xl flex flex-col gap-6">
+            <form onSubmit={handleSubmit} className="bg-[#1a1a1a] border border-white/10 rounded-sm p-5 sm:p-8 shadow-2xl flex flex-col gap-5 sm:gap-6">
               
               <div>
                 <span className="text-[10px] font-mono tracking-widest text-[#82d6c5] uppercase block mb-1">
@@ -307,7 +307,7 @@ export default function RegisterPage() {
             </form>
           ) : (
             /* Success Screen */
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-sm p-10 flex flex-col items-center text-center gap-6 shadow-2xl animate-fade-in">
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-sm p-6 sm:p-10 flex flex-col items-center text-center gap-5 sm:gap-6 shadow-2xl animate-fade-in">
               <div className="w-16 h-16 rounded-full bg-[#268072]/10 border border-[#268072]/20 flex items-center justify-center text-[#82d6c5]">
                 <CheckCircle2 className="w-8 h-8" />
               </div>

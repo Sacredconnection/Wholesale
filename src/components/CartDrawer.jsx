@@ -105,7 +105,7 @@ export default function CartDrawer() {
           <div className="absolute inset-y-0 right-0 max-w-md w-full bg-[#1a1a1a] border-l border-white/10 shadow-2xl flex flex-col justify-between animate-fade-in-left">
             
             {/* Header */}
-            <div className="px-8 py-6 border-b border-white/10 flex justify-between items-center bg-[#131313]">
+            <div className="px-5 sm:px-8 py-5 sm:py-6 border-b border-white/10 flex justify-between items-center bg-[#131313]">
               <div className="flex items-center gap-3">
                 <ShoppingBag className="w-5 h-5 text-[#82d6c5]" />
                 <h3 className="font-headline-md text-xl font-bold text-white">
@@ -121,7 +121,7 @@ export default function CartDrawer() {
             </div>
 
             {/* Body: Cart Items */}
-            <div className="flex-grow overflow-y-auto px-8 py-6 flex flex-col gap-6 scrollbar-none">
+            <div className="flex-grow overflow-y-auto px-5 sm:px-8 py-5 sm:py-6 flex flex-col gap-5 sm:gap-6 scrollbar-none">
               {cart.length > 0 ? (
                 <div className="flex flex-col gap-5 divide-y divide-white/5">
                   {cart.map((item, index) => (
@@ -206,7 +206,7 @@ export default function CartDrawer() {
             </div>
 
             {/* Footer Summary */}
-            <div className="px-8 py-6 bg-[#131313] border-t border-white/10 flex flex-col gap-6">
+            <div className="px-5 sm:px-8 py-5 sm:py-6 bg-[#131313] border-t border-white/10 flex flex-col gap-5 sm:gap-6">
               <div className="flex flex-col gap-2">
                 <div className="flex justify-between items-center text-xs text-white/50 uppercase tracking-wider font-label-sm">
                   <span>Total Items</span>

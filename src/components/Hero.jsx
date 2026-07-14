@@ -48,15 +48,15 @@ export default function Hero({ onOpenApply }) {
       </div>
 
       {/* Hero Section Content */}
-      <section className="w-full py-16 md:py-24 relative z-10">
-        <div className="max-w-7xl mx-auto px-6 md:px-12 flex flex-col items-start gap-6 animate-fade-in-up w-full">
+      <section className="w-full py-12 sm:py-16 lg:py-24 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-start gap-5 sm:gap-6 animate-fade-in-up w-full">
           
           <div className="inline-flex items-center gap-2 bg-[#268072]/15 border border-[#268072]/30 px-4 py-2 rounded-full text-xs font-semibold tracking-wider text-[#82d6c5] uppercase font-label-sm">
             <span className="w-1.5 h-1.5 bg-[#268072] rounded-full animate-pulse"></span>
             10 Authentic Tribes
           </div>
           
-          <h1 className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white leading-none font-headline-lg max-w-3xl">
+          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tighter text-white leading-[0.98] font-headline-lg max-w-3xl">
             The Power of <span className="text-[#82d6c5]">Ancestral Science</span> in Every Blend.
           </h1>
           
@@ -68,7 +68,7 @@ export default function Hero({ onOpenApply }) {
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 w-full sm:w-auto pt-4">
             <Link 
               href="/register"
-              className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-sm font-bold tracking-wide px-10 py-5 rounded-sm shadow-lg shadow-[#EC2300]/10 hover:shadow-[#EC2300]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase no-underline cursor-pointer border-0"
+              className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-sm font-bold tracking-wide px-7 sm:px-10 py-4 sm:py-5 rounded-sm shadow-lg shadow-[#EC2300]/10 hover:shadow-[#EC2300]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase no-underline cursor-pointer border-0"
             >
               Register B2B Account
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />

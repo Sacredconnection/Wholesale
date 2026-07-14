@@ -7,6 +7,7 @@ import TrustBar from '@/components/TrustBar';
 import LineageShowcase from '@/components/LineageShowcase';
 import Onboarding from '@/components/Onboarding';
 import NGOSection from '@/components/NGOSection';
+import RetailRedirectSection from '@/components/RetailRedirectSection';
 import Footer from '@/components/Footer';
 import ApplicationModal from '@/components/ApplicationModal';
 import LoginModal from '@/components/LoginModal';
@@ -30,15 +31,20 @@ export default function HomeClient() {
       <TrustBar onOpenApply={() => setIsApplyOpen(true)} />
 
       {/* Main Page Area */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-24 bg-[#23403B]">
-        {/* B2B Onboarding Steps */}
-        <Onboarding onOpenApply={() => setIsApplyOpen(true)} />
+      <main className="flex-grow w-full bg-[#23403B] pb-12 sm:pb-14 lg:pb-16">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 pb-12 sm:gap-14 sm:px-6 sm:pb-14 lg:gap-16 lg:px-8 lg:pb-16">
+          {/* B2B Onboarding Steps */}
+          <Onboarding onOpenApply={() => setIsApplyOpen(true)} />
 
-        {/* Tribe Lineage Details */}
-        <LineageShowcase />
+          {/* Tribe Lineage Details */}
+          <LineageShowcase />
 
-        {/* NGO Partnership Details */}
-        <NGOSection />
+          {/* NGO Partnership Details */}
+          <NGOSection />
+        </div>
+
+        {/* Secondary path for individual retail customers */}
+        <RetailRedirectSection />
       </main>
 
       {/* Footer Details */}

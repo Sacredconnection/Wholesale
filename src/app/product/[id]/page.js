@@ -67,7 +67,7 @@ export default function ProductDetailPage() {
     return (
       <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
-        <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex flex-col items-center justify-center text-center gap-4">
+        <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex flex-col items-center justify-center text-center gap-4">
           <div className="w-10 h-10 border-2 border-[#268072] border-t-transparent rounded-full animate-spin" />
           <p className="text-white/50 text-xs font-mono uppercase tracking-widest">Loading product…</p>
         </main>
@@ -81,7 +81,7 @@ export default function ProductDetailPage() {
     return (
       <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
-        <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex flex-col items-center justify-center text-center gap-6">
+        <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex flex-col items-center justify-center text-center gap-6">
           <div className="text-6xl">⚠️</div>
           <h2 className="font-headline-md text-3xl font-bold text-white">Product Not Found</h2>
           <p className="text-white/60 text-sm max-w-md">
@@ -119,7 +119,7 @@ export default function ProductDetailPage() {
       <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
 
       {/* Main Container */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-8">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
         
         {/* Breadcrumbs / Back button */}
         <div className="flex items-center gap-2 text-xs text-white/50 font-mono flex-wrap">
@@ -142,7 +142,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Product Details Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start mt-4 bg-[#1a1a1a] border border-white/10 rounded-lg p-5 sm:p-6 md:p-8 shadow-2xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start bg-[#1a1a1a] border border-white/10 rounded-lg p-5 sm:p-6 md:p-8 shadow-2xl">
           
           {/* Product image */}
           <div className="lg:col-span-6 w-full">
@@ -346,7 +346,7 @@ export default function ProductDetailPage() {
 
         {/* Related Products Section */}
         {relatedProducts.length > 0 && (
-          <div className="bg-[#1a1a1a] border border-white/5 rounded-sm p-6 md:p-8 my-8 shadow-2xl">
+          <div className="bg-[#1a1a1a] border border-white/5 rounded-sm p-5 sm:p-6 md:p-8 shadow-2xl">
           <h2 className="text-white text-2xl font-bold font-headline-md mb-8">Related products</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">

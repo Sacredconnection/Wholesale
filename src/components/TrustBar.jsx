@@ -61,11 +61,11 @@ export default function TrustBar({ onOpenApply }) {
 
   return (
     <div className="w-full bg-[#131313]">
-      <section className="max-w-7xl mx-auto px-6 md:px-12 py-24 w-full animate-fade-in" style={{ animationDelay: '0.4s' }}>
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-14 lg:py-16 w-full animate-fade-in" style={{ animationDelay: '0.4s' }}>
         <div className="grid grid-cols-1 md:grid-cols-3 border border-white/10 rounded-sm overflow-hidden divide-y md:divide-y-0 md:divide-x divide-white/10 bg-[#23403B]">
           
           {/* Card 1: B2B Program */}
-          <div className="relative p-10 flex flex-col justify-between items-start gap-4 overflow-hidden transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] group motion-reduce:transition-none">
+          <div className="relative p-6 sm:p-8 lg:p-10 flex flex-col justify-between items-start gap-4 overflow-hidden transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] group motion-reduce:transition-none">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#82d6c5]/10 border border-[#82d6c5]/20 flex items-center justify-center text-[#82d6c5] transition-colors duration-500 group-hover:bg-[#82d6c5]/15 group-hover:border-[#82d6c5]/30">
                 <BriefcaseBusiness className="w-5 h-5" aria-hidden="true" />
@@ -86,7 +86,7 @@ export default function TrustBar({ onOpenApply }) {
           </div>
 
           {/* Card 2: Sustainability */}
-          <div className="relative p-10 flex flex-col justify-between items-start gap-4 overflow-hidden transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] group motion-reduce:transition-none">
+          <div className="relative p-6 sm:p-8 lg:p-10 flex flex-col justify-between items-start gap-4 overflow-hidden transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] group motion-reduce:transition-none">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-[#82d6c5]/10 border border-[#82d6c5]/20 flex items-center justify-center text-[#82d6c5] transition-colors duration-500 group-hover:bg-[#82d6c5]/15 group-hover:border-[#82d6c5]/30">
                 <Leaf className="w-5 h-5 transition-transform duration-500 group-hover:-rotate-3 motion-reduce:transform-none" aria-hidden="true" />
@@ -106,9 +106,9 @@ export default function TrustBar({ onOpenApply }) {
           </div>
 
           {/* Card 3: Metrics */}
-          <div className="relative p-10 flex flex-col justify-center gap-4 overflow-hidden transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] group motion-reduce:transition-none">
+          <div className="relative p-6 sm:p-8 lg:p-10 flex flex-col justify-center gap-4 overflow-hidden transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] group motion-reduce:transition-none">
             <div className="inline-flex w-fit items-center gap-3">
-              <span ref={metricRef} className="inline-flex items-baseline text-5xl font-black tracking-tighter text-white font-headline-lg tabular-nums" aria-label="More than fourteen thousand batches delivered">
+              <span ref={metricRef} className="inline-flex items-baseline text-4xl sm:text-5xl font-black tracking-tighter text-white font-headline-lg tabular-nums" aria-label="More than fourteen thousand batches delivered">
                 <span aria-hidden="true">+</span>
                 <span className="inline-flex min-w-[1.45ch] justify-end overflow-hidden" aria-hidden="true">
                   <span key={batchCount} className="inline-block animate-number-rise">

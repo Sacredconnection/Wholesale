@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from 'react';
-import Image from 'next/image';
 import Link from 'next/link';
 
 const steps = [
@@ -79,28 +78,14 @@ export default function Onboarding({ onOpenApply }) {
       <section
         ref={sectionRef}
         id="onboarding"
-        className="bg-[#1a1a1a] border border-[#82d6c5]/35 rounded-2xl p-16 flex flex-col gap-16 relative overflow-hidden scroll-mt-24 hover:border-[#82d6c5]/60 transition-colors duration-500"
+            className="relative mx-auto flex w-full max-w-6xl flex-col items-center gap-10 pt-12 sm:gap-12 sm:pt-14 lg:gap-16 lg:pt-16 scroll-mt-24"
       >
-        {/* Glow Effect */}
-        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[#268072] opacity-[0.03] blur-[100px] pointer-events-none rounded-full" />
-
-        {/* Background Watermark */}
-        <Image
-          src="/onboarding/watermark-onboarding.svg"
-          alt=""
-          aria-hidden="true"
-          fill
-          sizes="(max-width: 1280px) 100vw, 1184px"
-          unoptimized
-          className="object-cover opacity-50 pointer-events-none select-none z-0"
-        />
-
         {/* Header */}
         <div
-          className="text-center max-w-2xl mx-auto z-10 step-item"
+          className="w-full max-w-3xl text-center z-10 step-item"
           style={visible ? { animation: 'stepFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0s forwards' } : {}}
         >
-          <h2 className="font-headline-lg text-4xl font-black tracking-tighter text-white mb-4">
+          <h2 className="font-headline-lg text-3xl sm:text-4xl font-black tracking-tighter text-white mb-3 sm:mb-4">
             Streamlined Wholesale Access
           </h2>
           <p className="font-body-md text-lg text-white/70">
@@ -109,7 +94,7 @@ export default function Onboarding({ onOpenApply }) {
         </div>
 
         {/* Steps Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 z-10 relative">
+        <div className="relative z-10 grid w-full grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-8">
 
           {/* Connecting Line Background */}
           <div className="hidden md:block absolute top-10 left-[15%] right-[15%] h-[2px] bg-white/10 -z-10" />
@@ -122,7 +107,7 @@ export default function Onboarding({ onOpenApply }) {
           {steps.map((step, i) => (
             <div
               key={step.num}
-              className={`step-item flex flex-col items-center text-center gap-6 group${visible ? ' animate' : ''}`}
+              className={`step-item flex flex-col items-center text-center gap-4 sm:gap-6 group${visible ? ' animate' : ''}`}
               style={visible ? { animationDelay: `${0.2 + i * 0.18}s` } : {}}
             >
               <div
@@ -134,7 +119,7 @@ export default function Onboarding({ onOpenApply }) {
               </div>
               <div>
                 <h3 className="font-headline-md text-2xl font-bold text-white mb-2">{step.title}</h3>
-                <p className="font-body-md text-base text-white/70">{step.desc}</p>
+                <p className="mx-auto max-w-sm font-body-md text-base text-white/70">{step.desc}</p>
               </div>
             </div>
           ))}
@@ -142,12 +127,12 @@ export default function Onboarding({ onOpenApply }) {
 
         {/* CTA Button */}
         <div
-          className={`flex justify-center mt-8 z-10 step-item${visible ? ' animate' : ''}`}
+          className={`flex w-full justify-center z-10 step-item${visible ? ' animate' : ''}`}
           style={visible ? { animationDelay: '0.75s' } : {}}
         >
           <Link
             href="/register"
-            className="bg-[#EC2300] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-6 px-16 rounded-sm hover:bg-[#c51d00] transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 cursor-pointer border-0 no-underline text-center"
+            className="w-full sm:w-auto bg-[#EC2300] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-4 sm:py-5 px-8 sm:px-12 lg:px-16 rounded-sm hover:bg-[#c51d00] transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 cursor-pointer border-0 no-underline text-center"
           >
             Create B2B Account
           </Link>

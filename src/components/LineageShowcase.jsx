@@ -217,12 +217,12 @@ export default function LineageShowcase() {
   }, [selectedTribe]);
 
   return (
-    <section id="tribes" className="relative isolate flex flex-col gap-12 py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
+    <section id="tribes" className="relative isolate flex flex-col gap-8 sm:gap-10 lg:gap-12 py-10 sm:py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
       
       {/* Header and Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 w-full">
         <div>
-          <h2 className="font-headline-lg text-4xl md:text-5xl font-black tracking-tighter text-white mb-4">
+          <h2 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white mb-3 sm:mb-4">
             Sourced Across 10 Indigenous Nations
           </h2>
           <p className="font-body-md text-lg text-white/70 max-w-2xl font-normal leading-relaxed">
@@ -254,7 +254,7 @@ export default function LineageShowcase() {
           onMouseLeave={handleMouseLeave}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
-          className="flex gap-6 py-4 overflow-x-auto scrollbar-none select-none cursor-grab active:cursor-grabbing"
+          className="flex gap-4 sm:gap-6 py-3 sm:py-4 overflow-x-auto scrollbar-none select-none cursor-grab active:cursor-grabbing"
         >
           {[...TRIBES_DATA, ...TRIBES_DATA].map((tribe, index) => (
             <div 
@@ -331,13 +331,13 @@ export default function LineageShowcase() {
             </div>
 
             {/* Modal Body */}
-            <div className="p-8 flex flex-col gap-6">
+            <div className="p-5 sm:p-8 flex flex-col gap-5 sm:gap-6">
               <p className="font-body-md text-[#e5e2e1] text-base leading-relaxed">
                 {selectedTribe.description}
               </p>
 
               {/* Grid Metadata */}
-              <div className="grid grid-cols-2 gap-4 border-y border-white/5 py-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 border-y border-white/5 py-4">
                 <div className="flex items-center gap-3">
                   <HeartHandshake className="w-5 h-5 text-[#82d6c5] shrink-0" />
                   <div>

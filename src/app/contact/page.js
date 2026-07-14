@@ -53,13 +53,13 @@ export default function ContactPage() {
     <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
 
-      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-12 flex flex-col gap-12">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
         {/* Page Title */}
-        <div className="border-b border-white/10 pb-8 mt-6">
+        <div className="border-b border-white/10 pb-6 sm:pb-8">
           <span className="inline-flex items-center gap-2 bg-[#268072]/15 border border-[#268072]/30 px-3 py-1 rounded-full text-xs font-semibold tracking-wider text-[#82d6c5] uppercase font-label-sm mb-3">
             Get In Touch
           </span>
-          <h1 className="font-headline-lg text-4xl md:text-5xl font-black tracking-tighter text-white">
+          <h1 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white">
             B2B Support &amp; Contact
           </h1>
           <p className="font-body-md text-base text-white/60 max-w-2xl mt-2 leading-relaxed">
@@ -68,10 +68,10 @@ export default function ContactPage() {
         </div>
 
         {/* Contact Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start">
           
           {/* Left Column: Contact Form */}
-          <div className="lg:col-span-7 bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-10 shadow-xl relative overflow-hidden">
+          <div className="lg:col-span-7 bg-[#1a1a1a] border border-white/10 rounded-md p-5 sm:p-6 lg:p-10 shadow-xl relative overflow-hidden">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#268072]/5 blur-2xl pointer-events-none rounded-full"></div>
             
             <h2 className="font-headline-md text-2xl font-bold text-white mb-6">
@@ -177,7 +177,7 @@ export default function ContactPage() {
           <div className="lg:col-span-5 flex flex-col gap-6 w-full">
             
             {/* Contact Details Card */}
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl flex flex-col gap-6">
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-5 sm:p-6 lg:p-8 shadow-xl flex flex-col gap-5 sm:gap-6">
               <h3 className="font-headline-md text-lg font-bold text-white border-b border-white/5 pb-3">
                 Corporate Details
               </h3>
@@ -232,7 +232,7 @@ export default function ContactPage() {
             </div>
 
             {/* Business Hours Card */}
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl flex flex-col gap-4">
+            <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-5 sm:p-6 lg:p-8 shadow-xl flex flex-col gap-4">
               <h3 className="font-headline-md text-sm font-bold uppercase tracking-wider text-white/80 flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[#82d6c5]" />
                 Support Hours

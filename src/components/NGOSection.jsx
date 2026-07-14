@@ -100,7 +100,7 @@ export default function NGOSection() {
       <section
         ref={sectionRef}
         id="ngo-partnership"
-        className="bg-[#1a1a1a] border border-[#82d6c5]/35 rounded-2xl p-8 md:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-[#82d6c5]/60 transition-colors duration-500"
+        className="bg-[#1a1a1a] border border-[#82d6c5]/35 rounded-2xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-[#82d6c5]/60 transition-colors duration-500"
       >
         {/* Ambient background glow */}
         <div className="absolute -top-36 -left-36 w-[500px] h-[500px] bg-[#268072] opacity-[0.09] blur-[130px] pointer-events-none rounded-full" />
@@ -114,15 +114,15 @@ export default function NGOSection() {
           onError={handleSymbolError}
         />
 
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center z-10 relative">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 xl:gap-16 items-center z-10 relative">
           
           {/* Left Column: Copywriting & Pillars */}
           <div 
-            className={`lg:col-span-7 flex flex-col gap-8 ngo-animate-item ${visible ? 'animate' : ''}`}
+            className={`lg:col-span-7 flex flex-col gap-6 sm:gap-8 ngo-animate-item ${visible ? 'animate' : ''}`}
             style={visible ? { animationDelay: '0.1s' } : {}}
           >
             {/* NGO Logo with text fallback */}
-            <div className="h-16 md:h-[80px] flex items-center mb-6">
+            <div className="h-16 md:h-[80px] flex items-center mb-2 sm:mb-4 lg:mb-6">
               <img 
                 src={logoSrc} 
                 alt="Conexão Ancestral Logo" 
@@ -140,7 +140,7 @@ export default function NGOSection() {
 
             {/* Titles */}
             <div className="flex flex-col gap-4">
-              <h2 className="font-headline-lg text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
+              <h2 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white leading-tight">
                 Bridges of Support for the <span className="text-[#284e32]">Amazon Rainforest</span>
               </h2>
               <p className="font-body-md text-base md:text-lg text-white/70 leading-relaxed">
@@ -149,7 +149,7 @@ export default function NGOSection() {
             </div>
 
             {/* Pillars Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 pt-6 border-t border-white/5">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 sm:gap-6 pt-5 sm:pt-6 border-t border-white/5">
               
               {/* Pillar 1 */}
               <div className="flex flex-col gap-3 group">
@@ -198,7 +198,7 @@ export default function NGOSection() {
                 href="https://www.conexaoancestral.org/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-3 bg-[#284e32] hover:bg-[#1f3d27] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-5 px-10 rounded-sm transition-all duration-300 shadow-lg shadow-black/20 hover:shadow-[#284e32]/20 cursor-pointer no-underline group border-0"
+                className="inline-flex w-full sm:w-auto items-center justify-center gap-3 bg-[#284e32] hover:bg-[#1f3d27] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-4 sm:py-5 px-7 sm:px-10 rounded-sm transition-all duration-300 shadow-lg shadow-black/20 hover:shadow-[#284e32]/20 cursor-pointer no-underline group border-0"
               >
                 Visit Conexão Ancestral
                 <ArrowUpRight className="w-4 h-4 text-white transition-transform duration-300 group-hover:translate-x-0.5 group-hover:-translate-y-0.5" />

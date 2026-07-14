@@ -15,13 +15,13 @@ function OrderReceivedContent() {
   const total = searchParams.get("total");
 
   return (
-    <main className="flex-grow w-full max-w-3xl mx-auto px-6 md:px-12 py-20 flex flex-col items-center text-center gap-8">
+    <main className="flex-grow w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 flex flex-col items-center text-center gap-8 sm:gap-10 lg:gap-12">
       <div className="w-20 h-20 rounded-full bg-[#268072]/20 border border-[#268072]/45 flex items-center justify-center animate-fade-in">
         <Check className="w-10 h-10 text-[#82d6c5]" />
       </div>
 
       <div className="flex flex-col gap-3">
-        <h1 className="font-headline-lg text-4xl md:text-5xl font-black tracking-tighter text-white">
+        <h1 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white">
           Order Received
         </h1>
         {orderNumber && (

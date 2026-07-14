@@ -20,11 +20,11 @@ export default function AuthGate({ loading = false }) {
     <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       <Header onOpenLogin={() => setIsLoginOpen(true)} onOpenApply={() => setIsApplyOpen(true)} />
 
-      <main className="flex-grow w-full max-w-7xl mx-auto px-6 md:px-12 py-24 flex items-center justify-center">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex items-center justify-center">
         {loading ? (
           <div className="w-10 h-10 border-4 border-[#268072] border-t-transparent rounded-full animate-spin"></div>
         ) : (
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-lg p-10 md:p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl animate-fade-in">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-lg p-6 sm:p-8 lg:p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl animate-fade-in">
             <div className="absolute top-0 right-0 w-40 h-40 bg-[#268072]/10 blur-2xl pointer-events-none rounded-full"></div>
 
             <div className="w-16 h-16 rounded-full bg-[#268072]/15 border border-[#268072]/30 flex items-center justify-center mx-auto mb-6">
