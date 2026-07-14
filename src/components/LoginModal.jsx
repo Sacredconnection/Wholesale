@@ -40,9 +40,9 @@ export default function LoginModal({ isOpen, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-[#0c0c0c]/85 backdrop-blur-md z-[60] flex items-center justify-center p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#0c0c0c]/85 p-3 backdrop-blur-md sm:p-4">
       <div 
-        className="bg-[#1a1a1a] border border-white/10 rounded-lg max-w-md w-full shadow-2xl relative overflow-hidden animate-fade-in-up"
+        className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-lg border border-white/10 bg-[#1a1a1a] shadow-2xl animate-fade-in-up sm:max-h-[calc(100dvh-2rem)]"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Glow */}

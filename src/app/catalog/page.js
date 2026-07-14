@@ -202,11 +202,11 @@ export default function CatalogPage() {
           </div>
           
           {/* Header Action Buttons */}
-          <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
+          <div className="flex w-full shrink-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
             {/* Download Catalog PDF Button */}
             <button 
               onClick={() => alert("Downloading Wholesale Catalog & Pricing PDF...")}
-              className="flex items-center gap-3 bg-[#EC2300] hover:bg-[#c51d00] text-white border-0 py-3.5 px-6 rounded-sm text-sm font-bold tracking-wide uppercase transition-all duration-300 cursor-pointer shadow-lg shadow-[#EC2300]/15 grow sm:grow-0 justify-center"
+              className="flex w-full grow items-center justify-center gap-3 rounded-sm border-0 bg-[#EC2300] px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-[#EC2300]/15 transition-all duration-300 hover:bg-[#c51d00] sm:w-auto sm:grow-0"
             >
               <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               PDF Catalog
@@ -215,7 +215,7 @@ export default function CatalogPage() {
             {/* Quick Cart Summary Button */}
             <button 
               onClick={() => setIsCartOpen(true)}
-              className="flex items-center gap-3 bg-[#1a1a1a] hover:bg-white/5 border border-white/10 hover:border-white/20 transition-all duration-300 py-3.5 px-6 rounded-sm text-sm font-bold tracking-wide text-white uppercase relative cursor-pointer grow sm:grow-0 justify-center"
+              className="relative flex w-full grow items-center justify-center gap-3 rounded-sm border border-white/10 bg-[#1a1a1a] px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition-all duration-300 hover:border-white/20 hover:bg-white/5 sm:w-auto sm:grow-0"
             >
               <ShoppingBag className="w-4 h-4 text-[#82d6c5]" />
               Order Sheet

@@ -182,7 +182,7 @@ export default function ProductDetailPage() {
           <div className="lg:col-span-6 flex flex-col gap-4">
             
             {/* Product Meta Category & Tribe Badges */}
-            <div className="flex gap-2.5">
+            <div className="flex flex-wrap gap-2.5">
               <span className="inline-block text-[10px] font-bold bg-[#268072]/15 text-[#82d6c5] border border-[#268072]/30 px-3 py-1 rounded-full uppercase tracking-wider font-label-sm">
                 {product.category}
               </span>
@@ -202,7 +202,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Price display */}
-            <div className="bg-white/[0.02] border border-white/5 p-4 sm:p-5 rounded-md flex justify-between items-center gap-4">
+            <div className="flex flex-col items-start justify-between gap-3 rounded-md border border-white/5 bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
               <div>
                 <span className="text-[10px] font-mono text-white/45 uppercase block">Est. B2B Unit Cost</span>
                 <div className="flex items-baseline gap-2 mt-1">
@@ -321,7 +321,7 @@ export default function ProductDetailPage() {
             <div className="h-px bg-white/10 my-1"></div>
 
             {/* B2B Certifications Trust Flags */}
-            <div className="grid grid-cols-2 gap-4 mt-2">
+            <div className="mt-2 grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
               <div className="flex items-start gap-2.5">
                 <ShieldCheck className="w-5 h-5 text-[#82d6c5] shrink-0 mt-0.5" />
                 <div>

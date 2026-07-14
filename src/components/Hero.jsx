@@ -28,7 +28,7 @@ export default function Hero() {
   }, []);
 
   return (
-    <div className="theme-dark-zone relative flex min-h-[calc(100svh-66px)] w-full flex-col justify-center overflow-hidden bg-[#23403B] md:min-h-screen">
+    <div className="theme-dark-zone relative flex min-h-[calc(100svh-66px)] w-full flex-col justify-center overflow-hidden bg-[#23403B] sm:min-h-[calc(100svh-82px)] lg:min-h-[calc(100svh-90px)]">
       {/* Full Bleed Background Image Carousel */}
       <div className="absolute inset-0 z-0">
         {BANNERS.map((banner, idx) => (
@@ -55,7 +55,7 @@ export default function Hero() {
       </div>
 
       {/* Hero Section Content */}
-      <section className="relative z-10 w-full -translate-y-44 py-12 sm:py-16 md:translate-y-0 lg:py-24">
+      <section className="relative z-10 w-full -translate-y-20 py-10 sm:-translate-y-12 sm:py-14 md:translate-y-0 md:py-16 lg:py-24">
         <div className="mx-auto flex w-full max-w-7xl animate-fade-in-up flex-col items-center gap-4 px-4 text-center sm:gap-5 sm:px-6 md:items-start md:gap-6 md:text-left lg:px-8">
           
           <div className="inline-flex items-center gap-2 bg-[#268072]/15 border border-[#268072]/30 px-4 py-2 rounded-full text-xs font-semibold tracking-wider text-[#82d6c5] uppercase font-label-sm">
@@ -85,7 +85,7 @@ export default function Hero() {
       </section>
 
       {/* Mobile CTA anchored near the bottom to preserve the product area */}
-      <div className="absolute inset-x-4 bottom-16 z-20 md:hidden">
+      <div className="absolute inset-x-4 bottom-14 z-20 sm:bottom-16 md:hidden">
         <Link
           href="/register"
           className="mx-auto flex w-full max-w-xs items-center justify-center gap-3 rounded-sm border-0 bg-[#EC2300] px-7 py-4 text-sm font-bold uppercase tracking-wide text-white no-underline shadow-lg shadow-[#EC2300]/10 transition-all duration-300 hover:bg-[#c51d00] hover:shadow-[#EC2300]/20 font-label-sm"

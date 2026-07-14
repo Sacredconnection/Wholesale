@@ -69,7 +69,7 @@ export default function Header({ onOpenLogin }) {
         </nav>
 
         {/* CTA Actions (Right - Desktop Only) */}
-        <div className="hidden self-stretch shrink-0 items-center gap-6 md:flex">
+        <div className="hidden self-stretch shrink-0 items-center gap-6 lg:flex">
           <ThemeToggle />
 
           {/* Cart Icon Trigger */}
@@ -121,7 +121,7 @@ export default function Header({ onOpenLogin }) {
         </div>
 
         {/* Mobile Cart and Hamburger Container (Mobile Only) */}
-        <div className="flex items-center gap-3 md:hidden">
+        <div className="flex items-center gap-2.5 sm:gap-3 lg:hidden">
           <ThemeToggle />
 
           <button
@@ -147,7 +147,7 @@ export default function Header({ onOpenLogin }) {
 
       {/* Mobile Drawer Navigation overlay */}
       {mobileMenuOpen && (
-        <div className="absolute top-[100%] left-0 w-full bg-[#212121] border-b border-white/10 px-4 sm:px-6 py-6 flex flex-col gap-5 md:hidden z-40 backdrop-blur-md shadow-xl animate-fade-in">
+        <div className="absolute top-[100%] left-0 z-40 flex max-h-[calc(100dvh-4rem)] w-full flex-col gap-5 overflow-y-auto border-b border-white/10 bg-[#212121] px-4 py-6 shadow-xl backdrop-blur-md animate-fade-in sm:px-6 lg:hidden">
           <Link
             className={`${pathname === '/' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/"

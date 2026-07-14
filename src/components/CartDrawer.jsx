@@ -125,8 +125,8 @@ export default function CartDrawer() {
               {cart.length > 0 ? (
                 <div className="flex flex-col gap-5 divide-y divide-white/5">
                   {cart.map((item, index) => (
-                    <div key={item.sku} className={`flex justify-between items-start gap-4 ${index > 0 ? "pt-5" : ""}`}>
-                      <div className="flex-grow flex gap-3">
+                    <div key={item.sku} className={`flex flex-col items-start justify-between gap-4 sm:flex-row ${index > 0 ? "pt-5" : ""}`}>
+                      <div className="flex w-full min-w-0 flex-grow gap-3">
                         <div className="w-10 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center text-xl shrink-0 select-none overflow-hidden">
                           {item.image ? (
                             <img
@@ -142,22 +142,22 @@ export default function CartDrawer() {
                             "🍃"
                           )}
                         </div>
-                        <div>
+                        <div className="min-w-0">
                           <h4 className="text-sm font-bold text-white leading-snug">
                             {item.name}
                           </h4>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="mt-1 flex min-w-0 flex-wrap items-center gap-2">
                             <span className="text-[10px] font-bold bg-[#268072]/10 text-[#82d6c5] border border-[#268072]/30 px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
                               {item.optionName}
                             </span>
-                            <span className="text-[10px] font-mono text-white/35">
+                            <span className="break-all text-[10px] font-mono text-white/35">
                               {item.sku}
                             </span>
                           </div>
                         </div>
                       </div>
 
-                      <div className="flex flex-col items-end justify-between h-full gap-3 min-w-[100px] shrink-0">
+                      <div className="flex w-full min-w-0 shrink-0 flex-row items-center justify-between gap-3 sm:h-full sm:w-auto sm:min-w-[100px] sm:flex-col sm:items-end">
                         <span className="text-sm font-bold text-white font-mono">
                           ${(item.price * item.quantity).toFixed(2)}
                         </span>

@@ -39,8 +39,9 @@ export default function TestimonialSection() {
     if (!carousel || !card) return;
 
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const inlinePadding = Number.parseFloat(window.getComputedStyle(carousel).paddingLeft) || 0;
     carousel.scrollTo({
-      left: card.offsetLeft - carousel.offsetLeft - 32,
+      left: card.offsetLeft - carousel.offsetLeft - inlinePadding,
       behavior: prefersReducedMotion ? 'auto' : 'smooth',
     });
     setActiveIndex(nextIndex);
@@ -87,12 +88,12 @@ export default function TestimonialSection() {
           <div
             ref={carouselRef}
             onScroll={syncActiveCard}
-            className="scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto px-8 md:grid md:grid-cols-3 md:gap-4 md:overflow-visible md:px-0"
+            className="scrollbar-none flex snap-x snap-mandatory gap-3 overflow-x-auto overscroll-x-contain px-5 touch-pan-x lg:grid lg:grid-cols-3 lg:gap-4 lg:overflow-visible lg:px-0"
           >
             {testimonials.map((testimonial) => (
               <figure
                 key={`${testimonial.name}-${testimonial.store}`}
-                className="relative flex min-w-[calc(100%-4rem)] snap-center flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-lg md:min-w-0 lg:p-6"
+                className="relative flex min-w-[calc(100%-2.5rem)] snap-center flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-lg lg:min-w-0 lg:p-6"
               >
                 <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#82d6c5] to-[#268072]" />
 
@@ -126,7 +127,7 @@ export default function TestimonialSection() {
           <button
             type="button"
             onClick={() => goToTestimonial(activeIndex - 1)}
-            className="absolute left-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] md:hidden"
+            className="absolute left-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] lg:hidden"
             aria-label="Show previous testimonial"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -134,14 +135,14 @@ export default function TestimonialSection() {
           <button
             type="button"
             onClick={() => goToTestimonial(activeIndex + 1)}
-            className="absolute right-0 top-1/2 z-10 grid h-9 w-9 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] md:hidden"
+            className="absolute right-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] lg:hidden"
             aria-label="Show next testimonial"
           >
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
 
-        <div className="mt-4 flex justify-center gap-2 md:hidden" aria-label="Testimonial position">
+        <div className="mt-4 flex justify-center gap-2 lg:hidden" aria-label="Testimonial position">
           {testimonials.map((testimonial, index) => (
             <button
               key={testimonial.name}

@@ -189,7 +189,7 @@ export default function ContactPage() {
                   <div>
                     <span className="text-[10px] font-mono text-white/40 uppercase tracking-wide">Email</span>
                     <p className="mt-0.5">
-                      <a href="mailto:info@sacredconnection.co" className="text-white hover:text-[#82d6c5] transition-colors text-sm font-bold no-underline font-mono">
+                      <a href="mailto:info@sacredconnection.co" className="break-all text-sm font-bold text-white no-underline transition-colors hover:text-[#82d6c5] font-mono">
                         info@sacredconnection.co
                       </a>
                     </p>
@@ -239,11 +239,11 @@ export default function ContactPage() {
                 Our support desk is available to assist partners with import verification, customs clearance documentation, and bulk orders:
               </p>
               <div className="h-px bg-white/5 my-1"></div>
-              <div className="flex justify-between items-center text-xs font-mono text-white/70">
+              <div className="flex flex-col gap-1 text-xs text-white/70 sm:flex-row sm:items-center sm:justify-between font-mono">
                 <span>Monday – Friday</span>
                 <span className="text-white">9:00 AM – 6:00 PM MST</span>
               </div>
-              <div className="flex justify-between items-center text-xs font-mono text-white/70">
+              <div className="flex flex-col gap-1 text-xs text-white/70 sm:flex-row sm:items-center sm:justify-between font-mono">
                 <span>Saturday – Sunday</span>
                 <span className="text-[#82d6c5] font-bold">Closed</span>
               </div>

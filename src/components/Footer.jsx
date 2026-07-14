@@ -17,10 +17,10 @@ export default function Footer() {
 
   return (
     <footer id="footer" className="theme-dark-zone bg-[#212121] border-t border-white/10 w-full scroll-mt-24">
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 px-4 sm:px-6 lg:px-8 py-14 sm:py-16 lg:py-20 w-full max-w-7xl mx-auto">
+      <div className="mx-auto grid w-full max-w-7xl grid-cols-1 gap-8 px-4 py-10 sm:grid-cols-2 sm:gap-10 sm:px-6 sm:py-12 lg:grid-cols-4 lg:gap-12 lg:px-8 lg:py-16">
         
         {/* Brand Info */}
-        <div className="md:col-span-2 flex flex-col gap-5 sm:gap-6 md:pr-6 lg:pr-8">
+        <div className="flex flex-col gap-5 sm:col-span-2 sm:gap-6 lg:pr-8">
           <div className="flex flex-col items-start gap-2">
             <Link
               href="#top"
