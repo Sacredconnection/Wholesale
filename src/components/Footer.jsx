@@ -1,9 +1,21 @@
 "use client";
 
 import React from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
 import { ShieldCheck, Leaf, Globe, Users } from 'lucide-react';
 
 export default function Footer() {
+  const handleLogoClick = (event) => {
+    event.preventDefault();
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    window.scrollTo({
+      top: 0,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
+  };
+
   return (
     <footer id="footer" className="bg-[#212121] border-t border-white/10 w-full mt-12 scroll-mt-24">
       <div className="grid grid-cols-1 md:grid-cols-4 gap-12 px-6 md:px-12 py-24 w-full max-w-7xl mx-auto">
@@ -11,11 +23,20 @@ export default function Footer() {
         {/* Brand Info */}
         <div className="md:col-span-2 flex flex-col gap-6 pr-8">
           <div className="flex flex-col items-start gap-2">
-            <img 
-              src="/logo.svg" 
-              alt="Sacred Connection Wholesale Logo" 
-              className="h-14 md:h-16 w-auto"
-            />
+            <Link
+              href="#top"
+              onClick={handleLogoClick}
+              aria-label="Back to the top of this page"
+              className="inline-flex rounded-sm focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#82d6c5]"
+            >
+              <Image
+                src="/logo.svg"
+                alt="Sacred Connection Wholesale Logo"
+                width={200}
+                height={72}
+                className="h-14 md:h-16 w-auto"
+              />
+            </Link>
           </div>
           <p className="font-body-md text-base text-white/50 leading-relaxed">
             © {new Date().getFullYear()} Sacred Connection Wholesale. Committed to ethical fair-trade sourcing and indigenous preservation.
