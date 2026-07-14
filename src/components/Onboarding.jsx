@@ -23,7 +23,6 @@ const steps = [
 
 export default function Onboarding({ onOpenApply }) {
   const sectionRef = useRef(null);
-  const lineRef = useRef(null);
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -78,48 +77,48 @@ export default function Onboarding({ onOpenApply }) {
       <section
         ref={sectionRef}
         id="onboarding"
-        className="relative mx-auto mt-12 flex w-full max-w-6xl scroll-mt-24 flex-col items-center gap-10 rounded-2xl border border-white/10 bg-[#1a1a1a] px-5 py-10 shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:mt-14 sm:gap-12 sm:px-8 sm:py-12 lg:mt-16 lg:gap-16 lg:px-12 lg:py-16"
+        className="relative mx-auto mt-8 flex w-full max-w-6xl scroll-mt-24 flex-col items-center gap-6 rounded-xl border border-white/10 bg-[#1a1a1a] px-4 py-7 shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:mt-10 sm:gap-7 sm:px-6 sm:py-8 lg:mt-12 lg:gap-8 lg:px-10 lg:py-10"
       >
         {/* Header */}
         <div
           className="w-full max-w-3xl text-center z-10 step-item"
           style={visible ? { animation: 'stepFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0s forwards' } : {}}
         >
-          <h2 className="font-headline-lg text-3xl sm:text-4xl font-black tracking-tighter text-white mb-3 sm:mb-4">
+          <h2 className="font-headline-lg text-2xl sm:text-3xl font-black tracking-tighter text-white mb-2">
             Streamlined Wholesale Access
           </h2>
-          <p className="font-body-md text-lg text-white/70">
+          <p className="font-body-md text-sm sm:text-base leading-relaxed text-white/70">
             Join our network of premium retailers and holistic practitioners. Our vetting process ensures ethical alignment and dedicated support for your business.
           </p>
         </div>
 
         {/* Steps Grid */}
-        <div className="relative z-10 grid w-full grid-cols-1 gap-8 md:grid-cols-3 md:gap-6 lg:gap-8">
+        <div className="relative z-10 grid w-full grid-cols-1 gap-5 md:grid-cols-3 md:gap-5 lg:gap-7">
 
           {/* Connecting Line Background */}
-          <div className="hidden md:block absolute top-10 left-[15%] right-[15%] h-[2px] bg-white/10 -z-10" />
+          <div className="hidden md:block absolute top-7 left-[15%] right-[15%] h-px bg-white/10 -z-10" />
 
           {/* Animated fill on top of the line */}
           <div
-            className={`hidden md:block absolute top-10 left-[15%] right-[15%] h-[2px] bg-gradient-to-r from-[#268072] to-[#82d6c5] -z-10 connector-line-fill${visible ? ' animate' : ''}`}
+            className={`hidden md:block absolute top-7 left-[15%] right-[15%] h-px bg-gradient-to-r from-[#268072] to-[#82d6c5] -z-10 connector-line-fill${visible ? ' animate' : ''}`}
           />
 
           {steps.map((step, i) => (
             <div
               key={step.num}
-              className={`step-item flex flex-col items-center text-center gap-4 sm:gap-6 group${visible ? ' animate' : ''}`}
+              className={`step-item flex flex-row items-start gap-3 text-left md:flex-col md:items-center md:gap-3 md:text-center group${visible ? ' animate' : ''}`}
               style={visible ? { animationDelay: `${0.2 + i * 0.18}s` } : {}}
             >
               <div
-                className="step-circle w-20 h-20 rounded-full bg-[#131313] border border-white/20 flex items-center justify-center group-hover:border-[#82d6c5] transition-colors duration-300 shadow-xl"
+                className="step-circle flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-[#131313] shadow-xl transition-colors duration-300 group-hover:border-[#82d6c5] md:h-14 md:w-14"
               >
-                <span className="font-headline-md text-xl font-bold text-white/50 group-hover:text-[#82d6c5] transition-colors duration-300">
+                <span className="font-headline-md text-base font-bold text-white/50 group-hover:text-[#82d6c5] transition-colors duration-300">
                   {step.num}
                 </span>
               </div>
-              <div>
-                <h3 className="font-headline-md text-2xl font-bold text-white mb-2">{step.title}</h3>
-                <p className="mx-auto max-w-sm font-body-md text-base text-white/70">{step.desc}</p>
+              <div className="min-w-0 pt-0.5 md:pt-0">
+                <h3 className="font-headline-md text-lg font-bold leading-snug text-white mb-1">{step.title}</h3>
+                <p className="mx-auto max-w-sm font-body-md text-sm leading-relaxed text-white/70">{step.desc}</p>
               </div>
             </div>
           ))}
@@ -132,7 +131,7 @@ export default function Onboarding({ onOpenApply }) {
         >
           <Link
             href="/register"
-            className="w-full sm:w-auto bg-[#EC2300] text-white font-label-sm text-sm font-bold uppercase tracking-widest py-4 sm:py-5 px-8 sm:px-12 lg:px-16 rounded-sm hover:bg-[#c51d00] transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 cursor-pointer border-0 no-underline text-center"
+            className="w-full sm:w-auto bg-[#EC2300] text-white font-label-sm text-xs font-bold uppercase tracking-widest py-3.5 px-8 sm:px-10 lg:px-12 rounded-sm hover:bg-[#c51d00] transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 cursor-pointer border-0 no-underline text-center"
           >
             Create B2B Account
           </Link>
