@@ -13,7 +13,7 @@ const TRIBES_DATA = [
     id: 'huni-kuin',
     name: 'Huni Kuin',
     region: 'Acre, Brazil',
-    image: '/tribes/huni-kuin.jpg',
+    image: '/tribes/huni-kuin.webp',
     description: 'The Huni Kuin (also known as Kaxinawá) are the largest indigenous population in Acre. Their name translates to "True People". They hold deep ancestral knowledge of jungle medicine, botany, and ritualistic spiritual practices.',
     sustainability: '100% Direct Fair Trade',
     harvest: 'Lunar Cycle Harvesting',
@@ -23,7 +23,7 @@ const TRIBES_DATA = [
     id: 'yawanawa',
     name: 'Yawanawá',
     region: 'Gregório River',
-    image: '/tribes/yawanawa.jpg',
+    image: '/tribes/yawanawa.webp',
     description: 'The Yawanawá ("People of the Wild Boar") occupy the Gregório River indigenous territory. They are celebrated globally for their vibrant music, spiritual authority, and pioneering leadership of female shamans.',
     sustainability: 'Equitable Profit Share',
     harvest: 'Sustainably Wild-Harvested',
@@ -33,7 +33,7 @@ const TRIBES_DATA = [
     id: 'katukina',
     name: 'Katukina',
     region: 'Campinas',
-    image: '/tribes/katukina.jpg',
+    image: '/tribes/katukina.webp',
     description: 'The Katukina are ancestral keepers of the Kambo ritual and sacred snuffs in the Campinas area. They maintain a highly traditional, disciplined lifestyle deeply connected to the rhythm of the virgin forest.',
     sustainability: 'Cooperative Managed Sourcing',
     harvest: 'Traditional Hand-Milled',
@@ -43,7 +43,7 @@ const TRIBES_DATA = [
     id: 'nukini',
     name: 'Nukini',
     region: 'Juruá Valley',
-    image: '/tribes/nukini.jpg',
+    image: '/tribes/nukini.webp',
     description: 'Residing in the Juruá Valley, the Nukini are known for their resilience and exquisite artisanal crafts. Nukini women hold a central role in gathering sacred herbs and crafting the tribe’s legendary snuffs.',
     sustainability: '100% Female-Gathered Support',
     harvest: 'Organic Forest Sourced',
@@ -53,7 +53,7 @@ const TRIBES_DATA = [
     id: 'shanenawa',
     name: 'Shanenawa',
     region: 'Feijó, Acre',
-    image: '/tribes/shanenawa.jpg',
+    image: '/tribes/shanenawa.webp',
     description: 'The Shanenawa inhabit the Feijó region. Their name means "People of the Blue Bird". They represent peace, wisdom, and deep alignment with the birds and wind spirits of the high forest.',
     sustainability: 'Direct Community Sourced',
     harvest: 'Traditional Bark Scraping',
@@ -63,7 +63,7 @@ const TRIBES_DATA = [
     id: 'caboclo',
     name: 'Caboclo',
     region: 'Amazon Forest',
-    image: '/tribes/caboclo.jpg',
+    image: '/tribes/caboclo.webp',
     description: 'Caboclo formulations represent the synthesis of traditional indigenous knowledge and forest medicine gathered by rubber tappers and riverside communities throughout the Amazon.',
     sustainability: 'Fair-Trade Co-op Sourced',
     harvest: 'Wild-Harvested Botanicals',
@@ -73,7 +73,7 @@ const TRIBES_DATA = [
     id: 'puyanawa',
     name: 'Puyanawa',
     region: 'Mâncio Lima',
-    image: '/tribes/puyanawa.jpg',
+    image: '/tribes/puyanawa.webp',
     description: 'The Puyanawa reside in Mâncio Lima. They have undergone a profound cultural renaissance, recovering their native language and establishing highly sustainable community agriculture models.',
     sustainability: '100% Reinvested Profits',
     harvest: 'Manual Leaf Selection',
@@ -83,7 +83,7 @@ const TRIBES_DATA = [
     id: 'apurina',
     name: 'Apurinã',
     region: 'Purus River',
-    image: '/tribes/apurina.jpg',
+    image: '/tribes/apurina.webp',
     description: 'The Apurinã live along the Purus River basin. They are the creators of the world-famous "Awiry" green snuff, which is unique in that it contains no tobacco and is never burned.',
     sustainability: 'Ultra-Rare Fair Sourced',
     harvest: 'Green Leaf Sun-Dried',
@@ -93,7 +93,7 @@ const TRIBES_DATA = [
     id: 'kuntanawa',
     name: 'Kuntanawa',
     region: 'Alto Juruá',
-    image: '/tribes/kuntanawa.jpg',
+    image: '/tribes/kuntanawa.webp',
     description: 'The Kuntanawa are located at the headwaters of the Alto Juruá. They are committed to reforestation, planting native sacred trees, and protecting the rich bio-diversity of their reservation.',
     sustainability: '100% Forest Protection Pact',
     harvest: 'Ethical Root Harvesting',
@@ -103,7 +103,7 @@ const TRIBES_DATA = [
     id: 'shawadawa',
     name: 'Shawãdawa',
     region: 'Acre, Brazil',
-    image: '/tribes/shawadawa.jpg',
+    image: '/tribes/shawadawa.webp',
     description: 'The Shawãdawa (also known as Arara) live along the Juruá River basin. Their name represents the sun and the macaw. They preserve deep ancestral songs and botanical expertise.',
     sustainability: '100% Direct Community Sourced',
     harvest: 'Sun-Dried Traditional Milling',
@@ -271,7 +271,7 @@ export default function LineageShowcase() {
                     setSelectedTribe(tribe);
                   }
                 }}
-                className="group cursor-pointer relative overflow-hidden rounded bg-[#1a1a1a] border border-white/5 aspect-[3/4] w-[280px] sm:w-[320px] shrink-0 transition-all duration-300 hover:[border-color:var(--ethnicity-accent)] hover:shadow-xl hover:shadow-black/30 select-none"
+                className="lineage-card group cursor-pointer relative overflow-hidden rounded bg-[#1a1a1a] border border-white/5 aspect-[3/4] w-[280px] sm:w-[320px] shrink-0 transition-all duration-300 hover:[border-color:var(--ethnicity-accent)] hover:shadow-xl hover:shadow-black/30 select-none"
                 style={{
                   '--ethnicity-accent': accentColor,
                   '--ethnicity-readable': readableAccentColor,
@@ -291,7 +291,7 @@ export default function LineageShowcase() {
 
                 {/* Bottom details */}
                 <div className="absolute bottom-0 left-0 w-full p-6 flex flex-col gap-2 backdrop-blur-sm bg-[#131313]/50 border-t border-white/10">
-                  <span className="font-label-sm text-xs text-[#82d6c5] uppercase tracking-widest transition-colors group-hover:[color:var(--ethnicity-readable)]">
+                  <span className="lineage-location font-label-sm text-xs text-[#82d6c5] uppercase tracking-widest transition-colors group-hover:[color:var(--ethnicity-readable)]">
                     {tribe.region}
                   </span>
                   <h3 className="font-headline-md text-2xl font-bold text-white">

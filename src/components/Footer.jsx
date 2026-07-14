@@ -52,6 +52,9 @@ export default function Footer() {
             Resources
           </h5>
           <nav className="flex flex-col gap-4">
+            <Link className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/about">
+              About
+            </Link>
             <Link className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/catalog">
               Catalog
             </Link>
@@ -67,12 +70,12 @@ export default function Footer() {
             Legal
           </h5>
           <nav className="flex flex-col gap-4">
-            <a className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="#" onClick={(e) => { e.preventDefault(); alert("Loading Legal disclosures..."); }}>
-              Legal Disclosures
-            </a>
-            <a className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="#" onClick={(e) => { e.preventDefault(); alert("Loading Terms of Service..."); }}>
-              Terms of Service
-            </a>
+            <Link className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/shipping-and-returns-policy">
+              Shipping and Returns Policy
+            </Link>
+            <Link className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/privacy-policy">
+              Privacy Policy
+            </Link>
           </nav>
         </div>
 

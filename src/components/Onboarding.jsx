@@ -50,6 +50,10 @@ export default function Onboarding() {
           from { transform: scaleX(0); }
           to   { transform: scaleX(1); }
         }
+        @keyframes lineFillVertical {
+          from { transform: scaleY(0); }
+          to   { transform: scaleY(1); }
+        }
         @keyframes circlePulse {
           0%   { box-shadow: 0 0 0 0 rgba(130, 214, 197, 0.45); }
           70%  { box-shadow: 0 0 0 16px rgba(130, 214, 197, 0); }
@@ -71,6 +75,13 @@ export default function Onboarding() {
         }
         .connector-line-fill.animate {
           animation: lineFill 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
+        }
+        .connector-line-fill-vertical {
+          transform-origin: center top;
+          transform: scaleY(0);
+        }
+        .connector-line-fill-vertical.animate {
+          animation: lineFillVertical 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.3s forwards;
         }
       `}</style>
 
@@ -106,11 +117,19 @@ export default function Onboarding() {
           {steps.map((step, i) => (
             <div
               key={step.num}
-              className={`step-item flex flex-row items-start gap-3 text-left md:flex-col md:items-center md:gap-3 md:text-center group${visible ? ' animate' : ''}`}
+              className={`step-item relative flex flex-row items-start gap-3 text-left md:flex-col md:items-center md:gap-3 md:text-center group${visible ? ' animate' : ''}`}
               style={visible ? { animationDelay: `${0.2 + i * 0.18}s` } : {}}
             >
+              {i < steps.length - 1 && (
+                <>
+                  <div className="absolute -bottom-11 left-6 top-6 w-px bg-white/10 md:hidden" />
+                  <div
+                    className={`connector-line-fill-vertical absolute -bottom-11 left-6 top-6 w-px bg-gradient-to-b from-[#268072] to-[#82d6c5] md:hidden${visible ? ' animate' : ''}`}
+                  />
+                </>
+              )}
               <div
-                className="step-circle flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-[#131313] shadow-xl transition-colors duration-300 group-hover:border-[#82d6c5] md:h-14 md:w-14"
+                className="step-circle relative z-10 flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-white/20 bg-[#131313] shadow-xl transition-colors duration-300 group-hover:border-[#82d6c5] md:h-14 md:w-14"
               >
                 <span className="font-headline-md text-base font-bold text-white/50 group-hover:text-[#82d6c5] transition-colors duration-300">
                   {step.num}
