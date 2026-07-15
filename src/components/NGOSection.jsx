@@ -109,7 +109,7 @@ export default function NGOSection() {
       <section
         ref={sectionRef}
         id="ngo-partnership"
-        className="theme-dark-zone bg-[#1a1a1a] border border-[#82d6c5]/35 rounded-2xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-[#82d6c5]/60 transition-colors duration-500"
+        className="theme-dark-zone bg-[#1a1a1a] border border-white/35 rounded-2xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-white/60 transition-colors duration-500"
       >
         {/* Ambient background glow */}
         <div className="absolute -top-36 -left-36 w-[500px] h-[500px] bg-[#268072] opacity-[0.09] blur-[130px] pointer-events-none rounded-full" />

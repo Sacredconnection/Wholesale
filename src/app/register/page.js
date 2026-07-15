@@ -5,17 +5,13 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { useAuth } from "@/components/AuthContext";
+import { COUNTRIES } from "@/lib/countries";
 import { 
   CheckCircle2, 
   AlertCircle, 
   Loader2, 
   ChevronLeft 
 } from "lucide-react";
-
-const COUNTRIES = [
-  "Brazil", "United States", "United Kingdom", "Germany", "France", "Netherlands",
-  "Spain", "Italy", "Portugal", "Canada", "Australia", "New Zealand", "Other"
-];
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -251,8 +247,10 @@ export default function RegisterPage() {
                     className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors w-full appearance-none"
                     required
                   >
-                    <option value="">Select country...</option>
-                    {COUNTRIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                    <option value="">Select a country / region...</option>
+                    {COUNTRIES.map(({ code, name }) => (
+                      <option key={code} value={code}>{name}</option>
+                    ))}
                   </select>
                 </div>
 
