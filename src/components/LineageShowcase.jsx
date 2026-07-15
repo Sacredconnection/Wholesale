@@ -245,7 +245,13 @@ export default function LineageShowcase() {
       </div>
 
       {/* Tribe Carousel Track - Seamless CSS Marquee replaced by Draggable Slider */}
-      <div className="w-full overflow-hidden relative">
+      <div className="relative">
+        <div
+          className="pointer-events-none absolute left-1/2 top-1/2 z-0 hidden h-[100px] w-screen -translate-x-1/2 -translate-y-1/2 bg-[url('/decorations/lineage-decorative-band.webp')] bg-center bg-repeat-x [background-size:auto_128px] min-[1440px]:block"
+          aria-hidden="true"
+        />
+
+        <div className="relative z-10 w-full overflow-hidden bg-[#131313]">
         {/* Soft edge blur overlays to blend marquee at the container edges */}
         <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-[#131313] to-transparent z-10 pointer-events-none"></div>
         <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-[#131313] to-transparent z-10 pointer-events-none"></div>
@@ -301,6 +307,7 @@ export default function LineageShowcase() {
               </div>
             );
           })}
+        </div>
         </div>
       </div>
 
