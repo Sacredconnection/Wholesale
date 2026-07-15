@@ -164,6 +164,19 @@ export default function CatalogPage() {
 
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
 
+  const mobilePageNumbers = useMemo(() => {
+    if (totalPages <= 3) {
+      return Array.from({ length: totalPages }, (_, index) => index + 1);
+    }
+
+    const firstVisiblePage = Math.min(
+      Math.max(currentPage - 1, 1),
+      totalPages - 2
+    );
+
+    return [firstVisiblePage, firstVisiblePage + 1, firstVisiblePage + 2];
+  }, [currentPage, totalPages]);
+
   // Handle clear filters
   const handleClearFilters = () => {
     setSearch("");
@@ -498,20 +511,41 @@ export default function CatalogPage() {
 
           {/* Pagination Controls */}
           {totalPages > 1 && (
-            <div className="flex justify-center items-center gap-4 py-8 border-t border-white/5 mt-6">
+            <div className="flex items-center justify-center gap-2 overflow-hidden border-t border-white/5 px-2 py-8 sm:gap-4 mt-6">
               <button
                 onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
                 disabled={currentPage === 1}
+                aria-label="Previous catalog page"
                 className="p-3 bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 text-white border border-white/10 rounded-sm transition-colors cursor-pointer disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
               
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 sm:hidden">
+                {mobilePageNumbers.map((page) => (
+                  <button
+                    key={page}
+                    onClick={() => setCurrentPage(page)}
+                    aria-label={`Go to catalog page ${page}`}
+                    aria-current={currentPage === page ? "page" : undefined}
+                    className={`h-10 w-10 rounded-sm border font-mono text-xs font-bold transition-all cursor-pointer ${
+                      currentPage === page
+                        ? "bg-[#268072] text-white border-[#268072]"
+                        : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white"
+                    }`}
+                  >
+                    {page}
+                  </button>
+                ))}
+              </div>
+
+              <div className="hidden items-center gap-2 sm:flex">
                 {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
                   <button
                     key={page}
                     onClick={() => setCurrentPage(page)}
+                    aria-label={`Go to catalog page ${page}`}
+                    aria-current={currentPage === page ? "page" : undefined}
                     className={`w-10 h-10 rounded-sm text-xs font-bold font-mono transition-all border cursor-pointer ${
                       currentPage === page
                         ? "bg-[#268072] text-white border-[#268072]"
@@ -526,6 +560,7 @@ export default function CatalogPage() {
               <button
                 onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
                 disabled={currentPage === totalPages}
+                aria-label="Next catalog page"
                 className="p-3 bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 text-white border border-white/10 rounded-sm transition-colors cursor-pointer disabled:cursor-not-allowed"
               >
                 <ChevronRight className="w-4 h-4" />
