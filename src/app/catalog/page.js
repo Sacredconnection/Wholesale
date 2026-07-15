@@ -381,7 +381,7 @@ export default function CatalogPage() {
                     <div className="col-span-1 lg:col-span-1 flex items-center">
                       <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="block">
                         {product.image ? (
-                          <div className="w-14 h-14 rounded-full border border-white/10 hover:border-[#268072]/45 overflow-hidden relative shadow-md hover:shadow-lg transition-all duration-300 bg-[#131313]">
+                          <div className="w-14 h-14 rounded-sm border border-white/10 hover:border-[#268072]/45 overflow-hidden relative shadow-md hover:shadow-lg transition-all duration-300 bg-[#131313]">
                             <img
                               src={product.image}
                               alt={product.name}
@@ -391,7 +391,7 @@ export default function CatalogPage() {
                           </div>
                         ) : (
                           <div
-                            className="w-14 h-14 rounded-full border border-white/10 hover:border-[#268072]/45 flex items-center justify-center text-lg font-black text-white select-none transition-all duration-300 relative shadow-md hover:shadow-lg font-mono uppercase"
+                            className="w-14 h-14 rounded-sm border border-white/10 hover:border-[#268072]/45 flex items-center justify-center text-lg font-black text-white select-none transition-all duration-300 relative shadow-md hover:shadow-lg font-mono uppercase"
                             style={{ backgroundColor: getEthnicityColor(product.tribe, product.category) }}
                           >
                             <span className="transform hover:scale-110 transition-transform duration-300">
