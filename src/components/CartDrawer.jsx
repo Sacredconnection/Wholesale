@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Cart images retain runtime WooCommerce error fallbacks. */
+
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from './CartContext';

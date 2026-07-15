@@ -457,8 +457,8 @@ html[data-theme="light"] .theme-dark-zone .lineage-card:hover .lineage-location 
   background: conic-gradient(
     from var(--lineage-trace-angle),
     transparent 0deg 300deg,
-    color-mix(in srgb, var(--ethnicity-readable) 45%, transparent) 326deg,
-    var(--ethnicity-readable) 342deg,
+    color-mix(in srgb, var(--ethnicity-accent) 45%, transparent) 326deg,
+    var(--ethnicity-accent) 342deg,
     transparent 360deg
   );
   opacity: 0;

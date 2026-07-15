@@ -4,9 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
 import { ArrowUpRight, Globe, ShieldCheck, HeartHandshake, Eye } from 'lucide-react';
-import { ETHNICITY_COLORS } from '@/lib/ethnicity-colors';
-
-const DEFAULT_CARD_ACCENT = '#268072';
+import { getEthnicityColor } from '@/lib/ethnicity-colors';
 
 const TRIBES_DATA = [
   {
@@ -252,10 +250,6 @@ export default function LineageShowcase() {
         />
 
         <div className="relative z-10 w-full overflow-hidden bg-[#131313]">
-        {/* Soft edge blur overlays to blend marquee at the container edges */}
-        <div className="absolute top-0 left-0 w-16 h-full bg-gradient-to-r from-[#131313] to-transparent z-10 pointer-events-none"></div>
-        <div className="absolute top-0 right-0 w-16 h-full bg-gradient-to-l from-[#131313] to-transparent z-10 pointer-events-none"></div>
-
         <div 
           ref={sliderRef}
           onMouseDown={handleMouseDown}
@@ -263,10 +257,10 @@ export default function LineageShowcase() {
           onMouseLeave={handleMouseLeave}
           onMouseUp={handleMouseUp}
           onMouseMove={handleMouseMove}
-          className="flex gap-4 sm:gap-6 py-3 sm:py-4 overflow-x-auto scrollbar-none select-none cursor-grab active:cursor-grabbing"
+          className="flex gap-4 overflow-x-auto py-3 select-none cursor-grab scrollbar-none active:cursor-grabbing sm:gap-6 sm:py-4 [mask-image:linear-gradient(to_right,transparent_0%,black_5%,black_95%,transparent_100%)] [-webkit-mask-image:linear-gradient(to_right,transparent_0%,black_5%,black_95%,transparent_100%)]"
         >
           {[...TRIBES_DATA, ...TRIBES_DATA].map((tribe, index) => {
-            const accentColor = ETHNICITY_COLORS[tribe.id] || DEFAULT_CARD_ACCENT;
+            const accentColor = getEthnicityColor(tribe.id);
             const readableAccentColor = `color-mix(in srgb, ${accentColor} 55%, white 45%)`;
 
             return (

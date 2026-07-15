@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from './AuthContext';
 import { optionPriceForUser, cartUnitPrice } from '@/lib/pricing';
 
@@ -10,21 +10,29 @@ export function CartProvider({ children }) {
   const { isLoggedIn, user } = useAuth();
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const cartHydrated = useRef(false);
 
   // Load cart from localStorage on mount
   useEffect(() => {
-    const storedCart = localStorage.getItem('sc_wholesale_cart');
-    if (storedCart) {
+    const hydrationTimer = window.setTimeout(() => {
       try {
-        setCart(JSON.parse(storedCart));
+        const storedCart = localStorage.getItem('sc_wholesale_cart');
+        const parsedCart = storedCart ? JSON.parse(storedCart) : [];
+        setCart(Array.isArray(parsedCart) ? parsedCart : []);
       } catch (e) {
         console.error("Failed to load cart from localStorage", e);
+        setCart([]);
+      } finally {
+        cartHydrated.current = true;
       }
-    }
+    }, 0);
+
+    return () => window.clearTimeout(hydrationTimer);
   }, []);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
+    if (!cartHydrated.current) return;
     localStorage.setItem('sc_wholesale_cart', JSON.stringify(cart));
   }, [cart]);
 

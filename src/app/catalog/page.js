@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- Product media comes from runtime WooCommerce URLs. */
+
 import { useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -58,7 +60,7 @@ export default function CatalogPage() {
   // Read URL query parameters to set initial tribe filter and page
   // Resolve accent-insensitively against actual data so URL params always match
   useEffect(() => {
-    if (typeof window !== "undefined") {
+    const syncTimer = window.setTimeout(() => {
       const params = new URLSearchParams(window.location.search);
       const tribeParam = params.get("tribe");
       if (tribeParam) {
@@ -74,7 +76,9 @@ export default function CatalogPage() {
           setCurrentPage(pageNum);
         }
       }
-    }
+    }, 0);
+
+    return () => window.clearTimeout(syncTimer);
     // Re-resolve the tribe param when the live catalog swaps in, so URL
     // filters keep matching against the current dataset.
   }, [products]);
@@ -369,13 +373,13 @@ export default function CatalogPage() {
               </button>
             </div>
           ) : paginatedProducts.length > 0 ? (
-            <div className="divide-y divide-white/5">
+            <div className="flex flex-col gap-3 p-3 sm:block sm:divide-y sm:divide-white/5 sm:p-0">
               {paginatedProducts.map((product) => {
                 const currentOptIdx = selectedOptions[product.id] !== undefined ? selectedOptions[product.id] : 0;
                 return (
                   <div 
                     key={product.id}
-                    className="grid grid-cols-1 lg:grid-cols-12 gap-4 items-center px-4 sm:px-6 lg:px-8 py-5 sm:py-6 hover:bg-white/[0.01] transition-colors"
+                    className="grid grid-cols-1 items-center gap-4 rounded-sm border border-white/10 bg-[#171717] px-4 py-6 shadow-sm shadow-black/20 transition-colors hover:bg-white/[0.01] sm:rounded-none sm:border-0 sm:bg-transparent sm:px-6 sm:py-6 sm:shadow-none lg:grid-cols-12 lg:px-8"
                   >
                     {/* Image Column — product thumbnail, tribe-letter fallback */}
                     <div className="col-span-1 lg:col-span-1 flex items-center">

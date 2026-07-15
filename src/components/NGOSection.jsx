@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from 'react';
+import Image from 'next/image';
 import { ArrowUpRight, Leaf, Shield, Droplets } from 'lucide-react';
 
 export default function NGOSection() {
@@ -115,9 +116,12 @@ export default function NGOSection() {
         <div className="absolute -bottom-36 -right-36 w-[500px] h-[500px] bg-[#82d6c5] opacity-[0.07] blur-[130px] pointer-events-none rounded-full" />
 
         {/* NGO Symbol Watermark in Bottom-Right */}
-        <img 
+        <Image
           src={symbolSrc} 
           alt="" 
+          width={750}
+          height={750}
+          unoptimized
           className="absolute bottom-[-160px] right-[-120px] w-[500px] h-[500px] md:w-[650px] md:h-[650px] lg:w-[750px] lg:h-[750px] opacity-[0.035] pointer-events-none select-none z-0 mix-blend-screen"
           onError={handleSymbolError}
         />
@@ -131,8 +135,11 @@ export default function NGOSection() {
           >
             {/* NGO Logo with text fallback */}
             <div className="h-16 md:h-[80px] flex items-center mb-2 sm:mb-4 lg:mb-6">
-              <img 
+              <Image
                 src={logoSrc} 
+                width={400}
+                height={160}
+                unoptimized
                 alt="Conexão Ancestral Logo" 
                 className="h-16 md:h-[80px] w-auto object-contain opacity-95 hover:opacity-100 transition-all duration-300"
                 onError={handleLogoError}
@@ -224,10 +231,12 @@ export default function NGOSection() {
               className={`ngo-photo-reveal rounded-xl overflow-hidden border border-white/10 shadow-xl aspect-[16/10] group cursor-pointer relative transition-[border-color,box-shadow] duration-500 hover:border-[#82d6c5]/45 hover:shadow-2xl hover:shadow-[#82d6c5]/10 ${visible ? 'animate' : ''}`}
               style={visible ? { animationDelay: '0.45s' } : {}}
             >
-              <img 
+              <Image
                 src="/ngo/collage-5.webp" 
                 alt="Traditional Amazonian Gathering" 
-                className="w-full h-full object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.045] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none"
+                fill
+                sizes="(min-width: 1024px) 34vw, 100vw"
+                className="object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.045] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#131313]/25 to-transparent opacity-80 group-hover:opacity-30 transition-opacity duration-700 pointer-events-none" />
             </div>
@@ -235,19 +244,19 @@ export default function NGOSection() {
             {/* 2x2 Grid of Corner Images */}
             <div className="grid grid-cols-2 gap-4">
               <div className={`ngo-photo-reveal rounded-lg overflow-hidden border border-white/10 shadow-lg aspect-[4/3] group cursor-pointer relative transition-[border-color,box-shadow] duration-500 hover:border-[#82d6c5]/45 hover:shadow-xl hover:shadow-[#82d6c5]/10 ${visible ? 'animate' : ''}`} style={visible ? { animationDelay: '0.56s' } : {}}>
-                <img src="/ngo/collage-1.webp" alt="Amazon Forest Canopy" className="w-full h-full object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.055] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none" />
+                <Image src="/ngo/collage-1.webp" alt="Amazon Forest Canopy" fill sizes="(min-width: 1024px) 17vw, 50vw" className="object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.055] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#131313]/25 to-transparent opacity-80 group-hover:opacity-25 transition-opacity duration-700 pointer-events-none" />
               </div>
               <div className={`ngo-photo-reveal rounded-lg overflow-hidden border border-white/10 shadow-lg aspect-[4/3] group cursor-pointer relative transition-[border-color,box-shadow] duration-500 hover:border-[#82d6c5]/45 hover:shadow-xl hover:shadow-[#82d6c5]/10 ${visible ? 'animate' : ''}`} style={visible ? { animationDelay: '0.64s' } : {}}>
-                <img src="/ngo/collage-2.webp" alt="Indigenous Community & Culture" className="w-full h-full object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.055] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none" />
+                <Image src="/ngo/collage-2.webp" alt="Indigenous Community & Culture" fill sizes="(min-width: 1024px) 17vw, 50vw" className="object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.055] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#131313]/25 to-transparent opacity-80 group-hover:opacity-25 transition-opacity duration-700 pointer-events-none" />
               </div>
               <div className={`ngo-photo-reveal rounded-lg overflow-hidden border border-white/10 shadow-lg aspect-[4/3] group cursor-pointer relative transition-[border-color,box-shadow] duration-500 hover:border-[#82d6c5]/45 hover:shadow-xl hover:shadow-[#82d6c5]/10 ${visible ? 'animate' : ''}`} style={visible ? { animationDelay: '0.72s' } : {}}>
-                <img src="/ngo/collage-3.webp" alt="Sacred Amazonian Botanicals" className="w-full h-full object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.055] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none" />
+                <Image src="/ngo/collage-3.webp" alt="Sacred Amazonian Botanicals" fill sizes="(min-width: 1024px) 17vw, 50vw" className="object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.055] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#131313]/25 to-transparent opacity-80 group-hover:opacity-25 transition-opacity duration-700 pointer-events-none" />
               </div>
               <div className={`ngo-photo-reveal rounded-lg overflow-hidden border border-white/10 shadow-lg aspect-[4/3] group cursor-pointer relative transition-[border-color,box-shadow] duration-500 hover:border-[#82d6c5]/45 hover:shadow-xl hover:shadow-[#82d6c5]/10 ${visible ? 'animate' : ''}`} style={visible ? { animationDelay: '0.8s' } : {}}>
-                <img src="/ngo/collage-4.webp" alt="Pristine Forest Stream" className="w-full h-full object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.055] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none" />
+                <Image src="/ngo/collage-4.webp" alt="Pristine Forest Stream" fill sizes="(min-width: 1024px) 17vw, 50vw" className="object-cover transition-[transform,filter] duration-700 ease-[cubic-bezier(0.16,1,0.3,1)] group-hover:scale-[1.055] group-hover:brightness-105 group-hover:saturate-110 motion-reduce:transition-none" />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#131313]/25 to-transparent opacity-80 group-hover:opacity-25 transition-opacity duration-700 pointer-events-none" />
               </div>
             </div>

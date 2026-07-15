@@ -1,5 +1,7 @@
 "use client";
 
+/* eslint-disable @next/next/no-img-element -- User avatars may come from arbitrary account URLs. */
+
 import { Fragment, useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/components/AuthContext";
@@ -140,7 +142,9 @@ export default function MyAccountPage() {
 
   // Sync state with user data once loaded
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+
+    const syncTimer = window.setTimeout(() => {
       setShippingForm({ ...user.shippingAddress });
       setBillingForm({ ...user.billingAddress });
       setAccountForm({
@@ -154,7 +158,9 @@ export default function MyAccountPage() {
         newPassword: "",
         confirmPassword: ""
       });
-    }
+    }, 0);
+
+    return () => window.clearTimeout(syncTimer);
   }, [user]);
 
   // Handle Loading State
@@ -1060,12 +1066,16 @@ function AdminApprovalsPanel() {
   const [registeredUsers, setRegisteredUsers] = useState([]);
 
   useEffect(() => {
-    try {
-      const users = JSON.parse(localStorage.getItem('sc_wholesale_registered') || '[]');
-      setRegisteredUsers(Array.isArray(users) ? users : []);
-    } catch (e) {
-      setRegisteredUsers([]);
-    }
+    const hydrationTimer = window.setTimeout(() => {
+      try {
+        const users = JSON.parse(localStorage.getItem('sc_wholesale_registered') || '[]');
+        setRegisteredUsers(Array.isArray(users) ? users : []);
+      } catch {
+        setRegisteredUsers([]);
+      }
+    }, 0);
+
+    return () => window.clearTimeout(hydrationTimer);
   }, []);
 
   const handleApprove = (email) => {

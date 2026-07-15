@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { useAuth } from "@/components/AuthContext";
 import { 
   CheckCircle2, 
@@ -113,7 +114,7 @@ export default function RegisterPage() {
       {/* Top Header */}
       <div className="theme-dark-zone w-full border-b border-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between bg-[#131313] z-10">
         <Link href="/" className="flex items-center gap-2">
-          <img src="/logo.svg" alt="Sacred Connection Wholesale Logo" className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity" />
+          <Image src="/logo.svg" alt="Sacred Connection Wholesale Logo" width={200} height={72} className="h-10 w-auto opacity-90 hover:opacity-100 transition-opacity" />
         </Link>
         <Link href="/" className="text-xs font-mono text-[#82d6c5] hover:text-white transition-colors flex items-center gap-1 font-bold">
           <ChevronLeft className="w-4 h-4" /> Back to Home

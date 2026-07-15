@@ -70,7 +70,7 @@ export default function TestimonialSection() {
   return (
     <section
       aria-labelledby="testimonial-heading"
-      className="relative isolate w-full overflow-hidden rounded-xl border border-white/10 bg-[#131313] px-4 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.14)] sm:px-6 sm:py-7 lg:px-8 lg:py-8"
+      className="relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#131313] px-4 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.14)] sm:px-6 sm:py-7 lg:px-8 lg:py-8"
     >
       <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#268072]/15 blur-3xl" />
 

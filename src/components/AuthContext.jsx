@@ -10,15 +10,23 @@ export function AuthProvider({ children }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Read state from localStorage on client-side mount
-    const storedAuth = localStorage.getItem('sc_wholesale_auth');
-    const storedUser = localStorage.getItem('sc_wholesale_user');
-    
-    if (storedAuth === 'true' && storedUser) {
-      setIsLoggedIn(true);
-      setUser(JSON.parse(storedUser));
-    }
-    setLoading(false);
+    const hydrationTimer = window.setTimeout(() => {
+      const storedAuth = localStorage.getItem('sc_wholesale_auth');
+      const storedUser = localStorage.getItem('sc_wholesale_user');
+
+      if (storedAuth === 'true' && storedUser) {
+        try {
+          setIsLoggedIn(true);
+          setUser(JSON.parse(storedUser));
+        } catch {
+          localStorage.removeItem('sc_wholesale_auth');
+          localStorage.removeItem('sc_wholesale_user');
+        }
+      }
+      setLoading(false);
+    }, 0);
+
+    return () => window.clearTimeout(hydrationTimer);
   }, []);
 
   const persistSession = (safeUser) => {

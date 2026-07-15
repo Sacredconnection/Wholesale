@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+/* eslint-disable @next/next/no-img-element -- Runtime product URLs require native image fallbacks. */
+
+import { useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -33,18 +35,17 @@ export default function ProductDetailPage() {
   // Find product from shared data (static fallback or live WooCommerce catalog)
   const product = products.find((p) => p.id === id);
 
-  // Get related products randomly from the entire product list (excluding current product)
-  const [relatedProducts, setRelatedProducts] = useState([]);
+  // Keep related products deterministic and derived from the shared catalog.
+  const relatedProducts = useMemo(() => {
+    if (!product) return [];
 
-  useEffect(() => {
-    if (!product) return;
+    const currentIndex = products.findIndex((item) => item.id === product.id);
+    const orderedProducts = [
+      ...products.slice(currentIndex + 1),
+      ...products.slice(0, currentIndex),
+    ];
 
-    // Filter out current product from all products
-    const candidates = products.filter((p) => p.id !== product.id);
-
-    // Shuffle and pick 4
-    const shuffled = [...candidates].sort(() => 0.5 - Math.random());
-    setRelatedProducts(shuffled.slice(0, 4));
+    return orderedProducts.filter((item) => item.id !== product.id).slice(0, 4);
   }, [product, products]);
 
   // States
