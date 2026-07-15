@@ -3,6 +3,7 @@ import { AuthProvider } from "@/components/AuthContext";
 import { CartProvider } from "@/components/CartContext";
 import { ProductsProvider } from "@/components/ProductsContext";
 import CartDrawer from "@/components/CartDrawer";
+import ReloadToHome from "@/components/ReloadToHome";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -42,6 +43,7 @@ export default function RootLayout({ children }) {
         className="min-h-full flex flex-col bg-[#131313] text-[#e5e2e1]"
         suppressHydrationWarning
       >
+        <ReloadToHome />
         <AuthProvider>
           <ProductsProvider>
             <CartProvider>
