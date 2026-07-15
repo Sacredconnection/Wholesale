@@ -55,7 +55,7 @@ export default function Hero() {
       </div>
 
       {/* Hero Section Content */}
-      <section className="relative z-10 w-full -translate-y-20 py-10 sm:-translate-y-12 sm:py-14 md:translate-y-0 md:py-16 lg:py-24">
+      <section className="relative z-10 w-full -translate-y-48 py-10 sm:-translate-y-12 sm:py-14 md:translate-y-0 md:py-16 lg:py-24">
         <div className="mx-auto flex w-full max-w-7xl animate-fade-in-up flex-col items-center gap-4 px-4 text-center sm:gap-5 sm:px-6 md:items-start md:gap-6 md:text-left lg:px-8">
           
           <div className="inline-flex items-center gap-2 bg-[#268072]/15 border border-[#268072]/30 px-4 py-2 rounded-full text-xs font-semibold tracking-wider text-[#82d6c5] uppercase font-label-sm">
