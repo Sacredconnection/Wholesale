@@ -6,11 +6,11 @@ export default function RetailRedirectSection() {
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-[#111616]/95 via-[#111616]/80 to-black/45 md:bg-gradient-to-r md:from-[#111616]/98 md:via-[#111616]/75 md:to-black/30"
+        className="absolute inset-0 -z-10 bg-gradient-to-b from-[#111616]/85 via-[#111616]/65 to-black/30 md:bg-gradient-to-r"
       />
 
-      <div className="mx-auto flex min-h-[340px] w-full max-w-7xl items-center px-4 py-14 sm:min-h-[380px] sm:px-6 sm:py-16 lg:min-h-[420px] lg:px-8 lg:py-20">
-          <div className="max-w-xl">
+      <div className="mx-auto flex min-h-[430px] w-full max-w-7xl items-start px-4 pb-14 pt-8 sm:min-h-[380px] sm:px-6 sm:pb-16 sm:pt-10 md:items-center md:py-16 lg:min-h-[420px] lg:px-8 lg:py-20">
+          <div className="mx-auto max-w-xl text-center md:mx-0 md:text-left">
             <p className="mb-3 font-label-sm text-xs font-bold uppercase tracking-[0.18em] text-[#82d6c5]">
               Individual Orders &amp; Retail
             </p>
@@ -28,7 +28,7 @@ export default function RetailRedirectSection() {
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Explore the Sacred Snuff Retail Store in a new tab"
-              className="mt-8 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-white/40 px-6 py-3.5 font-label-sm text-xs font-bold uppercase tracking-[0.14em] text-white transition-colors duration-300 hover:bg-white hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#82d6c5] sm:w-auto"
+              className="absolute inset-x-4 bottom-6 mt-0 inline-flex items-center justify-center gap-2 rounded-lg border border-white/40 px-6 py-3.5 font-label-sm text-xs font-bold uppercase tracking-[0.14em] text-white transition-colors duration-300 hover:bg-white hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#82d6c5] sm:static sm:mt-8 sm:w-auto"
             >
               Explore Retail Store
               <svg

@@ -47,8 +47,8 @@ export default function Hero() {
           </picture>
         ))}
         {/* Radial & Linear Overlays for Premium Contrast and Typography Readability */}
-        <div className="absolute inset-0 bg-gradient-to-b from-[#131313]/95 via-[#131313]/55 to-[#131313]/10 md:bg-gradient-to-r md:from-[#131313] md:via-[#131313]/75 md:to-[#131313]/20 md:opacity-95"></div>
-        <div className="absolute inset-0 hidden bg-gradient-to-t from-[#131313] via-transparent to-transparent opacity-80 md:block"></div>
+        <div className="absolute inset-0 bg-gradient-to-b from-[#131313]/88 via-[#131313]/48 to-[#131313]/8 md:bg-gradient-to-r md:from-[#131313]/90 md:via-[#131313]/65 md:to-[#131313]/15"></div>
+        <div className="absolute inset-0 hidden bg-gradient-to-t from-[#131313] via-transparent to-transparent opacity-65 md:block"></div>
         
         {/* Glow decoration */}
         <div className="absolute top-[-20%] left-[-10%] w-[600px] h-[600px] bg-[#268072] opacity-[0.06] blur-[150px] pointer-events-none rounded-full animate-drift-slow"></div>
