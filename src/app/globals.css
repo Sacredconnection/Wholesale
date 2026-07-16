@@ -684,9 +684,9 @@ html[data-theme="light"] .home-trace {
 
 html[data-theme="light"] .compendium-section {
   --compendium-trace-color: #268072;
-  background: linear-gradient(135deg, #ffffff 0%, #edf7f4 55%, #e2f1ec 100%) !important;
+  background: #ffffff !important;
   border-color: rgb(38 128 114 / 0.28) !important;
-  box-shadow: 0 24px 62px rgb(23 32 30 / 0.11);
+  box-shadow: 0 20px 52px rgb(23 32 30 / 0.1);
 }
 
 html[data-theme="light"] .compendium-icon-shell {
@@ -817,19 +817,30 @@ html[data-theme="light"] .theme-dark-zone [class~="bg-white/10"] {
 }
 
 .home-no-glass .compendium-icon-shell {
-  background-color: #1d4a42 !important;
+  background-color: #131313 !important;
 }
 
 .home-no-glass .compendium-email-box {
-  background-color: #142a26 !important;
+  background-color: #131313 !important;
+}
+
+.home-no-glass .compendium-email-input {
+  background-color: #0f0f0f !important;
 }
 
 .home-no-glass .testimonial-nav-button {
   background-color: #131313 !important;
 }
 
-html[data-theme="light"] .home-no-glass .wholesale-format-card,
+html[data-theme="light"] .home-no-glass .wholesale-format-card {
+  background-color: #ffffff !important;
+}
+
 html[data-theme="light"] .home-no-glass .compendium-email-box {
+  background-color: #f5f7f6 !important;
+}
+
+html[data-theme="light"] .home-no-glass .compendium-email-input {
   background-color: #ffffff !important;
 }
 

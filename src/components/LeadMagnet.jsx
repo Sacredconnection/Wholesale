@@ -4,10 +4,9 @@ export default function LeadMagnet() {
   return (
     <section
       aria-labelledby="lead-magnet-title"
-      className="compendium-section relative isolate w-full overflow-hidden rounded-xl border border-[#82d6c5]/20 bg-gradient-to-br from-[#173b35] via-[#1c4941] to-[#14342f] px-5 py-8 shadow-[0_26px_75px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-12 lg:py-12"
+      className="compendium-section relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#1a1a1a] px-5 py-8 shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-12 lg:py-12"
     >
-      <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#82d6c5]/12 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-28 -left-20 h-64 w-64 rounded-full bg-[#268072]/20 blur-3xl" />
+      <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#268072]/10 blur-3xl" />
 
       <div className="relative grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)] lg:gap-12">
         <div className="max-w-2xl">
