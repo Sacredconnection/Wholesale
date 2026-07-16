@@ -70,7 +70,7 @@ export default function TestimonialSection() {
   return (
     <section
       aria-labelledby="testimonial-heading"
-      className="home-trace relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#131313] px-4 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.14)] transition-colors duration-500 hover:border-[#82d6c5]/60 sm:px-6 sm:py-7 lg:px-8 lg:py-8"
+      className="relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#131313] px-4 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.14)] transition-colors duration-500 hover:border-[#82d6c5]/60 sm:px-6 sm:py-7 lg:px-8 lg:py-8"
     >
       <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#268072]/15 blur-3xl" />
 
@@ -93,7 +93,7 @@ export default function TestimonialSection() {
             {testimonials.map((testimonial) => (
               <figure
                 key={`${testimonial.name}-${testimonial.store}`}
-                className="home-trace relative flex min-w-[calc(100%-2.5rem)] snap-center flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-lg lg:min-w-0 lg:p-6"
+                className="relative flex min-w-[calc(100%-2.5rem)] snap-center flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-lg lg:min-w-0 lg:p-6"
               >
                 <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#82d6c5] to-[#268072]" />
 

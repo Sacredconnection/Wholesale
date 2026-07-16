@@ -484,96 +484,6 @@ html[data-theme="light"] .theme-dark-zone .lineage-card:hover .lineage-location 
   }
 }
 
-@property --home-trace-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
-.home-trace {
-  --home-trace-color: #82d6c5;
-}
-
-.home-trace::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 40;
-  padding: 1px;
-  border-radius: inherit;
-  background: conic-gradient(
-    from var(--home-trace-angle),
-    transparent 0deg 296deg,
-    color-mix(in srgb, var(--home-trace-color) 32%, transparent) 322deg,
-    var(--home-trace-color) 342deg,
-    transparent 360deg
-  );
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 300ms ease;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .home-trace:hover::after {
-    opacity: 0.78;
-    animation: home-trace-orbit 3.8s linear infinite;
-  }
-}
-
-.home-trace:focus-within::after {
-  opacity: 0.78;
-  animation: home-trace-orbit 3.8s linear infinite;
-}
-
-@keyframes home-trace-orbit {
-  to {
-    --home-trace-angle: 360deg;
-  }
-}
-
-html[data-theme="light"] .home-trace {
-  --home-trace-color: #268072;
-}
-
-@property --b2b-faq-trace-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
-.b2b-faq-card {
-  --b2b-faq-trace-color: #82d6c5;
-}
-
-.b2b-faq-card::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 20;
-  padding: 1px;
-  border-radius: inherit;
-  background: conic-gradient(
-    from var(--b2b-faq-trace-angle),
-    transparent 0deg 294deg,
-    color-mix(in srgb, var(--b2b-faq-trace-color) 35%, transparent) 320deg,
-    var(--b2b-faq-trace-color) 342deg,
-    transparent 360deg
-  );
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 300ms ease;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-}
-
 .b2b-faq-item {
   transition: background-color 300ms ease;
 }
@@ -584,19 +494,8 @@ html[data-theme="light"] .home-trace {
     box-shadow: 0 28px 80px rgb(0 0 0 / 0.2);
   }
 
-  .b2b-faq-card:hover::after {
-    opacity: 0.8;
-    animation: b2b-faq-trace-orbit 3.8s linear infinite;
-  }
-
   .b2b-faq-item:hover {
     background-color: rgb(130 214 197 / 0.035);
-  }
-}
-
-@keyframes b2b-faq-trace-orbit {
-  to {
-    --b2b-faq-trace-angle: 360deg;
   }
 }
 
@@ -624,39 +523,8 @@ html[data-theme="light"] .home-trace {
   box-shadow: 0 22px 48px rgb(0 0 0 / 0.25), 0 0 28px rgb(130 214 197 / 0.1);
 }
 
-@property --compendium-trace-angle {
-  syntax: "<angle>";
-  initial-value: 0deg;
-  inherits: false;
-}
-
 .compendium-section {
-  --compendium-trace-color: #82d6c5;
   transition: border-color 300ms ease, box-shadow 300ms ease;
-}
-
-.compendium-section::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 30;
-  padding: 1px;
-  border-radius: inherit;
-  background: conic-gradient(
-    from var(--compendium-trace-angle),
-    transparent 0deg 292deg,
-    color-mix(in srgb, var(--compendium-trace-color) 35%, transparent) 318deg,
-    var(--compendium-trace-color) 340deg,
-    transparent 360deg
-  );
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 300ms ease;
-  -webkit-mask:
-    linear-gradient(#000 0 0) content-box,
-    linear-gradient(#000 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
 }
 
 @media (hover: hover) and (pointer: fine) {
@@ -665,25 +533,9 @@ html[data-theme="light"] .home-trace {
     box-shadow: 0 30px 82px rgb(0 0 0 / 0.22);
   }
 
-  .compendium-section:hover::after {
-    opacity: 0.9;
-    animation: compendium-trace-orbit 3.8s linear infinite;
-  }
-}
-
-.compendium-section:focus-within::after {
-  opacity: 0.9;
-  animation: compendium-trace-orbit 3.8s linear infinite;
-}
-
-@keyframes compendium-trace-orbit {
-  to {
-    --compendium-trace-angle: 360deg;
-  }
 }
 
 html[data-theme="light"] .compendium-section {
-  --compendium-trace-color: #268072;
   background: #ffffff !important;
   border-color: rgb(38 128 114 / 0.28) !important;
   box-shadow: 0 20px 52px rgb(23 32 30 / 0.1);
@@ -755,10 +607,6 @@ html[data-theme="light"] .wholesale-format-badge {
   html[data-theme="light"] .wholesale-format-card:hover .wholesale-format-badge {
     border-color: rgb(38 128 114 / 0.25) !important;
   }
-}
-
-html[data-theme="light"] .b2b-faq-card {
-  --b2b-faq-trace-color: #268072;
 }
 
 html[data-theme="light"] .b2b-faq-toggle {
@@ -865,11 +713,6 @@ html[data-theme="light"] .home-no-glass .compendium-icon-shell {
     animation: none;
   }
 
-  .home-trace:hover::after,
-  .home-trace:focus-within::after,
-  .b2b-faq-card:hover::after,
-  .compendium-section:hover::after,
-  .compendium-section:focus-within::after,
   .compendium-download-icon {
     animation: none;
   }
