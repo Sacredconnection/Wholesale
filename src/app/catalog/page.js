@@ -373,13 +373,13 @@ export default function CatalogPage() {
               </button>
             </div>
           ) : paginatedProducts.length > 0 ? (
-            <div className="flex flex-col gap-3 p-3 sm:block sm:divide-y sm:divide-white/5 sm:p-0">
+            <div className="flex flex-col gap-3 p-3 lg:block lg:divide-y lg:divide-white/10 lg:p-0">
               {paginatedProducts.map((product) => {
                 const currentOptIdx = selectedOptions[product.id] !== undefined ? selectedOptions[product.id] : 0;
                 return (
                   <div 
                     key={product.id}
-                    className="grid grid-cols-1 items-center gap-4 rounded-sm border border-white/10 bg-[#171717] px-4 py-6 shadow-sm shadow-black/20 transition-colors hover:bg-white/[0.01] sm:rounded-none sm:border-0 sm:bg-transparent sm:px-6 sm:py-6 sm:shadow-none lg:grid-cols-12 lg:px-8"
+                    className="grid grid-cols-1 items-center gap-4 rounded-sm border border-white/10 bg-[#171717] px-4 py-6 shadow-sm shadow-black/20 transition-colors hover:bg-white/[0.01] sm:px-6 sm:py-6 lg:grid-cols-12 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-8 lg:shadow-none"
                   >
                     {/* Image Column — product thumbnail, tribe-letter fallback */}
                     <div className="col-span-1 lg:col-span-1 flex items-center">
