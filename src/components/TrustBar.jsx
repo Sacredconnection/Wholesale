@@ -62,7 +62,7 @@ export default function TrustBar() {
   return (
     <div className="w-full bg-[#131313]">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 w-full animate-fade-in" style={{ animationDelay: '0.4s' }}>
-        <div className="grid grid-cols-1 overflow-hidden rounded-sm border border-white/10 bg-[#23403B] md:grid-cols-2 lg:grid-cols-3">
+        <div className="home-trace relative grid grid-cols-1 overflow-hidden rounded-sm border border-white/10 bg-[#23403B] md:grid-cols-2 lg:grid-cols-3">
           
           {/* Card 1: B2B Program */}
           <div className="group relative flex flex-col items-start justify-between gap-3 overflow-hidden border-b border-white/10 p-4 transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] motion-reduce:transition-none sm:p-5 md:border-r lg:border-b-0 lg:p-7">

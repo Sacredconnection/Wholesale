@@ -1,12 +1,10 @@
 import Image from "next/image";
-import { Package, ShoppingBag } from "lucide-react";
 
 const FORMATS = [
   {
     title: "Retail-Ready Tins",
     category: "Retail formats",
     description: "Protective metal vessels designed for curated displays, discovery sets, and practitioner collections.",
-    icon: Package,
     image: "/wholesale-formats/retail-tins.webp",
     imageAlt: "Sacred Connection retail-ready tins",
     sizes: [
@@ -18,7 +16,6 @@ const FORMATS = [
     title: "Wholesale Supply Bags",
     category: "Bulk formats",
     description: "Secure high-volume packaging for refill programs, established retailers, and global distribution.",
-    icon: ShoppingBag,
     image: "/wholesale-formats/wholesale-bags.webp",
     imageAlt: "Sacred Connection wholesale supply bags",
     sizes: [
@@ -54,75 +51,51 @@ export default function WholesaleFormats() {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
-        {FORMATS.map(({ title, category, description, icon: Icon, image, imageAlt, sizes }, index) => (
+      <div className="grid grid-cols-1 gap-5 lg:grid-cols-2 lg:gap-6">
+        {FORMATS.map(({ title, category, description, image, imageAlt, sizes }) => (
           <article
             key={title}
-            className="group relative flex overflow-hidden rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-[#82d6c5]/40 hover:bg-white/[0.07] hover:shadow-[0_22px_55px_rgba(0,0,0,0.18)]"
+            className="home-trace wholesale-format-card group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-md transition-all duration-500 ease-out hover:-translate-y-1 hover:border-[#82d6c5]/50 hover:shadow-[0_26px_65px_rgba(0,0,0,0.24)] sm:p-7 lg:p-8"
           >
-            <div className="pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full bg-[#82d6c5]/0 blur-3xl transition-colors duration-300 group-hover:bg-[#82d6c5]/10" />
+            <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#268072]/20 blur-3xl transition-colors duration-700 group-hover:bg-[#82d6c5]/18" />
 
-            <div className="relative flex w-full flex-col">
-              <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-white/10 bg-[#131313]/35">
-                {image ? (
-                  <Image
-                    src={image}
-                    alt={imageAlt}
-                    fill
-                    unoptimized
-                    sizes="(min-width: 768px) 50vw, 100vw"
-                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.025]"
-                  />
-                ) : (
-                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[radial-gradient(circle_at_center,rgba(130,214,197,0.08),transparent_62%)] text-center">
-                    <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-[#131313]/55 text-[#82d6c5]">
-                      <Icon className="h-7 w-7" aria-hidden="true" />
-                    </div>
-                    <div>
-                      <span className="block font-label-sm text-[10px] font-bold uppercase tracking-[0.16em] text-white/55">
-                        Packaging photo
-                      </span>
-                      <span className="mt-1 block font-mono text-[9px] uppercase tracking-wider text-white/25">
-                        Recommended 1600 × 900 px
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
+            <div className="relative z-10 mb-8 flex h-56 items-center justify-center sm:h-64 lg:h-72">
+              <Image
+                src={image}
+                alt={imageAlt}
+                fill
+                unoptimized
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-contain drop-shadow-2xl transition-transform duration-700 ease-out group-hover:scale-105"
+              />
+            </div>
 
-              <div className="flex flex-1 flex-col p-5 sm:p-7 lg:p-8">
-                <div className="mb-5 flex items-start justify-between gap-4">
-                  <span className="font-label-sm text-[9px] font-bold uppercase tracking-[0.16em] text-[#82d6c5]/80">
-                    {category}
-                  </span>
-                  <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-white/25">
-                    {String(index + 1).padStart(2, "0")}
-                  </span>
-                </div>
+            <div className="relative z-10 border-t border-white/10 pt-6">
+              <span className="wholesale-format-category mb-2 block font-label-sm text-[10px] font-bold uppercase tracking-[0.16em] text-[#9ef2e1]">
+                {category}
+              </span>
+              <h3 className="wholesale-format-title font-headline-md text-2xl font-bold text-white transition-colors duration-300 group-hover:text-[#9ef2e1]">
+                {title}
+              </h3>
+              <p className="mt-3 max-w-xl font-body-md text-sm leading-relaxed text-white/80">
+                {description}
+              </p>
 
-                <h3 className="mb-3 font-headline-md text-2xl font-bold text-white">
-                  {title}
-                </h3>
-                <p className="max-w-md font-body-md text-sm leading-relaxed text-white/60">
-                  {description}
-                </p>
-
-                <div className="mt-auto grid grid-cols-2 gap-3 border-t border-white/10 pt-6">
-                  {sizes.map(({ volume, label }) => (
-                    <div
-                      key={volume}
-                      className="rounded-sm border border-white/[0.08] bg-[#131313]/25 p-3.5 transition-colors duration-300 group-hover:border-white/15 sm:p-4"
-                    >
-                      <span className="block font-headline-md text-lg font-black tracking-tight text-white sm:text-xl">
-                        {volume}
-                      </span>
-                      <span className="mt-1 block font-body-md text-[10px] leading-snug text-white/45 sm:text-[11px]">
-                        {label}
-                      </span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+              <ul className="mt-6 grid grid-cols-2 gap-3" aria-label={`${title} available sizes`}>
+                {sizes.map(({ volume, label }) => (
+                  <li
+                    key={volume}
+                    className="wholesale-format-badge rounded-lg border border-white/10 bg-black/40 px-3 py-3 text-center transition-colors duration-300 group-hover:border-white/20"
+                  >
+                    <strong className="block font-mono text-sm font-bold text-white">
+                      {volume}
+                    </strong>
+                    <span className="mt-1 block font-body-md text-[10px] leading-snug text-white/70 sm:text-[11px]">
+                      {label}
+                    </span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </article>
         ))}

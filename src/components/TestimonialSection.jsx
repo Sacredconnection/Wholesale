@@ -70,7 +70,7 @@ export default function TestimonialSection() {
   return (
     <section
       aria-labelledby="testimonial-heading"
-      className="relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#131313] px-4 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.14)] transition-colors duration-500 hover:border-[#82d6c5]/60 sm:px-6 sm:py-7 lg:px-8 lg:py-8"
+      className="home-trace relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#131313] px-4 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.14)] transition-colors duration-500 hover:border-[#82d6c5]/60 sm:px-6 sm:py-7 lg:px-8 lg:py-8"
     >
       <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#268072]/15 blur-3xl" />
 
@@ -93,7 +93,7 @@ export default function TestimonialSection() {
             {testimonials.map((testimonial) => (
               <figure
                 key={`${testimonial.name}-${testimonial.store}`}
-                className="relative flex min-w-[calc(100%-2.5rem)] snap-center flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-lg lg:min-w-0 lg:p-6"
+                className="home-trace relative flex min-w-[calc(100%-2.5rem)] snap-center flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-lg lg:min-w-0 lg:p-6"
               >
                 <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#82d6c5] to-[#268072]" />
 
@@ -127,7 +127,7 @@ export default function TestimonialSection() {
           <button
             type="button"
             onClick={() => goToTestimonial(activeIndex - 1)}
-            className="absolute left-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] lg:hidden"
+            className="testimonial-nav-button absolute left-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] lg:hidden"
             aria-label="Show previous testimonial"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -135,7 +135,7 @@ export default function TestimonialSection() {
           <button
             type="button"
             onClick={() => goToTestimonial(activeIndex + 1)}
-            className="absolute right-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] lg:hidden"
+            className="testimonial-nav-button absolute right-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] lg:hidden"
             aria-label="Show next testimonial"
           >
             <ChevronRight className="h-4 w-4" aria-hidden="true" />

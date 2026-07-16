@@ -19,7 +19,7 @@ export default function HomeClient() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
-    <div id="top" className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
+    <div id="top" className="home-no-glass bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       {/* Navigation Header */}
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
@@ -49,13 +49,15 @@ export default function HomeClient() {
 
           {/* B2B catalog lead magnet */}
           <LeadMagnet />
-
-          {/* NGO Partnership Details */}
-          <NGOSection />
         </div>
 
         {/* Secondary path for individual retail customers */}
         <RetailRedirectSection />
+
+        <div className="mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
+          {/* NGO Partnership Details */}
+          <NGOSection />
+        </div>
       </main>
 
       {/* Footer Details */}

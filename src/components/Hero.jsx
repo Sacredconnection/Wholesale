@@ -58,7 +58,7 @@ export default function Hero() {
       <section className="relative z-10 w-full -translate-y-48 py-10 sm:-translate-y-12 sm:py-14 md:translate-y-0 md:py-16 lg:py-24">
         <div className="mx-auto flex w-full max-w-7xl animate-fade-in-up flex-col items-center gap-4 px-4 text-center sm:gap-5 sm:px-6 md:items-start md:gap-6 md:text-left lg:px-8">
           
-          <div className="inline-flex items-center gap-3 rounded-full border border-white/15 bg-black/25 p-1.5 pr-4 shadow-[0_12px_35px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
+          <div className="hero-tribe-badge inline-flex items-center gap-3 rounded-full border border-white/15 bg-black/25 p-1.5 pr-4 shadow-[0_12px_35px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
             <span className="flex h-9 min-w-9 items-center justify-center rounded-full bg-gradient-to-br from-[#9be6d7] to-[#268072] text-xs font-black text-[#102420] shadow-[0_0_20px_rgba(130,214,197,0.22)] font-headline-md">
               10
             </span>

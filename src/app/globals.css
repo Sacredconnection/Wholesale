@@ -484,6 +484,62 @@ html[data-theme="light"] .theme-dark-zone .lineage-card:hover .lineage-location 
   }
 }
 
+@property --home-trace-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.home-trace {
+  --home-trace-color: #82d6c5;
+}
+
+.home-trace::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 40;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--home-trace-angle),
+    transparent 0deg 296deg,
+    color-mix(in srgb, var(--home-trace-color) 32%, transparent) 322deg,
+    var(--home-trace-color) 342deg,
+    transparent 360deg
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .home-trace:hover::after {
+    opacity: 0.78;
+    animation: home-trace-orbit 3.8s linear infinite;
+  }
+}
+
+.home-trace:focus-within::after {
+  opacity: 0.78;
+  animation: home-trace-orbit 3.8s linear infinite;
+}
+
+@keyframes home-trace-orbit {
+  to {
+    --home-trace-angle: 360deg;
+  }
+}
+
+html[data-theme="light"] .home-trace {
+  --home-trace-color: #268072;
+}
+
 @property --b2b-faq-trace-angle {
   syntax: "<angle>";
   initial-value: 0deg;
@@ -568,7 +624,66 @@ html[data-theme="light"] .theme-dark-zone .lineage-card:hover .lineage-location 
   box-shadow: 0 22px 48px rgb(0 0 0 / 0.25), 0 0 28px rgb(130 214 197 / 0.1);
 }
 
+@property --compendium-trace-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.compendium-section {
+  --compendium-trace-color: #82d6c5;
+  transition: border-color 300ms ease, box-shadow 300ms ease;
+}
+
+.compendium-section::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  padding: 1px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--compendium-trace-angle),
+    transparent 0deg 292deg,
+    color-mix(in srgb, var(--compendium-trace-color) 35%, transparent) 318deg,
+    var(--compendium-trace-color) 340deg,
+    transparent 360deg
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 300ms ease;
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .compendium-section:hover {
+    border-color: rgb(130 214 197 / 0.58);
+    box-shadow: 0 30px 82px rgb(0 0 0 / 0.22);
+  }
+
+  .compendium-section:hover::after {
+    opacity: 0.9;
+    animation: compendium-trace-orbit 3.8s linear infinite;
+  }
+}
+
+.compendium-section:focus-within::after {
+  opacity: 0.9;
+  animation: compendium-trace-orbit 3.8s linear infinite;
+}
+
+@keyframes compendium-trace-orbit {
+  to {
+    --compendium-trace-angle: 360deg;
+  }
+}
+
 html[data-theme="light"] .compendium-section {
+  --compendium-trace-color: #268072;
   background: linear-gradient(135deg, #ffffff 0%, #edf7f4 55%, #e2f1ec 100%) !important;
   border-color: rgb(38 128 114 / 0.28) !important;
   box-shadow: 0 24px 62px rgb(23 32 30 / 0.11);
@@ -602,6 +717,44 @@ html[data-theme="light"] .compendium-email-input::placeholder {
 
 html[data-theme="light"] .compendium-email-input:focus {
   border-color: rgb(38 128 114 / 0.58) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme="light"] .compendium-section:hover {
+    border-color: rgb(38 128 114 / 0.56) !important;
+    box-shadow: 0 28px 72px rgb(23 32 30 / 0.15);
+  }
+}
+
+html[data-theme="light"] .wholesale-format-card {
+  background-color: rgb(255 255 255 / 0.72) !important;
+  border-color: rgb(38 128 114 / 0.2) !important;
+  box-shadow: 0 18px 48px rgb(23 32 30 / 0.1);
+}
+
+html[data-theme="light"] .wholesale-format-category {
+  color: #006b5e !important;
+}
+
+html[data-theme="light"] .wholesale-format-badge {
+  border-color: rgb(23 32 30 / 0.13) !important;
+  background-color: rgb(238 244 241 / 0.9) !important;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  html[data-theme="light"] .wholesale-format-card:hover {
+    border-color: rgb(38 128 114 / 0.52) !important;
+    background-color: rgb(255 255 255 / 0.88) !important;
+    box-shadow: 0 24px 58px rgb(23 32 30 / 0.14);
+  }
+
+  html[data-theme="light"] .wholesale-format-card:hover .wholesale-format-title {
+    color: #006b5e !important;
+  }
+
+  html[data-theme="light"] .wholesale-format-card:hover .wholesale-format-badge {
+    border-color: rgb(38 128 114 / 0.25) !important;
+  }
 }
 
 html[data-theme="light"] .b2b-faq-card {
@@ -644,6 +797,46 @@ html[data-theme="light"] .theme-dark-zone [class~="bg-white/10"] {
   background-color: rgb(255 255 255 / 0.1) !important;
 }
 
+/* Reversible no-glass preview for the Home. Remove `home-no-glass` from
+   HomeClient to restore the preserved glassmorphism version. */
+.home-no-glass [class*="backdrop-blur"] {
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+}
+
+.home-no-glass .hero-tribe-badge {
+  background-color: #18201e !important;
+}
+
+.home-no-glass .wholesale-format-card {
+  background-color: #1a1a1a !important;
+}
+
+.home-no-glass .lineage-glass-surface {
+  background-color: #131313 !important;
+}
+
+.home-no-glass .compendium-icon-shell {
+  background-color: #1d4a42 !important;
+}
+
+.home-no-glass .compendium-email-box {
+  background-color: #142a26 !important;
+}
+
+.home-no-glass .testimonial-nav-button {
+  background-color: #131313 !important;
+}
+
+html[data-theme="light"] .home-no-glass .wholesale-format-card,
+html[data-theme="light"] .home-no-glass .compendium-email-box {
+  background-color: #ffffff !important;
+}
+
+html[data-theme="light"] .home-no-glass .compendium-icon-shell {
+  background-color: #e5f2ee !important;
+}
+
 @media (prefers-reduced-motion: reduce) {
   body,
   header,
@@ -661,7 +854,11 @@ html[data-theme="light"] .theme-dark-zone [class~="bg-white/10"] {
     animation: none;
   }
 
+  .home-trace:hover::after,
+  .home-trace:focus-within::after,
   .b2b-faq-card:hover::after,
+  .compendium-section:hover::after,
+  .compendium-section:focus-within::after,
   .compendium-download-icon {
     animation: none;
   }
