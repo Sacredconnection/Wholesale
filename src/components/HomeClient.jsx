@@ -4,8 +4,11 @@ import { useState } from 'react';
 import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import TrustBar from '@/components/TrustBar';
+import WholesaleFormats from '@/components/WholesaleFormats';
 import LineageShowcase from '@/components/LineageShowcase';
 import TestimonialSection from '@/components/TestimonialSection';
+import B2BFAQ from '@/components/B2BFAQ';
+import LeadMagnet from '@/components/LeadMagnet';
 import Onboarding from '@/components/Onboarding';
 import NGOSection from '@/components/NGOSection';
 import RetailRedirectSection from '@/components/RetailRedirectSection';
@@ -32,11 +35,20 @@ export default function HomeClient() {
           {/* B2B Onboarding Steps */}
           <Onboarding />
 
+          {/* Product volumes and packaging formats */}
+          <WholesaleFormats />
+
           {/* Tribe Lineage Details */}
           <LineageShowcase />
 
           {/* Retail Partner Testimonial */}
           <TestimonialSection />
+
+          {/* B2B operational FAQ */}
+          <B2BFAQ />
+
+          {/* B2B catalog lead magnet */}
+          <LeadMagnet />
 
           {/* NGO Partnership Details */}
           <NGOSection />

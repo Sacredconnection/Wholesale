@@ -10,8 +10,17 @@ import {
   CheckCircle2, 
   AlertCircle, 
   Loader2, 
-  ChevronLeft 
+  ChevronDown,
+  ChevronLeft,
+  Check
 } from "lucide-react";
+
+const normalizeCountrySearch = (value) =>
+  value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase()
+    .trim();
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -32,10 +41,69 @@ export default function RegisterPage() {
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [countryQuery, setCountryQuery] = useState("");
+  const [countryOpen, setCountryOpen] = useState(false);
+  const [activeCountryIndex, setActiveCountryIndex] = useState(0);
+
+  const normalizedCountryQuery = normalizeCountrySearch(countryQuery);
+  const filteredCountries = normalizedCountryQuery
+    ? COUNTRIES.filter(({ code, name }) =>
+        normalizeCountrySearch(name).includes(normalizedCountryQuery) ||
+        code.toLocaleLowerCase().includes(normalizedCountryQuery)
+      )
+    : COUNTRIES;
 
   const set = (field) => (e) => {
     setForm((prev) => ({ ...prev, [field]: e.target.value }));
     setError("");
+  };
+
+  const handleCountryChange = (e) => {
+    const query = e.target.value;
+    const normalizedQuery = normalizeCountrySearch(query);
+    const selectedCountry = COUNTRIES.find(
+      ({ code, name }) =>
+        code.toLocaleLowerCase() === normalizedQuery ||
+        normalizeCountrySearch(name) === normalizedQuery
+    );
+
+    setCountryQuery(query);
+    setCountryOpen(true);
+    setActiveCountryIndex(0);
+    setForm((prev) => ({
+      ...prev,
+      country: selectedCountry?.code || "",
+    }));
+    setError("");
+  };
+
+  const selectCountry = ({ code, name }) => {
+    setCountryQuery(name);
+    setForm((prev) => ({ ...prev, country: code }));
+    setCountryOpen(false);
+    setError("");
+  };
+
+  const handleCountryKeyDown = (e) => {
+    if (e.key === "ArrowDown") {
+      e.preventDefault();
+      if (countryOpen) {
+        setActiveCountryIndex((index) =>
+          Math.min(index + 1, filteredCountries.length - 1)
+        );
+      } else {
+        setCountryOpen(true);
+        setActiveCountryIndex(0);
+      }
+    } else if (e.key === "ArrowUp") {
+      e.preventDefault();
+      setActiveCountryIndex((index) => Math.max(index - 1, 0));
+    } else if (e.key === "Enter" && countryOpen && filteredCountries[activeCountryIndex]) {
+      e.preventDefault();
+      selectCountry(filteredCountries[activeCountryIndex]);
+    } else if (e.key === "Escape") {
+      setCountryOpen(false);
+    }
   };
 
   const validate = () => {
@@ -241,17 +309,74 @@ export default function RegisterPage() {
                   <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     Country/Region
                   </label>
-                  <select 
-                    value={form.country} 
-                    onChange={set("country")}
-                    className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors w-full appearance-none"
-                    required
+                  <div
+                    className="relative"
+                    onBlur={(e) => {
+                      if (!e.currentTarget.contains(e.relatedTarget)) setCountryOpen(false);
+                    }}
                   >
-                    <option value="">Select a country / region...</option>
-                    {COUNTRIES.map(({ code, name }) => (
-                      <option key={code} value={code}>{name}</option>
-                    ))}
-                  </select>
+                    <div className={`flex items-center overflow-hidden rounded-sm border bg-[#131313] transition-colors ${countryOpen ? "border-[#268072]" : "border-white/10"}`}>
+                      <input
+                        type="text"
+                        value={countryQuery}
+                        onChange={handleCountryChange}
+                        onKeyDown={handleCountryKeyDown}
+                        placeholder="Start typing a country / region..."
+                        autoComplete="off"
+                        role="combobox"
+                        aria-autocomplete="list"
+                        aria-controls="registration-country-list"
+                        aria-expanded={countryOpen}
+                        className="min-w-0 flex-1 bg-transparent px-4 py-3 text-sm text-white outline-none"
+                        required
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setCountryOpen((open) => !open)}
+                        aria-label="Show country list"
+                        className="flex self-stretch items-center justify-center border-0 bg-transparent px-4 text-white/60 transition-colors hover:text-white cursor-pointer"
+                      >
+                        <ChevronDown className={`h-4 w-4 transition-transform ${countryOpen ? "rotate-180" : ""}`} />
+                      </button>
+                    </div>
+
+                    {countryOpen && (
+                      <div
+                        id="registration-country-list"
+                        role="listbox"
+                        className="absolute z-30 mt-1 max-h-60 w-full overflow-y-auto rounded-sm border border-white/10 bg-[#131313] p-1 shadow-2xl shadow-black/50"
+                      >
+                        {filteredCountries.length > 0 ? (
+                          filteredCountries.map((country, index) => (
+                            <button
+                              key={country.code}
+                              type="button"
+                              role="option"
+                              aria-selected={form.country === country.code}
+                              onMouseDown={(e) => e.preventDefault()}
+                              onClick={() => selectCountry(country)}
+                              onMouseEnter={() => setActiveCountryIndex(index)}
+                              className={`flex w-full items-center justify-between gap-3 rounded-sm border-0 px-3 py-2.5 text-left text-sm cursor-pointer transition-colors ${
+                                index === activeCountryIndex
+                                  ? "bg-[#268072]/25 text-white"
+                                  : "bg-transparent text-white/75 hover:bg-white/5 hover:text-white"
+                              }`}
+                            >
+                              <span>{country.name}</span>
+                              <span className="flex items-center gap-2 font-mono text-[10px] text-white/40">
+                                {country.code}
+                                {form.country === country.code && <Check className="h-3.5 w-3.5 text-[#82d6c5]" />}
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="px-3 py-4 text-center text-xs text-white/45">
+                            No country found.
+                          </p>
+                        )}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 {/* State / Region (Optional) */}

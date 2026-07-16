@@ -1,0 +1,132 @@
+import Image from "next/image";
+import { Package, ShoppingBag } from "lucide-react";
+
+const FORMATS = [
+  {
+    title: "Retail-Ready Tins",
+    category: "Retail formats",
+    description: "Protective metal vessels designed for curated displays, discovery sets, and practitioner collections.",
+    icon: Package,
+    image: "/wholesale-formats/retail-tins.webp",
+    imageAlt: "Sacred Connection retail-ready tins",
+    sizes: [
+      { volume: "5g / 10g", label: "Discovery & counter display" },
+      { volume: "20g / 50g", label: "Core retail & practitioner" },
+    ],
+  },
+  {
+    title: "Wholesale Supply Bags",
+    category: "Bulk formats",
+    description: "Secure high-volume packaging for refill programs, established retailers, and global distribution.",
+    icon: ShoppingBag,
+    image: "/wholesale-formats/wholesale-bags.webp",
+    imageAlt: "Sacred Connection wholesale supply bags",
+    sizes: [
+      { volume: "250g", label: "Practitioner & refill supply" },
+      { volume: "1kg", label: "Master wholesale volume" },
+    ],
+  },
+];
+
+export default function WholesaleFormats() {
+  return (
+    <section
+      aria-labelledby="wholesale-formats-title"
+      className="flex w-full flex-col gap-8 py-2 sm:gap-10 sm:py-4"
+    >
+      <div className="max-w-3xl">
+        <span className="mb-3 block font-label-sm text-[10px] font-bold uppercase tracking-[0.2em] text-[#82d6c5] sm:text-xs">
+          Product Line &amp; Categories
+        </span>
+        <h2
+          id="wholesale-formats-title"
+          className="mb-3 font-headline-lg text-3xl font-black tracking-tighter text-white sm:mb-4 sm:text-4xl md:text-5xl"
+        >
+          Ancestral Volumes &amp; Retail Formats
+        </h2>
+        <p className="max-w-2xl font-body-md text-base font-normal leading-relaxed text-white/70 sm:text-lg">
+          Pure lineages secured in protective vessels, available from retail-ready tins to master wholesale bags.
+        </p>
+        <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 font-label-sm">
+          <span>Blends</span>
+          <span>Retail Packs</span>
+          <span>Bulk Supply</span>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:gap-6">
+        {FORMATS.map(({ title, category, description, icon: Icon, image, imageAlt, sizes }, index) => (
+          <article
+            key={title}
+            className="group relative flex overflow-hidden rounded-lg border border-white/10 bg-white/5 backdrop-blur-sm transition-all duration-300 ease-in-out hover:-translate-y-1 hover:border-[#82d6c5]/40 hover:bg-white/[0.07] hover:shadow-[0_22px_55px_rgba(0,0,0,0.18)]"
+          >
+            <div className="pointer-events-none absolute -right-14 -top-14 h-40 w-40 rounded-full bg-[#82d6c5]/0 blur-3xl transition-colors duration-300 group-hover:bg-[#82d6c5]/10" />
+
+            <div className="relative flex w-full flex-col">
+              <div className="relative aspect-[16/9] w-full overflow-hidden border-b border-white/10 bg-[#131313]/35">
+                {image ? (
+                  <Image
+                    src={image}
+                    alt={imageAlt}
+                    fill
+                    unoptimized
+                    sizes="(min-width: 768px) 50vw, 100vw"
+                    className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.025]"
+                  />
+                ) : (
+                  <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-[radial-gradient(circle_at_center,rgba(130,214,197,0.08),transparent_62%)] text-center">
+                    <div className="flex h-14 w-14 items-center justify-center rounded-full border border-white/10 bg-[#131313]/55 text-[#82d6c5]">
+                      <Icon className="h-7 w-7" aria-hidden="true" />
+                    </div>
+                    <div>
+                      <span className="block font-label-sm text-[10px] font-bold uppercase tracking-[0.16em] text-white/55">
+                        Packaging photo
+                      </span>
+                      <span className="mt-1 block font-mono text-[9px] uppercase tracking-wider text-white/25">
+                        Recommended 1600 × 900 px
+                      </span>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+              <div className="flex flex-1 flex-col p-5 sm:p-7 lg:p-8">
+                <div className="mb-5 flex items-start justify-between gap-4">
+                  <span className="font-label-sm text-[9px] font-bold uppercase tracking-[0.16em] text-[#82d6c5]/80">
+                    {category}
+                  </span>
+                  <span className="font-mono text-[10px] font-bold tracking-[0.14em] text-white/25">
+                    {String(index + 1).padStart(2, "0")}
+                  </span>
+                </div>
+
+                <h3 className="mb-3 font-headline-md text-2xl font-bold text-white">
+                  {title}
+                </h3>
+                <p className="max-w-md font-body-md text-sm leading-relaxed text-white/60">
+                  {description}
+                </p>
+
+                <div className="mt-auto grid grid-cols-2 gap-3 border-t border-white/10 pt-6">
+                  {sizes.map(({ volume, label }) => (
+                    <div
+                      key={volume}
+                      className="rounded-sm border border-white/[0.08] bg-[#131313]/25 p-3.5 transition-colors duration-300 group-hover:border-white/15 sm:p-4"
+                    >
+                      <span className="block font-headline-md text-lg font-black tracking-tight text-white sm:text-xl">
+                        {volume}
+                      </span>
+                      <span className="mt-1 block font-body-md text-[10px] leading-snug text-white/45 sm:text-[11px]">
+                        {label}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
