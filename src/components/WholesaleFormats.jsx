@@ -57,8 +57,6 @@ export default function WholesaleFormats() {
             key={title}
             className="wholesale-format-card group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-md transition-all duration-500 ease-out hover:-translate-y-1 hover:border-[#82d6c5]/50 hover:shadow-[0_26px_65px_rgba(0,0,0,0.24)] sm:p-7 lg:p-8"
           >
-            <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#268072]/20 blur-3xl transition-colors duration-700 group-hover:bg-[#82d6c5]/18" />
-
             <div className="relative z-10 mb-8 flex h-56 items-center justify-center sm:h-64 lg:h-72">
               <Image
                 src={image}
@@ -66,7 +64,7 @@ export default function WholesaleFormats() {
                 fill
                 unoptimized
                 sizes="(min-width: 1024px) 50vw, 100vw"
-                className="object-contain drop-shadow-2xl transition-transform duration-700 ease-out group-hover:scale-105"
+                className="wholesale-format-image object-contain drop-shadow-2xl transition-transform duration-700 ease-out group-hover:scale-105"
               />
             </div>
 

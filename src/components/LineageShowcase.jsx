@@ -218,15 +218,15 @@ export default function LineageShowcase() {
   }, [selectedTribe]);
 
   return (
-    <section id="tribes" className="theme-dark-zone relative isolate flex flex-col gap-8 sm:gap-10 lg:gap-12 py-10 sm:py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
+    <section id="tribes" className="theme-dark-zone lineage-showcase relative isolate flex flex-col gap-8 sm:gap-10 lg:gap-12 py-10 sm:py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
       
       {/* Header and Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 w-full">
         <div>
-          <h2 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white mb-3 sm:mb-4">
+          <h2 className="lineage-heading font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white mb-3 sm:mb-4">
             Sourced Across 10 Indigenous Nations
           </h2>
-          <p className="font-body-md text-lg text-white/70 max-w-2xl font-normal leading-relaxed">
+          <p className="lineage-description font-body-md text-lg text-white/70 max-w-2xl font-normal leading-relaxed">
             Ethical harvesting practices honoring centuries of tradition. We work directly with tribal leadership to ensure fair compensation and cultural preservation.
           </p>
         </div>
@@ -234,7 +234,7 @@ export default function LineageShowcase() {
         {/* Controls block */}
         <div className="flex items-center gap-6 shrink-0 w-full md:w-auto justify-between md:justify-end">
           <a 
-            className="text-[#82d6c5] hover:text-[#268072] font-label-sm text-sm uppercase tracking-widest hover:underline flex items-center gap-1.5 transition-colors" 
+            className="lineage-link text-[#82d6c5] hover:text-[#268072] font-label-sm text-sm uppercase tracking-widest hover:underline flex items-center gap-1.5 transition-colors"
             href="/catalog"
           >
             Explore Lineage <ArrowUpRight className="w-4 h-4" />
@@ -245,11 +245,11 @@ export default function LineageShowcase() {
       {/* Tribe Carousel Track - Seamless CSS Marquee replaced by Draggable Slider */}
       <div className="relative">
         <div
-          className="pointer-events-none absolute left-1/2 top-1/2 z-0 hidden h-[100px] w-screen -translate-x-1/2 -translate-y-1/2 bg-[url('/decorations/lineage-decorative-band.webp')] bg-center bg-repeat-x [background-size:auto_128px] min-[1440px]:block"
+          className="lineage-decorative-band pointer-events-none absolute left-1/2 top-1/2 z-0 hidden h-[100px] w-screen -translate-x-1/2 -translate-y-1/2 bg-[url('/decorations/lineage-decorative-band.webp')] bg-center bg-repeat-x [background-size:auto_128px] min-[1440px]:block"
           aria-hidden="true"
         />
 
-        <div className="relative z-10 w-full overflow-hidden bg-[#131313]">
+        <div className="lineage-track-shell relative z-10 w-full overflow-hidden bg-[#131313]">
         <div 
           ref={sliderRef}
           onMouseDown={handleMouseDown}

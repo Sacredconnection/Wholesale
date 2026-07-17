@@ -1,8 +1,9 @@
 # Global site background
 
-Place the final background image in this folder with the exact name:
+Place the background images in this folder with these exact names:
 
-`sacred-wholesale-background.webp`
+- Dark theme: `sacred-wholesale-background.webp`
+- Light theme: `sacred-wholesale-background-light.webp`
 
 Recommended export:
 
@@ -13,8 +14,9 @@ Recommended export:
 - Target file size: ideally below 700 KB
 - Composition: keep the main visual interest near the center, because `cover` crops the edges on narrower screens
 
-The site already references the image at:
+The site already references the images at:
 
-`/backgrounds/sacred-wholesale-background.webp`
+- `/backgrounds/sacred-wholesale-background.webp`
+- `/backgrounds/sacred-wholesale-background-light.webp`
 
-Until that file is added, the existing solid background color remains as the fallback.
+If an image is unavailable, the corresponding theme's solid background color remains as the fallback.
