@@ -195,7 +195,7 @@ export default function CatalogPage() {
   }
 
   return (
-    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
+    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       {/* Navigation Header */}
       <Header 
         onOpenLogin={() => setIsLoginOpen(true)}

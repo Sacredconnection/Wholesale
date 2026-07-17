@@ -75,7 +75,7 @@ export default function OrderReceivedPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
-    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
+    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
       <Suspense fallback={<main className="flex-grow" />}>
         <OrderReceivedContent />

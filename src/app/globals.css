@@ -135,6 +135,13 @@ body {
   font-weight: 400;
   line-height: 1.6;
   background-color: #131313;
+  background-image:
+    linear-gradient(rgb(10 18 16 / 0.58), rgb(10 18 16 / 0.72)),
+    url("/backgrounds/sacred-wholesale-background.webp");
+  background-position: center top;
+  background-repeat: no-repeat;
+  background-size: cover;
+  background-attachment: fixed;
   color: #e5e2e1;
   overflow-x: hidden;
 }
@@ -228,7 +235,16 @@ textarea {
 
 html[data-theme="light"] body {
   background-color: #eef4f1;
+  background-image:
+    linear-gradient(rgb(238 244 241 / 0.78), rgb(238 244 241 / 0.9)),
+    url("/backgrounds/sacred-wholesale-background.webp");
   color: #17201e;
+}
+
+/* Page shells are transparent so the fixed global background remains visible. */
+.site-background-page,
+.site-background-page > main {
+  background-color: transparent !important;
 }
 
 html[data-theme="light"] [class~="bg-[#23403B]"] {

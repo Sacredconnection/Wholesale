@@ -15,7 +15,7 @@ export default function AuthGate({ loading = false }) {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
 
   return (
-    <div className="bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
+    <div className="site-background-page bg-[#131313] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex items-center justify-center">

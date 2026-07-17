@@ -166,7 +166,7 @@ export default function MyAccountPage() {
   // Handle Loading State
   if (loading) {
     return (
-      <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
         <div className="flex-grow flex items-center justify-center">
           <div className="w-10 h-10 border-4 border-[#268072] border-t-transparent rounded-full animate-spin"></div>
@@ -179,7 +179,7 @@ export default function MyAccountPage() {
   // Handle Not Logged In State
   if (!isLoggedIn) {
     return (
-      <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
         
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex items-center justify-center">
@@ -278,7 +278,7 @@ export default function MyAccountPage() {
   };
 
   return (
-    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       {/* Hero Header Section */}

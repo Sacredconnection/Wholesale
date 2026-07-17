@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
   // so hold off on "not found" until the live catalog finishes loading.
   if (!product && productsLoading) {
     return (
-      <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex flex-col items-center justify-center text-center gap-4">
           <div className="w-10 h-10 border-2 border-[#268072] border-t-transparent rounded-full animate-spin" />
@@ -78,7 +78,7 @@ export default function ProductDetailPage() {
   // If product doesn't exist
   if (!product) {
     return (
-      <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex flex-col items-center justify-center text-center gap-6">
           <div className="text-6xl">⚠️</div>
@@ -114,7 +114,7 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       {/* Main Container */}

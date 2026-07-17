@@ -48,7 +48,7 @@ export default function ContactPage() {
   };
 
   return (
-    <div className="bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
