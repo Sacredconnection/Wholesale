@@ -39,7 +39,7 @@ export default function RootLayout({ children }) {
         <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
       </head>
       <body
-        className="min-h-full flex flex-col bg-[#131313] text-[#e5e2e1]"
+        className="min-h-full flex flex-col bg-[#23403B] text-[#e5e2e1]"
         suppressHydrationWarning
       >
         <AuthProvider>

@@ -134,9 +134,9 @@ body {
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.6;
-  background-color: #131313;
+  background-color: #23403b;
   background-image:
-    linear-gradient(rgb(10 18 16 / 0.58), rgb(10 18 16 / 0.72)),
+    linear-gradient(rgb(35 64 59 / 0.58), rgb(35 64 59 / 0.72)),
     url("/backgrounds/sacred-wholesale-background.webp");
   background-position: center top;
   background-repeat: no-repeat;
