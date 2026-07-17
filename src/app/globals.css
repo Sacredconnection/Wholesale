@@ -464,7 +464,10 @@ html[data-theme="light"] .theme-dark-zone .lineage-card {
 
 html[data-theme="light"] .theme-dark-zone .lineage-card:hover {
   border-color: var(--ethnicity-accent) !important;
-  box-shadow: 0 14px 36px rgb(23 32 30 / 0.12) !important;
+  box-shadow:
+    0 0 0 1px color-mix(in srgb, var(--ethnicity-accent) 70%, transparent),
+    0 0 18px color-mix(in srgb, var(--ethnicity-accent) 32%, transparent),
+    0 14px 36px rgb(23 32 30 / 0.12) !important;
 }
 
 html[data-theme="light"] .theme-dark-zone .lineage-card:hover .lineage-location {
@@ -501,10 +504,28 @@ html[data-theme="light"] .theme-dark-zone .lineage-card:hover .lineage-location 
   mask-composite: exclude;
 }
 
+html[data-theme="light"] .theme-dark-zone .lineage-card::after {
+  padding: 2px;
+  background: conic-gradient(
+    from var(--lineage-trace-angle),
+    transparent 0deg 250deg,
+    color-mix(in srgb, var(--ethnicity-accent) 75%, transparent) 292deg,
+    var(--ethnicity-accent) 326deg 346deg,
+    transparent 360deg
+  );
+}
+
 @media (hover: hover) and (pointer: fine) {
   .lineage-card:hover::after {
     opacity: 0.7;
     animation: lineage-trace-orbit 3.8s linear infinite;
+  }
+
+  html[data-theme="light"] .theme-dark-zone .lineage-card:hover::after {
+    opacity: 1;
+    filter: drop-shadow(
+      0 0 9px color-mix(in srgb, var(--ethnicity-accent) 55%, transparent)
+    );
   }
 }
 
