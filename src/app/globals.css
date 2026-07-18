@@ -778,6 +778,7 @@ html[data-theme="light"] .home-no-glass .compendium-icon-shell {
 
 /* Shared editorial treatment for About and policy pages. */
 .editorial-hero {
+  border-bottom: 0;
   background-color: #131313;
   background-image:
     linear-gradient(
@@ -799,6 +800,9 @@ html[data-theme="light"] .home-no-glass .compendium-icon-shell {
 }
 
 .editorial-content {
+  position: relative;
+  z-index: 1;
+  margin-top: -1px;
   background-color: #131313;
 }
 

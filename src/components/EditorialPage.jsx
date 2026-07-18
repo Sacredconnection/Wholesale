@@ -63,7 +63,7 @@ export default function EditorialPage({
     <PublicPageShell>
       <main>
         <header
-          className="editorial-hero relative isolate overflow-hidden border-b border-white/10"
+          className="editorial-hero relative isolate overflow-hidden"
           style={bannerStyle}
         >
           <div className="relative mx-auto w-full max-w-7xl px-4 py-14 sm:px-6 sm:py-20 lg:px-8 lg:py-24">
