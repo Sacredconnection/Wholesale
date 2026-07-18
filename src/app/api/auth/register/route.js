@@ -1,6 +1,7 @@
 import { createCustomer, isWooCommerceConfigured, WooCommerceApiError } from "@/lib/woocommerce";
 import { setWpUserRole } from "@/lib/wp-auth";
 import { mapCustomerToUser, toWcAddress } from "@/lib/wc-mappers";
+import { isSupportedCountryCode } from "@/lib/countries";
 import {
   cleanText,
   isSameOrigin,
@@ -50,6 +51,12 @@ export async function POST(request) {
   }
   if (!firstName || !shippingAddress.street || !shippingAddress.city || !shippingAddress.country || !phone) {
     return securityError("Required account and address fields are missing.", 400);
+  }
+  if (
+    !isSupportedCountryCode(shippingAddress.country) ||
+    !isSupportedCountryCode(billingAddress.country)
+  ) {
+    return securityError("Please select a valid Country/Region.", 400);
   }
 
   try {

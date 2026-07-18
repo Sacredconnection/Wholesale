@@ -51,3 +51,8 @@ export const COUNTRIES = COUNTRY_CODES.map((code) => ({
   code,
   name: COUNTRY_NAME_OVERRIDES[code] || regionNames.of(code) || code,
 }));
+
+const COUNTRY_CODE_SET = new Set(COUNTRY_CODES);
+
+export const isSupportedCountryCode = (value) =>
+  typeof value === "string" && COUNTRY_CODE_SET.has(value.toUpperCase());
