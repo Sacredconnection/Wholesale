@@ -59,12 +59,11 @@ export default function CartDrawer() {
     try {
       const res = await fetch("/api/orders", {
         method: "POST",
+        credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          customer: user,
-          items: cart.map(({ sku, name, optionName, quantity, wcProductId, wcVariationId }) => ({
+          items: cart.map(({ sku, quantity, wcProductId, wcVariationId }) => ({
             sku,
-            name: `${name} — ${optionName}`,
             quantity,
             wcProductId,
             wcVariationId,

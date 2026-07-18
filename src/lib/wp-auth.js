@@ -2,6 +2,8 @@
 // The backend has no JWT plugin, but XML-RPC is enabled — wp.getUsersBlogs
 // runs wp_authenticate (accepts email or username) and needs no extra setup.
 
+import { getWooCommerceBaseUrl } from "@/lib/woocommerce";
+
 if (typeof window !== "undefined") {
   throw new Error("src/lib/wp-auth.js is server-only.");
 }
@@ -22,7 +24,12 @@ const xmlEscape = (value) =>
  * those env vars are absent or the call fails — callers treat it as optional.
  */
 export async function setWpUserRole(userId, role) {
-  const base = (process.env.WOOCOMMERCE_URL || "").replace(/\/+$/, "");
+  let base;
+  try {
+    base = getWooCommerceBaseUrl();
+  } catch {
+    return false;
+  }
   const adminUser = process.env.WP_ADMIN_USER;
   const appPassword = process.env.WP_APP_PASSWORD;
   if (!base || !adminUser || !appPassword) return false;
@@ -54,8 +61,7 @@ export async function setWpUserRole(userId, role) {
  * caller can distinguish "wrong password" from "backend unreachable".
  */
 export async function verifyWpCredentials(usernameOrEmail, password) {
-  const base = (process.env.WOOCOMMERCE_URL || "").replace(/\/+$/, "");
-  if (!base) throw new Error("WOOCOMMERCE_URL is not configured.");
+  const base = getWooCommerceBaseUrl();
 
   const body =
     `<?xml version="1.0"?><methodCall><methodName>wp.getUsersBlogs</methodName><params>` +

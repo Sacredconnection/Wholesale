@@ -1,48 +1,55 @@
-import {
-  createCustomer,
-  isWooCommerceConfigured,
-  WooCommerceApiError,
-} from "@/lib/woocommerce";
+import { createCustomer, isWooCommerceConfigured, WooCommerceApiError } from "@/lib/woocommerce";
 import { setWpUserRole } from "@/lib/wp-auth";
 import { mapCustomerToUser, toWcAddress } from "@/lib/wc-mappers";
+import {
+  cleanText,
+  isSameOrigin,
+  isValidEmail,
+  readJsonBody,
+  RequestBodyError,
+  securityError,
+} from "@/lib/request-security";
 
-// Creates the wholesale account as a WooCommerce customer (a real WordPress
-// user), so the buyer can immediately sign in with the same credentials.
+function cleanAddress(value) {
+  const address = value && typeof value === "object" ? value : {};
+  return {
+    street: cleanText(address.street, 160),
+    neighborhood: cleanText(address.neighborhood, 100),
+    city: cleanText(address.city, 100),
+    state: cleanText(address.state, 100),
+    zip: cleanText(address.zip, 24),
+    country: cleanText(address.country, 2).toUpperCase(),
+  };
+}
+
 export async function POST(request) {
-  if (!isWooCommerceConfigured()) {
-    return Response.json(
-      { error: "WooCommerce backend is not configured." },
-      { status: 503 }
-    );
-  }
+  if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
+  if (!isWooCommerceConfigured()) return securityError("Registration backend unavailable.", 503);
 
   let body;
   try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON body." }, { status: 400 });
+    body = await readJsonBody(request, 32 * 1024);
+  } catch (err) {
+    if (err instanceof RequestBodyError) return securityError(err.message, err.status);
+    return securityError("Invalid JSON body.", 400);
   }
 
-  const {
-    email,
-    password,
-    firstName = "",
-    lastName = "",
-    company = "",
-    phone = "",
-    businessType = "",
-    shippingAddress = {},
-    billingAddress = {},
-  } = body;
+  const email = cleanText(body.email, 254).toLowerCase();
+  const password = typeof body.password === "string" ? body.password : "";
+  const firstName = cleanText(body.firstName, 80);
+  const lastName = cleanText(body.lastName, 80);
+  const company = cleanText(body.company, 120);
+  const phone = cleanText(body.phone, 40);
+  const businessType = cleanText(body.businessType, 80);
+  const shippingAddress = cleanAddress(body.shippingAddress);
+  const billingAddress = cleanAddress(body.billingAddress);
 
-  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-    return Response.json({ error: "A valid email address is required." }, { status: 400 });
+  if (!isValidEmail(email)) return securityError("A valid email address is required.", 400);
+  if (password.length < 12 || password.length > 128) {
+    return securityError("Password must contain between 12 and 128 characters.", 400);
   }
-  if (!password || password.length < 8) {
-    return Response.json(
-      { error: "Password must be at least 8 characters." },
-      { status: 400 }
-    );
+  if (!firstName || !shippingAddress.street || !shippingAddress.city || !shippingAddress.country || !phone) {
+    return securityError("Required account and address fields are missing.", 400);
   }
 
   try {
@@ -52,20 +59,8 @@ export async function POST(request) {
       password,
       first_name: firstName,
       last_name: lastName,
-      billing: {
-        first_name: firstName,
-        last_name: lastName,
-        company,
-        email,
-        phone,
-        ...toWcAddress(billingAddress),
-      },
-      shipping: {
-        first_name: firstName,
-        last_name: lastName,
-        company,
-        ...toWcAddress(shippingAddress),
-      },
+      billing: { first_name: firstName, last_name: lastName, company, email, phone, ...toWcAddress(billingAddress) },
+      shipping: { first_name: firstName, last_name: lastName, company, ...toWcAddress(shippingAddress) },
       meta_data: [
         { key: "sc_channel", value: "wholesale-portal" },
         { key: "sc_approval_status", value: "pending" },
@@ -73,35 +68,21 @@ export async function POST(request) {
       ],
     });
 
-    // New accounts await approval: switch the role to "pending" so the team
-    // sees it in WP Admin (the WC customers API always creates as "customer"
-    // — its role field is read-only, so this goes through wp/v2/users). If
-    // the app-password env vars are missing this is a no-op; the login route
-    // blocks plain "customer" accounts as pending either way.
     await setWpUserRole(customer.id, "pending");
-
-    return Response.json({ user: mapCustomerToUser(customer) }, { status: 201 });
+    return Response.json(
+      { user: mapCustomerToUser(customer) },
+      { status: 201, headers: { "Cache-Control": "no-store" } }
+    );
   } catch (err) {
     if (err instanceof WooCommerceApiError) {
       const code = err.details?.code || "";
       if (code.includes("email-exists") || code.includes("username-exists")) {
-        return Response.json(
-          { error: "An account with this email already exists. Please log in." },
-          { status: 409 }
-        );
+        return securityError("An account with this email already exists. Please log in.", 409);
       }
-      if (err.details?.message) {
-        console.error("POST /api/auth/register rejected:", err.details);
-        return Response.json(
-          { error: `Registration failed: ${err.details.message}` },
-          { status: 422 }
-        );
-      }
+      console.error("POST /api/auth/register rejected:", err.details);
+      return securityError("Registration was rejected. Please review the supplied details.", 422);
     }
     console.error("POST /api/auth/register failed:", err);
-    return Response.json(
-      { error: "Registration failed. Please try again." },
-      { status: 502 }
-    );
+    return securityError("Registration failed. Please try again.", 502);
   }
 }

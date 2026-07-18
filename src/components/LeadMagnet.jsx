@@ -45,6 +45,7 @@ export default function LeadMagnet() {
                 type="email"
                 autoComplete="email"
                 inputMode="email"
+                maxLength={254}
                 placeholder="you@company.com"
                 required
                 className="compendium-email-input h-12 w-full rounded-sm border border-white/10 bg-[#0f2420]/70 pl-11 pr-4 font-body-md text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#82d6c5]/60"

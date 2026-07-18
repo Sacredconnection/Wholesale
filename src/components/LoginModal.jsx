@@ -42,6 +42,9 @@ export default function LoginModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#0c0c0c]/85 p-3 backdrop-blur-md sm:p-4">
       <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="login-title"
         className="relative max-h-[calc(100dvh-1.5rem)] w-full max-w-md overflow-y-auto rounded-lg border border-white/10 bg-[#1a1a1a] shadow-2xl animate-fade-in-up sm:max-h-[calc(100dvh-2rem)]"
         onClick={(e) => e.stopPropagation()}
       >
@@ -50,6 +53,8 @@ export default function LoginModal({ isOpen, onClose }) {
 
         {/* Close Button */}
         <button 
+          type="button"
+          aria-label="Close login dialog"
           onClick={onClose}
           className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 hover:bg-black text-white/70 hover:text-white flex items-center justify-center font-bold border border-white/10 hover:border-white/30 transition-all cursor-pointer z-10"
         >
@@ -63,7 +68,7 @@ export default function LoginModal({ isOpen, onClose }) {
               <Key className="w-3.5 h-3.5" />
               Secure Portal Access
             </span>
-            <h3 className="font-headline-md text-2xl font-bold text-white">
+            <h3 id="login-title" className="font-headline-md text-2xl font-bold text-white">
               Client Login
             </h3>
           </div>
@@ -77,11 +82,16 @@ export default function LoginModal({ isOpen, onClose }) {
 
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-1.5">
-              <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+              <label htmlFor="login-email" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                 Partner Email
               </label>
               <input 
+                id="login-email"
+                name="email"
                 type="email" 
+                autoComplete="email"
+                maxLength={254}
+                required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="name@company.com"
@@ -90,12 +100,17 @@ export default function LoginModal({ isOpen, onClose }) {
             </div>
 
             <div className="flex flex-col gap-1.5 relative">
-              <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+              <label htmlFor="login-password" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                 Password
               </label>
               <div className="relative">
                 <input 
+                  id="login-password"
+                  name="password"
                   type={showPassword ? 'text' : 'password'} 
+                  autoComplete="current-password"
+                  maxLength={256}
+                  required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
@@ -103,11 +118,20 @@ export default function LoginModal({ isOpen, onClose }) {
                 />
                 <button
                   type="button"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                   onClick={() => setShowPassword(!showPassword)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-white/50 hover:text-white bg-transparent border-0 cursor-pointer p-0"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
+              </div>
+              <div className="flex justify-end pt-1">
+                <Link
+                  href="/api/auth/forgot-password"
+                  className="text-[11px] font-semibold text-[#82d6c5] transition-colors hover:text-white hover:underline"
+                >
+                  Forgot your password?
+                </Link>
               </div>
             </div>
           </div>

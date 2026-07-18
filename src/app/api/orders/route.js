@@ -10,6 +10,8 @@ import {
 } from "@/lib/woocommerce";
 import {
   extractWeightGrams,
+  isApprovedWholesaleCustomer,
+  mapCustomerToUser,
   mapOrder,
   roleBasedPrices,
   toWcAddress,
@@ -20,46 +22,34 @@ import {
   progressivePerGramRate,
   progressiveTableKeyFor,
 } from "@/lib/pricing";
+import {
+  cleanText,
+  isSameOrigin,
+  readJsonBody,
+  RequestBodyError,
+  securityError,
+} from "@/lib/request-security";
+import { getSession } from "@/lib/session";
 
 const notConfigured = () =>
   Response.json({ error: "WooCommerce backend is not configured." }, { status: 503 });
 
 // Payment instructions attached to every order as the customer-provided note.
-const PAYMENT_NOTE = `H & F Bank Account:
-Zelle: mslumiar@gmail.com
-H&F Trading Company
-Wells Fargo
-Account: 6114240598
-Routing numbers:
-Direct deposits, electronic payments 121042882
-Wire transfers – domestic 121000248
-Swift Wells Fargo: WFBIUS6S
-Wells Fargo Address: 420 Montgomery Street
-Sao Francisco – California
-Zip code: 94104
-Address: H&F: 2301 Stampede Ave Cody WY 82414
-– – – – –
-Terms of Payment:
-Net 30 days . Buyer shall pay all sales, use, customs, excise or other
-taxes presently or hereafter payable in regards to this transaction, and
-Buyer shall reimburse Seller for any such taxes or charges paid by
-H&F Trading Company (hereafter "Seller.")
-As importer no state excise tax is paid
-No excise tax paid.
-Shipment from USA`;
+const paymentInstructions = () =>
+  cleanText(process.env.ORDER_PAYMENT_INSTRUCTIONS, 4000, { multiline: true });
 
 // Lists the orders belonging to a billing email (used by My Account).
-export async function GET(request) {
+export async function GET() {
+  const session = await getSession();
+  if (!session) return securityError("Authentication required.", 401);
   if (!isWooCommerceConfigured()) return notConfigured();
 
-  const email = new URL(request.url).searchParams.get("email");
-  if (!email) {
-    return Response.json({ error: "Missing 'email' query parameter." }, { status: 400 });
-  }
-
   try {
-    const orders = await getOrdersByEmail(email);
-    return Response.json({ orders: orders.map(mapOrder) });
+    const orders = await getOrdersByEmail(session.email);
+    return Response.json(
+      { orders: orders.map(mapOrder) },
+      { headers: { "Cache-Control": "no-store" } }
+    );
   } catch (err) {
     console.error("GET /api/orders failed:", err);
     const status = err instanceof WooCommerceApiError && err.status >= 400 ? 502 : 500;
@@ -70,28 +60,33 @@ export async function GET(request) {
 // Registers a wholesale order in WooCommerce. No online payment is taken:
 // the order lands as "on-hold" and the team contacts the buyer to arrange it.
 export async function POST(request) {
+  if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
+  const session = await getSession();
+  if (!session) return securityError("Authentication required.", 401);
   if (!isWooCommerceConfigured()) return notConfigured();
 
   let body;
   try {
-    body = await request.json();
-  } catch {
-    return Response.json({ error: "Invalid JSON body." }, { status: 400 });
+    body = await readJsonBody(request);
+  } catch (err) {
+    if (err instanceof RequestBodyError) return securityError(err.message, err.status);
+    return securityError("Invalid JSON body.", 400);
   }
 
-  const { customer = {}, items = [], note = "" } = body;
-
-  if (!customer.email) {
-    return Response.json({ error: "Missing customer email." }, { status: 400 });
-  }
-  if (!Array.isArray(items) || items.length === 0) {
-    return Response.json({ error: "The order sheet is empty." }, { status: 400 });
+  const { items = [] } = body;
+  const note = cleanText(body.note, 1000, { multiline: true });
+  if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
+    return securityError("The order sheet must contain between 1 and 100 items.", 400);
   }
 
   try {
     // The buyer's access level (WP role) drives role-based pricing. Resolved
     // server-side from the customer record — never trusted from the client.
-    const wcCustomer = await getCustomerByEmail(customer.email);
+    const wcCustomer = await getCustomerByEmail(session.email);
+    if (!isApprovedWholesaleCustomer(wcCustomer) || wcCustomer.id !== session.customerId) {
+      return securityError("Authentication required.", 401);
+    }
+    const customer = mapCustomerToUser(wcCustomer);
     const role = wcCustomer?.role || null;
 
     // Phase 1 — resolve each cart item to its WooCommerce payload so price
@@ -114,21 +109,35 @@ export async function POST(request) {
         : "default";
 
     for (const item of items) {
-      const quantity = Math.max(1, parseInt(item.quantity) || 1);
+      if (!item || typeof item !== "object") return securityError("Invalid order item.", 400);
+
+      const quantity = Number(item.quantity);
+      const requestedProductId = Number(item.wcProductId);
+      const requestedVariationId = Number(item.wcVariationId);
+      const sku = cleanText(item.sku, 100);
+      if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 1000) {
+        return securityError("Every item quantity must be between 1 and 1000.", 400);
+      }
+      if (
+        (item.wcProductId && (!Number.isSafeInteger(requestedProductId) || requestedProductId < 1)) ||
+        (item.wcVariationId && (!Number.isSafeInteger(requestedVariationId) || requestedVariationId < 1))
+      ) {
+        return securityError("Invalid product identifier.", 400);
+      }
 
       let payload = null; // full WC product or variation object
       let productId = null;
       let variationId = null;
 
-      if (item.wcProductId && item.wcVariationId) {
-        payload = await getVariationById(item.wcProductId, item.wcVariationId);
-        productId = item.wcProductId;
-        variationId = item.wcVariationId;
-      } else if (item.wcProductId) {
-        payload = await getProductById(item.wcProductId);
-        productId = item.wcProductId;
-      } else if (item.sku) {
-        const found = await findProductBySku(item.sku);
+      if (requestedProductId && requestedVariationId) {
+        payload = await getVariationById(requestedProductId, requestedVariationId);
+        productId = requestedProductId;
+        variationId = requestedVariationId;
+      } else if (requestedProductId) {
+        payload = await getProductById(requestedProductId);
+        productId = requestedProductId;
+      } else if (sku) {
+        const found = await findProductBySku(sku);
         if (found) {
           payload = found;
           productId = found.parent_id || found.id;
@@ -137,7 +146,7 @@ export async function POST(request) {
       }
 
       if (!payload) {
-        unresolved.push(item.sku || item.name || "unknown item");
+        unresolved.push(sku || "unknown item");
         continue;
       }
 
@@ -217,7 +226,10 @@ export async function POST(request) {
 
     // Customer-facing note: payment instructions on every order, plus any
     // note the buyer typed. Internal context goes to meta_data instead.
-    const customerNote = note ? `${PAYMENT_NOTE}\n– – – – –\nBuyer note: ${note}` : PAYMENT_NOTE;
+    const instructions = paymentInstructions();
+    const customerNote = [instructions, note ? `Buyer note: ${note}` : ""]
+      .filter(Boolean)
+      .join("\n---\n");
 
     const order = await createOrder({
       status: "on-hold",

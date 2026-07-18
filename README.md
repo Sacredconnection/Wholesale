@@ -84,6 +84,8 @@ The catalog can be served live from a WordPress/WooCommerce backend. Configurati
 | `WOOCOMMERCE_CONSUMER_KEY` | REST API consumer key (`ck_...`) |
 | `WOOCOMMERCE_CONSUMER_SECRET` | REST API consumer secret (`cs_...`) |
 | `WC_REVALIDATE_SECONDS` | Optional server-side cache TTL for API responses (default `300`) |
+| `SESSION_SECRET` | Required random secret (minimum 32 characters) used to sign authentication cookies |
+| `ORDER_PAYMENT_INSTRUCTIONS` | Server-only payment text appended to wholesale orders |
 
 *   **Local dev:** copy `.env.example` to `.env.local` and fill in the keys (generated in WP Admin → WooCommerce → Settings → Advanced → REST API).
 *   **Vercel:** add the same variables in **Project Settings → Environment Variables**. When the backend URL changes, only `WOOCOMMERCE_URL` needs updating.
@@ -105,11 +107,8 @@ npm run start
 
 ---
 
-## 🔐 B2B Demo Login Credentials
+## B2B Authentication
 
-For testing and client review, a simulated default B2B account is preloaded:
-
-*   **Email:** `partner@sacredconnection.com`
-*   **Password:** `ancestral8892`
-
-*Note: In production environments, this mock provider is designed to be replaced with a secure database or headless identity management service (e.g., Auth0, Firebase Auth, or Clerk).*
+Authentication is verified against WordPress/WooCommerce. The application then
+stores only a signed, short-lived session in an `HttpOnly` cookie; passwords and
+authentication state are never stored in browser `localStorage`.

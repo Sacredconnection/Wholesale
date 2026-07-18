@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from 'react';
+import Link from 'next/link';
 import { Send, FileText, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
 
 export default function ApplicationModal({ isOpen, onClose }) {
@@ -81,11 +82,16 @@ export default function ApplicationModal({ isOpen, onClose }) {
   return (
     <div className="fixed inset-0 bg-[#0c0c0c]/85 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
       <div 
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="application-title"
         className="bg-[#1a1a1a] border border-white/10 rounded-lg max-w-xl w-full shadow-2xl relative animate-fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Close Button */}
         <button 
+          type="button"
+          aria-label="Close wholesale application dialog"
           onClick={handleClose}
           className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/60 hover:bg-black text-white/70 hover:text-white flex items-center justify-center font-bold border border-white/10 hover:border-white/30 transition-all cursor-pointer z-10"
         >
@@ -101,7 +107,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                 <FileText className="w-3.5 h-3.5" />
                 Step 1 of 3: Vetting Application
               </span>
-              <h3 className="font-headline-md text-2xl font-bold text-white">
+              <h3 id="application-title" className="font-headline-md text-2xl font-bold text-white">
                 Apply for Wholesale Account
               </h3>
               <p className="text-sm text-white/50 font-body-md mt-1">
@@ -114,12 +120,16 @@ export default function ApplicationModal({ isOpen, onClose }) {
               
               {/* Full Name */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+                <label htmlFor="application-full-name" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                   Authorized Contact Name
                 </label>
                 <input 
+                  id="application-full-name"
                   type="text" 
                   name="fullName"
+                  autoComplete="name"
+                  maxLength={160}
+                  required
                   value={formData.fullName}
                   onChange={handleChange}
                   placeholder="e.g. John Doe"
@@ -130,12 +140,16 @@ export default function ApplicationModal({ isOpen, onClose }) {
 
               {/* Business Name */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+                <label htmlFor="application-business-name" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                   Registered Business Name
                 </label>
                 <input 
+                  id="application-business-name"
                   type="text" 
                   name="businessName"
+                  autoComplete="organization"
+                  maxLength={120}
+                  required
                   value={formData.businessName}
                   onChange={handleChange}
                   placeholder="e.g. Ancestral Botanicals Ltd."
@@ -146,12 +160,15 @@ export default function ApplicationModal({ isOpen, onClose }) {
 
               {/* Tax ID */}
               <div className="flex flex-col gap-1.5">
-                <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+                <label htmlFor="application-tax-id" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                   Business License / Tax ID
                 </label>
                 <input 
+                  id="application-tax-id"
                   type="text" 
                   name="taxId"
+                  maxLength={80}
+                  required
                   value={formData.taxId}
                   onChange={handleChange}
                   placeholder="e.g. EIN-12-3456789"
@@ -163,12 +180,16 @@ export default function ApplicationModal({ isOpen, onClose }) {
               {/* Contact Grid */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+                  <label htmlFor="application-email" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                     Work Email
                   </label>
                   <input 
+                    id="application-email"
                     type="email" 
                     name="email"
+                    autoComplete="email"
+                    maxLength={254}
+                    required
                     value={formData.email}
                     onChange={handleChange}
                     placeholder="john@company.com"
@@ -177,12 +198,16 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   {errors.email && <span className="text-xs text-[#ffb4ab]">{errors.email}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+                  <label htmlFor="application-phone" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                     Phone Number
                   </label>
                   <input 
+                    id="application-phone"
                     type="tel" 
                     name="phone"
+                    autoComplete="tel"
+                    maxLength={40}
+                    required
                     value={formData.phone}
                     onChange={handleChange}
                     placeholder="+1 (555) 123-4567"
@@ -195,10 +220,11 @@ export default function ApplicationModal({ isOpen, onClose }) {
               {/* volume & intent */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+                  <label htmlFor="application-volume" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                     Est. Monthly Ordering Volume
                   </label>
                   <select 
+                    id="application-volume"
                     name="volume"
                     value={formData.volume}
                     onChange={handleChange}
@@ -211,10 +237,11 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   </select>
                 </div>
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
+                  <label htmlFor="application-channel" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
                     Resale Channel
                   </label>
                   <select 
+                    id="application-channel"
                     name="resaleIntent"
                     value={formData.resaleIntent}
                     onChange={handleChange}
@@ -284,21 +311,21 @@ export default function ApplicationModal({ isOpen, onClose }) {
             
             <div>
               <h3 className="font-headline-md text-2xl font-bold text-white mb-2">
-                Application Received Successfully!
+                Application Details Ready
               </h3>
               <p className="text-sm text-white/50 font-body-md max-w-sm mx-auto leading-relaxed">
-                Your vetting ticket has been created. A dedicated B2B compliance officer will review your business credentials within the next 48 hours.
+                Your details were validated locally and have not been sent to an administrator. Continue to the secure registration page when you are ready.
               </p>
             </div>
 
             <div className="bg-[#131313] border border-white/5 rounded-sm p-4 w-full flex flex-col gap-2 font-mono text-left max-w-sm">
               <div className="flex justify-between text-xs">
-                <span className="text-white/40">TICKET ID:</span>
-                <span className="text-[#82d6c5] font-bold">SCW-7781-B2B</span>
+                <span className="text-white/40">FORM CHECK:</span>
+                <span className="text-[#82d6c5] font-bold">LOCAL VALIDATION</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">STATUS:</span>
-                <span className="text-white font-bold uppercase">PENDING REVIEW</span>
+                <span className="text-white font-bold uppercase">READY TO REGISTER</span>
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-white/40">NOTIFICATIONS TO:</span>
@@ -308,15 +335,16 @@ export default function ApplicationModal({ isOpen, onClose }) {
 
             <div className="flex items-center gap-2 text-[10px] font-mono text-white/40 uppercase">
               <ShieldCheck className="w-4 h-4 text-[#82d6c5]" />
-              Secure vetting vault encrypted
+              No administrative changes were made
             </div>
 
-            <button
+            <Link
+              href="/register"
               onClick={handleClose}
               className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider px-8 py-4 rounded-sm transition-all border-0 cursor-pointer w-full max-w-sm shadow-md"
             >
-              Return to Portal
-            </button>
+              Continue to Secure Registration
+            </Link>
           </div>
         )}
       </div>

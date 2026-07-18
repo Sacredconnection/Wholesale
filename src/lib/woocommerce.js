@@ -10,14 +10,33 @@ if (typeof window !== "undefined") {
 
 const API_VERSION = "wc/v3";
 
-const baseUrl = () => (process.env.WOOCOMMERCE_URL || "").replace(/\/+$/, "");
+export function getWooCommerceBaseUrl() {
+  const rawUrl = (process.env.WOOCOMMERCE_URL || "").replace(/\/+$/, "");
+  if (!rawUrl) throw new Error("WOOCOMMERCE_URL is not configured.");
+
+  const url = new URL(rawUrl);
+  const isLocalDevelopment =
+    process.env.NODE_ENV !== "production" &&
+    url.protocol === "http:" &&
+    ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  if (url.protocol !== "https:" && !isLocalDevelopment) {
+    throw new Error("WOOCOMMERCE_URL must use HTTPS.");
+  }
+  return rawUrl;
+}
+
+const baseUrl = () => getWooCommerceBaseUrl();
 
 export function isWooCommerceConfigured() {
-  return Boolean(
-    process.env.WOOCOMMERCE_URL &&
+  try {
+    getWooCommerceBaseUrl();
+    return Boolean(
       process.env.WOOCOMMERCE_CONSUMER_KEY &&
       process.env.WOOCOMMERCE_CONSUMER_SECRET
-  );
+    );
+  } catch {
+    return false;
+  }
 }
 
 const revalidateSeconds = () => {

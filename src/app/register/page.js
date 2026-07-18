@@ -109,7 +109,9 @@ export default function RegisterPage() {
   const validate = () => {
     if (!form.username.trim()) return "Username / Contact Name is required.";
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "A valid email address is required.";
-    if (!form.password || form.password.length < 8) return "Password must be at least 8 characters.";
+    if (!form.password || form.password.length < 12 || form.password.length > 128) {
+      return "Password must contain between 12 and 128 characters.";
+    }
     if (!form.address.trim()) return "Address Line 1 is required.";
     if (!form.city.trim()) return "City is required.";
     if (!form.zip.trim()) return "Postcode / ZIP is required.";
@@ -216,11 +218,15 @@ export default function RegisterPage() {
                 
                 {/* Username */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="register-name" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     Username
                   </label>
                   <input 
+                    id="register-name"
+                    name="name"
                     type="text" 
+                    autoComplete="name"
+                    maxLength={160}
                     value={form.username} 
                     onChange={set("username")}
                     placeholder="e.g. johndoe"
@@ -231,11 +237,15 @@ export default function RegisterPage() {
 
                 {/* Email */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="register-email" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     Email
                   </label>
                   <input 
+                    id="register-email"
+                    name="email"
                     type="email" 
+                    autoComplete="email"
+                    maxLength={254}
                     value={form.email} 
                     onChange={set("email")}
                     placeholder="name@company.com"
@@ -246,14 +256,19 @@ export default function RegisterPage() {
 
                 {/* Password */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="register-password" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     Password
                   </label>
                   <input 
+                    id="register-password"
+                    name="password"
                     type="password" 
+                    autoComplete="new-password"
+                    minLength={12}
+                    maxLength={128}
                     value={form.password} 
                     onChange={set("password")}
-                    placeholder="Minimum 8 characters"
+                    placeholder="12–128 characters"
                     className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors w-full"
                     required
                   />
@@ -261,11 +276,15 @@ export default function RegisterPage() {
 
                 {/* Address Line 1 */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="register-address" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     Address Line 1
                   </label>
                   <input 
+                    id="register-address"
+                    name="address"
                     type="text" 
+                    autoComplete="address-line1"
+                    maxLength={160}
                     value={form.address} 
                     onChange={set("address")}
                     placeholder="1234 Main St"
@@ -276,11 +295,15 @@ export default function RegisterPage() {
 
                 {/* City */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="register-city" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     City
                   </label>
                   <input 
+                    id="register-city"
+                    name="city"
                     type="text" 
+                    autoComplete="address-level2"
+                    maxLength={100}
                     value={form.city} 
                     onChange={set("city")}
                     placeholder="New York"
@@ -291,11 +314,15 @@ export default function RegisterPage() {
 
                 {/* Postcode / ZIP */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="register-postal-code" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     Postcode / ZIP
                   </label>
                   <input 
+                    id="register-postal-code"
+                    name="postal-code"
                     type="text" 
+                    autoComplete="postal-code"
+                    maxLength={24}
                     value={form.zip} 
                     onChange={set("zip")}
                     placeholder="10001"
@@ -306,7 +333,7 @@ export default function RegisterPage() {
 
                 {/* Country/Region */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="registration-country" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     Country/Region
                   </label>
                   <div
@@ -317,7 +344,10 @@ export default function RegisterPage() {
                   >
                     <div className={`flex items-center overflow-hidden rounded-sm border bg-[#131313] transition-colors ${countryOpen ? "border-[#268072]" : "border-white/10"}`}>
                       <input
+                        id="registration-country"
+                        name="country"
                         type="text"
+                        maxLength={100}
                         value={countryQuery}
                         onChange={handleCountryChange}
                         onKeyDown={handleCountryKeyDown}
@@ -381,11 +411,15 @@ export default function RegisterPage() {
 
                 {/* State / Region (Optional) */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="register-state" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     State / Region (Optional)
                   </label>
                   <input 
+                    id="register-state"
+                    name="state"
                     type="text" 
+                    autoComplete="address-level1"
+                    maxLength={100}
                     value={form.state} 
                     onChange={set("state")}
                     placeholder="Select a state / region..."
@@ -395,11 +429,15 @@ export default function RegisterPage() {
 
                 {/* Phone Number */}
                 <div className="flex flex-col gap-1.5">
-                  <label className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                  <label htmlFor="register-phone" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
                     Phone Number
                   </label>
                   <input 
+                    id="register-phone"
+                    name="phone"
                     type="tel" 
+                    autoComplete="tel"
+                    maxLength={40}
                     value={form.phone} 
                     onChange={set("phone")}
                     placeholder="(123) 456-7890"

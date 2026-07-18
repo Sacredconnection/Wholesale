@@ -119,6 +119,12 @@ export const fromWcAddress = (address = {}) => ({
 const customerMeta = (customer, key) =>
   (customer.meta_data || []).find((m) => m.key === key)?.value;
 
+export function isApprovedWholesaleCustomer(customer) {
+  return Boolean(
+    customer && !["pending", "customer"].includes((customer.role || "").toLowerCase())
+  );
+}
+
 // Maps a WooCommerce customer to the user shape the UI stores in AuthContext.
 // Wholesale terms (credit limit / discount) live in customer meta so the team
 // can manage them from WP Admin; they default to 0 when absent.
@@ -223,5 +229,17 @@ export function mapProduct(product, variations = [], categoryContext = {}) {
     description: stripHtml(product.short_description) || stripHtml(product.description),
     isNew: product.featured === true || (product.tags || []).some((t) => t.slug === "new"),
     options,
+  };
+}
+
+export function mapProductForRole(product, variations, categoryContext, role) {
+  const mapped = mapProduct(product, variations, categoryContext);
+  return {
+    ...mapped,
+    options: mapped.options.map((option) => ({
+      ...option,
+      rolePrices:
+        role && option.rolePrices?.[role] != null ? { [role]: option.rolePrices[role] } : {},
+    })),
   };
 }

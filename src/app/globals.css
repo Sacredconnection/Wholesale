@@ -776,6 +776,156 @@ html[data-theme="light"] .home-no-glass .compendium-icon-shell {
   background-color: #e5f2ee !important;
 }
 
+/* Shared editorial treatment for About and policy pages. */
+.editorial-hero {
+  background-color: #131313;
+  background-image:
+    linear-gradient(
+      90deg,
+      rgb(19 19 19 / 0.98) 0%,
+      rgb(19 19 19 / 0.92) 42%,
+      rgb(19 19 19 / 0.56) 68%,
+      rgb(19 19 19 / 0.24) 100%
+    ),
+    var(--editorial-banner-image, url("/backgrounds/sacred-wholesale-background.webp"));
+  background-position: center, var(--editorial-banner-position, center);
+  background-repeat: no-repeat;
+  background-size: cover;
+}
+
+.editorial-card,
+.editorial-toc {
+  box-shadow: 0 24px 70px rgb(0 0 0 / 0.2);
+}
+
+.editorial-content {
+  background-color: #131313;
+}
+
+.editorial-copy > p + p,
+.editorial-copy > ul + p,
+.editorial-copy > p + ul {
+  margin-top: 1.25rem;
+}
+
+.editorial-copy ul {
+  padding-left: 1.35rem;
+  list-style: none;
+}
+
+.editorial-copy li {
+  position: relative;
+  padding-left: 1.2rem;
+}
+
+.editorial-copy li + li {
+  margin-top: 0.65rem;
+}
+
+.editorial-copy li::before {
+  content: "";
+  position: absolute;
+  top: 0.78rem;
+  left: 0;
+  width: 0.34rem;
+  height: 0.34rem;
+  border-radius: 9999px;
+  background-color: #82d6c5;
+  box-shadow: 0 0 0 4px rgb(38 128 114 / 0.12);
+}
+
+.editorial-copy strong {
+  color: rgb(255 255 255 / 0.86);
+  font-weight: 600;
+}
+
+.editorial-copy a,
+.editorial-contact a {
+  color: #82d6c5;
+  text-decoration: underline;
+  text-decoration-color: rgb(130 214 197 / 0.35);
+  text-underline-offset: 0.25rem;
+  transition: color 180ms ease, text-decoration-color 180ms ease;
+}
+
+.editorial-copy a:hover,
+.editorial-contact a:hover {
+  color: #ffffff;
+  text-decoration-color: currentColor;
+}
+
+html[data-theme="light"] .editorial-hero {
+  background-color: #f5f7f6;
+  background-image:
+    linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.98) 0%,
+      rgb(255 255 255 / 0.94) 42%,
+      rgb(245 247 246 / 0.65) 68%,
+      rgb(245 247 246 / 0.28) 100%
+    ),
+    var(--editorial-banner-image, url("/backgrounds/sacred-wholesale-background-light.webp"));
+}
+
+html[data-theme="light"] .editorial-card,
+html[data-theme="light"] .editorial-toc {
+  box-shadow: 0 24px 70px rgb(23 32 30 / 0.1);
+}
+
+html[data-theme="light"] .editorial-content {
+  background-color: rgb(255 255 255 / 0.74);
+}
+
+html[data-theme="light"] .editorial-value-card {
+  background-color: #f5f7f6 !important;
+  border-color: rgb(38 128 114 / 0.16) !important;
+}
+
+html[data-theme="light"] .editorial-section-number {
+  color: #006b5e !important;
+  border-color: rgb(38 128 114 / 0.28) !important;
+  background-color: rgb(38 128 114 / 0.08) !important;
+}
+
+html[data-theme="light"] .editorial-notice {
+  background-color: rgb(38 128 114 / 0.07) !important;
+}
+
+html[data-theme="light"] .editorial-copy,
+html[data-theme="light"] .editorial-notice [class~="text-white/65"],
+html[data-theme="light"] .editorial-contact [class~="text-white/65"] {
+  color: rgb(23 32 30 / 0.68) !important;
+}
+
+html[data-theme="light"] .editorial-copy strong {
+  color: rgb(23 32 30 / 0.9);
+}
+
+html[data-theme="light"] .editorial-copy a,
+html[data-theme="light"] .editorial-contact a {
+  color: #006b5e;
+  text-decoration-color: rgb(0 107 94 / 0.35);
+}
+
+html[data-theme="light"] .editorial-copy a:hover,
+html[data-theme="light"] .editorial-contact a:hover {
+  color: #17201e;
+}
+
+@media (max-width: 767px) {
+  .editorial-hero {
+    background-image:
+      linear-gradient(90deg, rgb(19 19 19 / 0.96), rgb(19 19 19 / 0.76)),
+      var(--editorial-banner-image, url("/backgrounds/sacred-wholesale-background.webp"));
+  }
+
+  html[data-theme="light"] .editorial-hero {
+    background-image:
+      linear-gradient(90deg, rgb(255 255 255 / 0.97), rgb(245 247 246 / 0.82)),
+      var(--editorial-banner-image, url("/backgrounds/sacred-wholesale-background-light.webp"));
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   body,
   header,

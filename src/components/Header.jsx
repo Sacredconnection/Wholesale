@@ -23,9 +23,10 @@ export default function Header({ onOpenLogin }) {
     }
   };
 
-  const handleHeaderLogout = () => {
-    logout();
+  const handleHeaderLogout = async () => {
+    await logout();
     router.push('/');
+    router.refresh();
   };
 
   return (

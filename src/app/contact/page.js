@@ -39,12 +39,13 @@ export default function ContactPage() {
     setLoading(true);
     setError("");
 
-    // Simulate sending message
-    setTimeout(() => {
-      setLoading(false);
-      setSuccess(true);
-      setForm({ name: "", email: "", subject: "", message: "" });
-    }, 1200);
+    const subject = encodeURIComponent(`[B2B Support] ${form.subject.trim().slice(0, 120)}`);
+    const body = encodeURIComponent(
+      `Name: ${form.name.trim()}\nEmail: ${form.email.trim()}\n\n${form.message.trim()}`
+    );
+    window.location.assign(`mailto:info@sacredconnection.co?subject=${subject}&body=${body}`);
+    setLoading(false);
+    setSuccess(true);
   };
 
   return (
@@ -82,8 +83,8 @@ export default function ContactPage() {
                   <Check className="w-4 h-4" />
                 </div>
                 <div>
-                  <p className="font-bold">Message sent successfully!</p>
-                  <p className="text-xs text-emerald-400/80 mt-0.5">Our wholesale support team will get back to you within 24 business hours.</p>
+                  <p className="font-bold">Email prepared successfully.</p>
+                  <p className="text-xs text-emerald-400/80 mt-0.5">Review and send it from your email application to contact our wholesale support team.</p>
                 </div>
               </div>
             )}
@@ -97,6 +98,9 @@ export default function ContactPage() {
                   <input 
                     type="text" 
                     id="name"
+                    name="name"
+                    autoComplete="name"
+                    maxLength={160}
                     value={form.name}
                     onChange={handleChange("name")}
                     placeholder="Your name"
@@ -112,6 +116,9 @@ export default function ContactPage() {
                   <input 
                     type="email" 
                     id="email"
+                    name="email"
+                    autoComplete="email"
+                    maxLength={254}
                     value={form.email}
                     onChange={handleChange("email")}
                     placeholder="name@company.com"
@@ -128,6 +135,8 @@ export default function ContactPage() {
                 <input 
                   type="text" 
                   id="subject"
+                  name="subject"
+                  maxLength={120}
                   value={form.subject}
                   onChange={handleChange("subject")}
                   placeholder="How can we help you?"
@@ -142,6 +151,8 @@ export default function ContactPage() {
                 </label>
                 <textarea 
                   id="message"
+                  name="message"
+                  maxLength={2000}
                   value={form.message}
                   onChange={handleChange("message")}
                   placeholder="Tell us about your store, volume requirements, or inquiry..."
