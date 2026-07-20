@@ -75,7 +75,7 @@ export default function WholesaleFormats() {
               <h3 className="wholesale-format-title font-headline-md text-2xl font-bold text-white transition-colors duration-300 group-hover:text-[#9ef2e1]">
                 {title}
               </h3>
-              <p className="mt-3 max-w-xl font-body-md text-sm leading-relaxed text-white/80">
+              <p className="wholesale-format-description mt-3 max-w-xl font-body-md text-sm leading-relaxed text-white/80">
                 {description}
               </p>
 
@@ -88,7 +88,7 @@ export default function WholesaleFormats() {
                     <strong className="block font-mono text-sm font-bold text-white">
                       {volume}
                     </strong>
-                    <span className="mt-1 block font-body-md text-[10px] leading-snug text-white/70 sm:text-[11px]">
+                    <span className="wholesale-format-detail mt-1 block font-body-md text-[10px] leading-snug text-white/70 sm:text-[11px]">
                       {label}
                     </span>
                   </li>

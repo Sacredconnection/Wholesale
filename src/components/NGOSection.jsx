@@ -7,26 +7,6 @@ import { ArrowUpRight, Leaf, Shield, Droplets } from 'lucide-react';
 export default function NGOSection() {
   const sectionRef = useRef(null);
   const [visible, setVisible] = useState(false);
-  const [logoSrc, setLogoSrc] = useState('/ngo/logo-conexao-ancestral.svg');
-  const [logoFormatIndex, setLogoFormatIndex] = useState(0);
-  const logoFormats = [
-    '/ngo/logo-conexao-ancestral.svg',
-    '/ngo/logo-conexao-ancestral.png',
-    '/ngo/logo-conexao-ancestral.jpg',
-    '/ngo/logo-conexao-ancestral.jpeg'
-  ];
-
-  const handleLogoError = (e) => {
-    if (logoFormatIndex < logoFormats.length - 1) {
-      const nextIndex = logoFormatIndex + 1;
-      setLogoFormatIndex(nextIndex);
-      setLogoSrc(logoFormats[nextIndex]);
-    } else {
-      e.target.style.display = 'none';
-      const fallback = e.target.nextSibling;
-      if (fallback) fallback.style.display = 'inline-flex';
-    }
-  };
 
   const [symbolSrc, setSymbolSrc] = useState('/ngo/simbolo-conexao-ancestral.svg');
   const [symbolFormatIndex, setSymbolFormatIndex] = useState(0);
@@ -109,7 +89,7 @@ export default function NGOSection() {
       <section
         ref={sectionRef}
         id="ngo-partnership"
-        className="theme-dark-zone bg-[#1a1a1a] border border-white/35 rounded-2xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-white/60 transition-colors duration-500"
+        className="ngo-section-card bg-[#1a1a1a] border border-white/35 rounded-2xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-white/60 transition-colors duration-500"
       >
         {/* Ambient background glow */}
         <div className="absolute -top-36 -left-36 w-[500px] h-[500px] bg-[#268072] opacity-[0.09] blur-[130px] pointer-events-none rounded-full" />
@@ -122,7 +102,7 @@ export default function NGOSection() {
           width={750}
           height={750}
           unoptimized
-          className="absolute bottom-[-160px] right-[-120px] w-[500px] h-[500px] md:w-[650px] md:h-[650px] lg:w-[750px] lg:h-[750px] opacity-[0.035] pointer-events-none select-none z-0 mix-blend-screen"
+          className="ngo-section-watermark absolute bottom-[-160px] right-[-120px] w-[500px] h-[500px] md:w-[650px] md:h-[650px] lg:w-[750px] lg:h-[750px] opacity-[0.035] pointer-events-none select-none z-0 mix-blend-screen"
           onError={handleSymbolError}
         />
 
@@ -136,13 +116,25 @@ export default function NGOSection() {
             {/* NGO Logo with text fallback */}
             <div className="h-16 md:h-[80px] flex items-center mb-2 sm:mb-4 lg:mb-6">
               <Image
-                src={logoSrc} 
+                src="/ngo/logo-conexao-ancestral.svg"
                 width={400}
                 height={160}
                 unoptimized
-                alt="Conexão Ancestral Logo" 
-                className="h-16 md:h-[80px] w-auto object-contain opacity-95 hover:opacity-100 transition-all duration-300"
-                onError={handleLogoError}
+                alt="Conexão Ancestral Logo"
+                className="ngo-logo ngo-logo-dark h-16 md:h-[80px] w-auto object-contain opacity-95 hover:opacity-100 transition-all duration-300"
+              />
+              <Image
+                src="/ngo/logo-conexao-ancestral-light-01.svg"
+                width={400}
+                height={160}
+                unoptimized
+                alt="Conexão Ancestral Logo"
+                className="ngo-logo ngo-logo-light h-16 md:h-[80px] w-auto object-contain opacity-95 hover:opacity-100 transition-all duration-300"
+                onError={(event) => {
+                  event.currentTarget.style.display = 'none';
+                  const darkLogo = event.currentTarget.previousElementSibling;
+                  if (darkLogo) darkLogo.style.display = 'block';
+                }}
               />
               <span className="hidden items-center gap-2 bg-black/20 border border-white/10 px-4 py-1.5 rounded-full text-xs font-bold tracking-wider text-[#82d6c5] uppercase font-label-sm w-fit">
                 <span className="relative flex h-2 w-2">

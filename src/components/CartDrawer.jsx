@@ -225,7 +225,7 @@ export default function CartDrawer() {
 
                 {perGramRates.map(({ tableKey, label, rate }) => (
                   <div key={tableKey} className="flex justify-between items-center text-xs text-[#82d6c5] font-mono">
-                    <span>VOLUME RATE — {label}</span>
+                    <span>VOLUME RATE: {label}</span>
                     <span className="font-bold">${rate.toFixed(2)}/g</span>
                   </div>
                 ))}
@@ -235,7 +235,7 @@ export default function CartDrawer() {
                   <div className="flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/25 text-yellow-400 text-[11px] px-3 py-2.5 rounded-sm mt-1">
                     <Scale className="w-3.5 h-3.5 shrink-0" />
                     <span>
-                      Minimum wholesale order is <strong>{MIN_ORDER_GRAMS}g</strong> — add{" "}
+                      Minimum wholesale order is <strong>{MIN_ORDER_GRAMS}g</strong>; add{" "}
                       {Math.ceil(MIN_ORDER_GRAMS - cartTotalWeightGrams)}g more to submit.
                     </span>
                   </div>

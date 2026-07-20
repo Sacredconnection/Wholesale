@@ -391,6 +391,35 @@ html[data-theme="light"] :is(
   color: #ffffff !important;
 }
 
+/* The NGO partnership card follows the selected theme. */
+.ngo-logo-light {
+  display: none;
+}
+
+html[data-theme="light"] .ngo-section-card {
+  background-color: #ffffff !important;
+  border-color: rgb(23 32 30 / 0.14) !important;
+  box-shadow: 0 24px 60px rgb(40 78 50 / 0.12) !important;
+}
+
+html[data-theme="light"] .ngo-section-card:hover {
+  border-color: rgb(40 78 50 / 0.34) !important;
+}
+
+html[data-theme="light"] .ngo-logo-dark {
+  display: none;
+}
+
+html[data-theme="light"] .ngo-logo-light {
+  display: block;
+}
+
+html[data-theme="light"] .ngo-section-watermark {
+  filter: brightness(0) saturate(100%) invert(24%) sepia(18%) saturate(1227%) hue-rotate(81deg) brightness(91%) contrast(90%);
+  mix-blend-mode: multiply;
+  opacity: 0.04;
+}
+
 /* Header, hero, lineage, retail banner and footer retain their dark treatment. */
 html[data-theme="light"] .theme-dark-zone[class~="bg-[#23403B]"] {
   background-color: #23403b !important;
@@ -738,6 +767,14 @@ html[data-theme="light"] body .lineage-showcase .lineage-decorative-band {
 
 .home-no-glass .wholesale-format-card {
   background-color: #1a1a1a !important;
+}
+
+html[data-theme="dark"] .wholesale-format-description {
+  color: #d1d9d5;
+}
+
+html[data-theme="dark"] .wholesale-format-detail {
+  color: #a3b8b0;
 }
 
 .home-no-glass .lineage-glass-surface {

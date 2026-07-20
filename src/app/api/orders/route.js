@@ -187,7 +187,7 @@ export async function POST(request) {
     if (totalWeightGrams < MIN_ORDER_GRAMS) {
       return Response.json(
         {
-          error: `Minimum wholesale order is ${MIN_ORDER_GRAMS}g — this order sheet totals ${Math.round(totalWeightGrams)}g.`,
+          error: `Minimum wholesale order is ${MIN_ORDER_GRAMS}g; this order sheet totals ${Math.round(totalWeightGrams)}g.`,
         },
         { status: 422 }
       );
@@ -235,7 +235,7 @@ export async function POST(request) {
       status: "on-hold",
       set_paid: false,
       payment_method: "sc_offline",
-      payment_method_title: "Offline — Sacred Connection team will contact you to arrange payment",
+      payment_method_title: "Offline: Sacred Connection team will contact you to arrange payment",
       billing: {
         first_name: customer.firstName || "",
         last_name: customer.lastName || "",

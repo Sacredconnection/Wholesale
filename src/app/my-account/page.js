@@ -441,7 +441,7 @@ export default function MyAccountPage() {
                         </div>
                         <p className="text-xs text-white/50 leading-relaxed max-w-lg">
                           {activeOrder.items.map((i) => `${i.name} x ${i.quantity}`).join(" · ")}
-                          {" — "}${Number(activeOrder.total).toFixed(2)}
+                          {" · $"}{Number(activeOrder.total).toFixed(2)}
                         </p>
                       </div>
                       <button
@@ -509,7 +509,7 @@ export default function MyAccountPage() {
 
                       {OPEN_ORDER_STATUSES.slice(0, 2).includes(activeOrder.status) && (
                         <p className="text-[11px] text-white/50 leading-relaxed border-t border-white/5 pt-4">
-                          No online payment is required — our team will contact you to
+                          No online payment is required; our team will contact you to
                           arrange payment and confirm shipping for this order.
                         </p>
                       )}

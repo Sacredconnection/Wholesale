@@ -31,7 +31,7 @@ const values = [
   {
     icon: Network,
     title: 'Shared growth',
-    text: 'We believe meaningful growth is collaborative—supporting suppliers, retailers, practitioners, and the communities they serve.',
+    text: 'We believe meaningful growth is collaborative, supporting suppliers, retailers, practitioners, and the communities they serve.',
   },
 ];
 
@@ -95,7 +95,7 @@ export default function AboutPage() {
           Our wholesale program is designed for established retailers, studios, practitioners, and aligned organizations. Approved partners receive access to trade information, product availability, and ordering support suited to their business.
         </p>
         <p>
-          Every partnership begins with understanding. Tell us about your store, your customers, and what you hope to offer—we will help you explore whether our collections are the right fit.
+          Every partnership begins with understanding. Tell us about your store, your customers, and what you hope to offer; we will help you explore whether our collections are the right fit.
         </p>
         <EditorialContact>
           <p>

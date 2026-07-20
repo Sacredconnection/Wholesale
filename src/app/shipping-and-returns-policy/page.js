@@ -24,7 +24,7 @@ export default function ShippingAndReturnsPolicyPage() {
     <EditorialPage
       eyebrow="Customer care"
       title="Shipping & Returns Policy"
-      description="A clear guide to how wholesale orders are prepared, shipped, inspected, and—when eligible—returned."
+      description="A clear guide to how wholesale orders are prepared, shipped, inspected and, when eligible, returned."
       icon={PackageCheck}
       updated="July 18, 2026"
       navigation={navigation}

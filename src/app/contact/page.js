@@ -232,7 +232,7 @@ export default function ContactPage() {
                     <address className="not-italic text-sm font-body-md text-white/70 mt-1 leading-relaxed">
                       <p className="font-bold text-white">Sacred Connection LLC</p>
                       <p>2301 Stampede Ave</p>
-                      <p>Cody, WY – 82414</p>
+                      <p>Cody, WY 82414</p>
                       <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest mt-1">USA</p>
                     </address>
                   </div>

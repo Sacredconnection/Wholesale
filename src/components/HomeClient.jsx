@@ -35,11 +35,11 @@ export default function HomeClient() {
           {/* B2B Onboarding Steps */}
           <Onboarding />
 
-          {/* Product volumes and packaging formats */}
-          <WholesaleFormats />
-
           {/* Tribe Lineage Details */}
           <LineageShowcase />
+
+          {/* Product volumes and packaging formats */}
+          <WholesaleFormats />
 
           {/* Retail Partner Testimonial */}
           <TestimonialSection />
