@@ -31,10 +31,12 @@ export async function POST(request) {
     return securityError("A valid email and password are required.", 400);
   }
 
+  let authenticationStage = "WordPress credential verification";
   try {
     const { valid } = await verifyWpCredentials(email, password);
     if (!valid) return securityError("Invalid email or password.", 401);
 
+    authenticationStage = "WooCommerce customer lookup";
     const customer = await getCustomerByEmail(email);
     if (!customer || PENDING_ROLES.includes((customer.role || "").toLowerCase())) {
       return securityError(
@@ -44,10 +46,11 @@ export async function POST(request) {
     }
 
     const user = mapCustomerToUser(customer);
+    authenticationStage = "session creation";
     await createSession({ email: user.email, customerId: customer.id });
     return Response.json({ user }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
-    console.error("POST /api/auth/login failed:", err);
+    console.error(`POST /api/auth/login failed during ${authenticationStage}:`, err);
     return securityError("Could not reach the authentication backend. Please try again.", 502);
   }
 }
