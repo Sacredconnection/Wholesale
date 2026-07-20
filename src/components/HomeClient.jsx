@@ -41,14 +41,14 @@ export default function HomeClient() {
           {/* Product volumes and packaging formats */}
           <WholesaleFormats />
 
-          {/* Retail Partner Testimonial */}
-          <TestimonialSection />
-
           {/* B2B operational FAQ */}
           <B2BFAQ />
 
           {/* B2B catalog lead magnet */}
           <LeadMagnet />
+
+          {/* Retail Partner Testimonial */}
+          <TestimonialSection />
         </div>
 
         {/* Secondary path for individual retail customers */}
