@@ -1,4 +1,4 @@
-﻿// Maps WooCommerce REST payloads to the internal product shape used by the UI.
+// Maps WooCommerce REST payloads to the internal product shape used by the UI.
 
 const stripHtml = (html) =>
   (html || "")
@@ -70,9 +70,6 @@ export function mapVariationToOption(variation) {
   };
 }
 
-const normalizeName = (str) =>
-  (str || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-
 // Pre-computes category hierarchy info used by mapProduct: which categories
 // are subcategories (their names double as the tribe list, e.g. "Huni Kuin"
 // under "Rapé Indigenous").
@@ -83,8 +80,8 @@ export function buildCategoryContext(categories = []) {
     parentById[c.id] = c.parent || 0;
     nameById[c.id] = c.name;
   });
-  const childNames = categories.filter((c) => c.parent).map((c) => c.name);
-  return { parentById, nameById, childNames };
+
+  return { parentById, nameById };
 }
 
 // Walks up the category tree to the top-level ancestor (e.g. "Yawanawa" →
@@ -178,7 +175,7 @@ export function mapOrder(order) {
 }
 
 export function mapProduct(product, variations = [], categoryContext = {}) {
-  const { parentById = {}, nameById = {}, childNames = [] } = categoryContext;
+  const { parentById = {}, nameById = {} } = categoryContext;
 
   const options =
     product.type === "variable" && variations.length > 0
@@ -206,10 +203,6 @@ export function mapProduct(product, variations = [], categoryContext = {}) {
   const tribe =
     attributeOption(product.attributes, "tribe") ||
     subCats[0]?.name ||
-    // Fall back to detecting a known subcategory name inside the product name
-    // (e.g. "SHAWADAWA KAPAYUBA HAPE" → "Shawãdawa").
-    childNames.find((n) => normalizeName(product.name).includes(normalizeName(n))) ||
-    topCats[0]?.name ||
     "";
 
   return {

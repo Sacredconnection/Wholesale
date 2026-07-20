@@ -67,7 +67,8 @@ export default function CatalogPage() {
         const match = products.find(
           (p) => normalizeStr(p.tribe) === normalizeStr(tribeParam)
         );
-        setTribe(match ? match.tribe : tribeParam);
+        setCategory(match?.category || "All");
+        setTribe(match?.tribe || "All");
       }
       const pageParam = params.get("page");
       if (pageParam) {
@@ -116,25 +117,31 @@ export default function CatalogPage() {
     const seen = new Map(); // normalised key → original string
     products.forEach((p) => {
       const key = normalizeStr(p.category);
-      if (!seen.has(key)) seen.set(key, p.category);
-    });
-    const unique = [...seen.values()].sort((a, b) =>
-      normalizeStr(a).localeCompare(normalizeStr(b))
-    );
-    return ["All", "New Arrivals", ...unique];
-  }, [products]);
-
-  const tribes = useMemo(() => {
-    const seen = new Map(); // normalised key → original string
-    products.forEach((p) => {
-      const key = normalizeStr(p.tribe);
-      if (!seen.has(key)) seen.set(key, p.tribe);
+      if (key && !seen.has(key)) seen.set(key, p.category);
     });
     const unique = [...seen.values()].sort((a, b) =>
       normalizeStr(a).localeCompare(normalizeStr(b))
     );
     return ["All", ...unique];
   }, [products]);
+
+  const tribes = useMemo(() => {
+    if (category === "All") return [];
+
+    const normalizedCategory = normalizeStr(category);
+    const seen = new Map();
+    products
+      .filter((p) => normalizeStr(p.category) === normalizedCategory)
+      .forEach((p) => {
+        const key = normalizeStr(p.tribe);
+        if (key && key !== normalizedCategory && !seen.has(key)) {
+          seen.set(key, p.tribe);
+        }
+      });
+    return [...seen.values()].sort((a, b) =>
+      normalizeStr(a).localeCompare(normalizeStr(b))
+    );
+  }, [products, category]);
 
   // Filtered Products – accent-insensitive matching, sorted A–Z
   const filteredProducts = useMemo(() => {
@@ -148,10 +155,7 @@ export default function CatalogPage() {
           normalizeStr(product.name).includes(normSearch) ||
           normalizeStr(product.sku).includes(normSearch);
         const matchesCategory =
-          category === "All" ||
-          (category === "New Arrivals"
-            ? product.isNew === true
-            : normalizeStr(product.category) === normCat);
+          category === "All" || normalizeStr(product.category) === normCat;
         const matchesTribe =
           tribe === "All" || normalizeStr(product.tribe) === normTribe;
         return matchesSearch && matchesCategory && matchesTribe;
@@ -252,7 +256,7 @@ export default function CatalogPage() {
             Filter Products
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 lg:gap-6 items-end">
+          <div className={`grid grid-cols-1 sm:grid-cols-2 ${tribes.length > 0 ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-5 lg:gap-6 items-end`}>
             
             {/* Search Input */}
             <div className="flex flex-col gap-2 w-full">
@@ -286,13 +290,14 @@ export default function CatalogPage() {
                   value={category}
                   onChange={(e) => {
                     setCategory(e.target.value);
+                    setTribe("All");
                     setCurrentPage(1);
                   }}
                   className="w-full bg-[#131313] border border-white/10 rounded-sm py-4 px-4 text-sm text-white focus:outline-none focus:border-[#268072] transition-colors font-body-md cursor-pointer appearance-none"
                 >
                   {categories.map((cat) => (
                     <option key={cat} value={cat}>
-                      {cat === "All" ? "All Categories" : cat === "New Arrivals" ? "🆕 New Arrivals" : cat}
+                      {cat === "All" ? "All Categories" : cat}
                     </option>
                   ))}
                 </select>
@@ -303,29 +308,32 @@ export default function CatalogPage() {
             </div>
 
             {/* Tribe/Etnia Dropdown */}
-            <div className="flex flex-col gap-2 w-full">
-              <label htmlFor="tribe" className="text-xs text-white/55 font-semibold tracking-wide uppercase font-label-sm">
-                Indigenous Tribe
-              </label>
-              <div className="relative">
-                <select 
-                  id="tribe"
-                  value={tribe}
-                  onChange={(e) => {
-                    setTribe(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full bg-[#131313] border border-white/10 rounded-sm py-4 px-4 text-sm text-white focus:outline-none focus:border-[#268072] transition-colors font-body-md cursor-pointer appearance-none"
-                >
-                  {tribes.map((tb) => (
-                    <option key={tb} value={tb}>{tb === "All" ? "All Tribes" : tb}</option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/40">
-                  ▼
+            {tribes.length > 0 && (
+              <div className="flex flex-col gap-2 w-full">
+                <label htmlFor="tribe" className="text-xs text-white/55 font-semibold tracking-wide uppercase font-label-sm">
+                  Indigenous Tribe
+                </label>
+                <div className="relative">
+                  <select
+                    id="tribe"
+                    value={tribe}
+                    onChange={(e) => {
+                      setTribe(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-[#131313] border border-white/10 rounded-sm py-4 px-4 text-sm text-white focus:outline-none focus:border-[#268072] transition-colors font-body-md cursor-pointer appearance-none"
+                  >
+                    <option value="All">All Tribes</option>
+                    {tribes.map((tb) => (
+                      <option key={tb} value={tb}>{tb}</option>
+                    ))}
+                  </select>
+                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/40">
+                    ▼
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
             {/* Clear Filters Button */}
             <div className="w-full">
