@@ -8,7 +8,7 @@ import "./globals.css";
 const roboto = Roboto({
   variable: "--font-roboto",
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800", "900"],
+  weight: "variable",
   display: "swap",
 });
 
@@ -25,6 +25,13 @@ const themeBootScript = `
 
 export const metadata = {
   metadataBase: new URL("https://wholesale.sacredconnection.com"),
+  title: "Sacred Connection Wholesale | B2B Portal",
+  description:
+    "Direct fair-trade sourcing of sacred Amazonian botanicals and traditional forest remedies for wholesale partners.",
+  applicationName: "Sacred Connection Wholesale",
+  icons: {
+    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
+  },
 };
 
 export default function RootLayout({ children }) {

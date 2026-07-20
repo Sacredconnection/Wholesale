@@ -32,24 +32,51 @@ export default function ContactPage() {
   const handleChange = (field) => (e) => {
     setForm(prev => ({ ...prev, [field]: e.target.value }));
     setError("");
+    setSuccess(false);
   };
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (loading) return;
+
+    const normalizedForm = {
+      name: form.name.trim(),
+      email: form.email.trim().toLowerCase(),
+      subject: form.subject.trim(),
+      message: form.message.trim(),
+    };
+
+    if (Object.values(normalizedForm).some((value) => !value)) {
+      setError("Please complete all fields before opening your email application.");
+      setSuccess(false);
+      return;
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedForm.email)) {
+      setError("Please enter a valid business email address.");
+      setSuccess(false);
+      return;
+    }
+
     setLoading(true);
     setError("");
 
-    const subject = encodeURIComponent(`[B2B Support] ${form.subject.trim().slice(0, 120)}`);
+    const subject = encodeURIComponent(`[B2B Support] ${normalizedForm.subject.slice(0, 120)}`);
     const body = encodeURIComponent(
-      `Name: ${form.name.trim()}\nEmail: ${form.email.trim()}\n\n${form.message.trim()}`
+      `Name: ${normalizedForm.name}\nEmail: ${normalizedForm.email}\n\n${normalizedForm.message}`
     );
-    window.location.assign(`mailto:info@sacredconnection.co?subject=${subject}&body=${body}`);
-    setLoading(false);
-    setSuccess(true);
+    try {
+      window.location.assign(`mailto:info@sacredconnection.co?subject=${subject}&body=${body}`);
+      setSuccess(true);
+    } catch {
+      setError("Your email application could not be opened. Please email info@sacredconnection.co directly.");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
-    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
@@ -78,7 +105,7 @@ export default function ContactPage() {
             </h2>
 
             {success && (
-              <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm p-4 rounded mb-6 flex items-center gap-3 animate-fade-in">
+              <div role="status" className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-sm p-4 rounded mb-6 flex items-center gap-3 animate-fade-in">
                 <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 shrink-0">
                   <Check className="w-4 h-4" />
                 </div>
@@ -89,7 +116,13 @@ export default function ContactPage() {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+            {error && (
+              <div role="alert" className="mb-6 rounded border border-[#ffb4ab]/20 bg-[#93000a]/15 p-4 text-sm text-[#ffb4ab]">
+                {error}
+              </div>
+            )}
+
+            <form onSubmit={handleSubmit} aria-busy={loading} className="flex flex-col gap-5">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="name" className="text-[10px] font-mono uppercase text-white/55 font-semibold">
@@ -170,12 +203,12 @@ export default function ContactPage() {
                 {loading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Sending Message...
+                    Opening Email App...
                   </>
                 ) : (
                   <>
                     <Send className="w-4 h-4" />
-                    Send Message
+                    Open Email App
                   </>
                 )}
               </button>
@@ -230,10 +263,9 @@ export default function ContactPage() {
                   <div>
                     <span className="text-[10px] font-mono text-white/40 uppercase tracking-wide">Headquarters</span>
                     <address className="not-italic text-sm font-body-md text-white/70 mt-1 leading-relaxed">
-                      <p className="font-bold text-white">Sacred Connection LLC</p>
                       <p>2301 Stampede Ave</p>
-                      <p>Cody, WY 82414</p>
-                      <p className="text-[10px] font-mono text-white/40 uppercase tracking-widest mt-1">USA</p>
+                      <p>Cody, WY – 82414</p>
+                      <p>USA</p>
                     </address>
                   </div>
                 </div>

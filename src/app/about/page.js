@@ -8,6 +8,9 @@ import EditorialPage, {
 export const metadata = {
   title: 'About | Sacred Connection Wholesale',
   description: 'Discover the purpose, values, and partnership approach behind Sacred Connection Wholesale.',
+  alternates: {
+    canonical: '/about',
+  },
 };
 
 const navigation = [

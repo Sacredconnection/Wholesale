@@ -8,6 +8,9 @@ import EditorialPage, {
 export const metadata = {
   title: 'Privacy Policy | Sacred Connection Wholesale',
   description: 'Learn how Sacred Connection Wholesale collects, uses, protects, and shares personal information.',
+  alternates: {
+    canonical: '/privacy-policy',
+  },
 };
 
 const navigation = [

@@ -8,24 +8,6 @@ export default function NGOSection() {
   const sectionRef = useRef(null);
   const [visible, setVisible] = useState(false);
 
-  const [symbolSrc, setSymbolSrc] = useState('/ngo/simbolo-conexao-ancestral.svg');
-  const [symbolFormatIndex, setSymbolFormatIndex] = useState(0);
-  const symbolFormats = [
-    '/ngo/simbolo-conexao-ancestral.svg',
-    '/ngo/simbolo-conexao-ancestral.png',
-    '/ngo/simbolo-conexao-ancestral.jpg',
-  ];
-
-  const handleSymbolError = (e) => {
-    if (symbolFormatIndex < symbolFormats.length - 1) {
-      const nextIndex = symbolFormatIndex + 1;
-      setSymbolFormatIndex(nextIndex);
-      setSymbolSrc(symbolFormats[nextIndex]);
-    } else {
-      e.target.style.display = 'none';
-    }
-  };
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       ([entry]) => {
@@ -97,13 +79,11 @@ export default function NGOSection() {
 
         {/* NGO Symbol Watermark in Bottom-Right */}
         <Image
-          src={symbolSrc} 
+          src="/ngo/simbolo-conexao-ancestral.svg"
           alt="" 
           width={750}
           height={750}
-          unoptimized
           className="ngo-section-watermark absolute bottom-[-160px] right-[-120px] w-[500px] h-[500px] md:w-[650px] md:h-[650px] lg:w-[750px] lg:h-[750px] opacity-[0.035] pointer-events-none select-none z-0 mix-blend-screen"
-          onError={handleSymbolError}
         />
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 sm:gap-10 lg:gap-12 xl:gap-16 items-center z-10 relative">
@@ -119,7 +99,6 @@ export default function NGOSection() {
                 src="/ngo/logo-conexao-ancestral.svg"
                 width={400}
                 height={160}
-                unoptimized
                 alt="Conexão Ancestral Logo"
                 className="ngo-logo ngo-logo-dark h-16 md:h-[80px] w-auto object-contain opacity-95 hover:opacity-100 transition-all duration-300"
               />
@@ -127,7 +106,6 @@ export default function NGOSection() {
                 src="/ngo/logo-conexao-ancestral-light-01.svg"
                 width={400}
                 height={160}
-                unoptimized
                 alt="Conexão Ancestral Logo"
                 className="ngo-logo ngo-logo-light h-16 md:h-[80px] w-auto object-contain opacity-95 hover:opacity-100 transition-all duration-300"
                 onError={(event) => {

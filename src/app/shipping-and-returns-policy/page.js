@@ -8,6 +8,9 @@ import EditorialPage, {
 export const metadata = {
   title: 'Shipping & Returns Policy | Sacred Connection Wholesale',
   description: 'Review shipping, delivery, inspection, return, and claim guidelines for Sacred Connection Wholesale orders.',
+  alternates: {
+    canonical: '/shipping-and-returns-policy',
+  },
 };
 
 const navigation = [

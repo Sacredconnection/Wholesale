@@ -24,9 +24,7 @@ export const metadata = {
     url: "https://wholesale.sacredconnection.com",
     images: [
       {
-        url: "/banner/hero-banner.jpg",
-        width: 1200,
-        height: 630,
+        url: "/banner/hero-banner.webp",
         alt: "Sacred Connection Wholesale - Amazon Canopy",
       }
     ],
@@ -35,7 +33,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Sacred Connection Wholesale | B2B Portal",
     description: "Direct fair-trade sourcing of sacred Amazonian snuffs (rapeh) and traditional forest remedies.",
-    images: ["/banner/hero-banner.jpg"],
+    images: ["/banner/hero-banner.webp"],
   },
   robots: {
     index: true,
@@ -51,7 +49,7 @@ export default function Page() {
       "@id": "https://wholesale.sacredconnection.com/#organization",
       "name": "Sacred Connection Wholesale",
       "url": "https://wholesale.sacredconnection.com",
-      "logo": "https://wholesale.sacredconnection.com/logo.png",
+      "logo": "https://wholesale.sacredconnection.com/logo.svg",
       "description": "Direct fair-trade sourcing of sacred Amazonian snuffs (rapeh) and traditional forest remedies. Access our verified B2B wholesale platform.",
       "contactPoint": {
         "@type": "ContactPoint",

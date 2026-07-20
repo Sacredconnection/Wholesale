@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
   // so hold off on "not found" until the live catalog finishes loading.
   if (!product && productsLoading) {
     return (
-      <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex flex-col items-center justify-center text-center gap-4">
           <div className="w-10 h-10 border-2 border-[#268072] border-t-transparent rounded-full animate-spin" />
@@ -78,7 +78,7 @@ export default function ProductDetailPage() {
   // If product doesn't exist
   if (!product) {
     return (
-      <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex flex-col items-center justify-center text-center gap-6">
           <div className="text-6xl">⚠️</div>
@@ -114,14 +114,14 @@ export default function ProductDetailPage() {
   };
 
   return (
-    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       {/* Main Container */}
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
         
         {/* Breadcrumbs / Back button */}
-        <div className="flex items-center gap-2 text-xs text-white/50 font-mono flex-wrap">
+        <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-white/50 font-mono">
           <Link href={`/catalog?page=${fromPage}`} className="flex items-center gap-1.5 hover:text-white transition-colors no-underline">
             <ArrowLeft className="w-4.5 h-4.5" />
             Back to Wholesale Catalog (Page {fromPage})
@@ -135,9 +135,9 @@ export default function ProductDetailPage() {
             </>
           )}
           <span>/</span>
-          <span className="text-white/30 capitalize">{product.category}</span>
+          <span className="break-words text-white/30 capitalize">{product.category}</span>
           <span>/</span>
-          <span className="text-white/80">{product.name}</span>
+          <span className="min-w-0 break-words text-white/80">{product.name}</span>
         </div>
 
         {/* Product Details Section */}

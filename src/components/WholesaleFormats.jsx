@@ -62,7 +62,6 @@ export default function WholesaleFormats() {
                 src={image}
                 alt={imageAlt}
                 fill
-                unoptimized
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="wholesale-format-image object-contain drop-shadow-2xl transition-transform duration-700 ease-out group-hover:scale-105"
               />

@@ -51,6 +51,8 @@ export default function MyAccountPage() {
   const { isLoggedIn, user, loading, logout, updateUser } = useAuth();
   const router = useRouter();
   const avatarInputRef = useRef(null);
+  const [avatarMessage, setAvatarMessage] = useState("");
+  const [avatarError, setAvatarError] = useState("");
   
   // Navigation tabs state
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -59,11 +61,25 @@ export default function MyAccountPage() {
   const handleAvatarChange = (e) => {
     const file = e.target.files[0];
     if (!file) return;
+    setAvatarMessage("");
+    setAvatarError("");
     const allowedImageTypes = ["image/jpeg", "image/png", "image/webp"];
-    if (!allowedImageTypes.includes(file.type)) return;
-    if (file.size > 4 * 1024 * 1024) return; // 4MB guard
+    if (!allowedImageTypes.includes(file.type)) {
+      setAvatarError("Choose a JPG, PNG, or WEBP image.");
+      e.target.value = "";
+      return;
+    }
+    if (file.size > 4 * 1024 * 1024) {
+      setAvatarError("The profile image must be 4 MB or smaller.");
+      e.target.value = "";
+      return;
+    }
     const reader = new FileReader();
-    reader.onload = (ev) => updateUser({ avatar: ev.target.result });
+    reader.onload = (ev) => {
+      updateUser({ avatar: ev.target.result });
+      setAvatarMessage("Profile photo preview updated for this session.");
+    };
+    reader.onerror = () => setAvatarError("The selected image could not be read.");
     reader.readAsDataURL(file);
   };
   
@@ -74,6 +90,7 @@ export default function MyAccountPage() {
 
   // Address edit toggles and form states
   const [editShipping, setEditShipping] = useState(false);
+  const [shippingMessage, setShippingMessage] = useState("");
   const [shippingForm, setShippingForm] = useState({
     street: "",
     neighborhood: "",
@@ -84,6 +101,7 @@ export default function MyAccountPage() {
   });
 
   const [editBilling, setEditBilling] = useState(false);
+  const [billingMessage, setBillingMessage] = useState("");
   const [billingForm, setBillingForm] = useState({
     street: "",
     neighborhood: "",
@@ -170,10 +188,10 @@ export default function MyAccountPage() {
   // Handle Loading State
   if (loading) {
     return (
-      <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
-        <div className="flex-grow flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-[#268072] border-t-transparent rounded-full animate-spin"></div>
+        <div role="status" className="flex-grow flex items-center justify-center" aria-label="Loading account">
+          <div className="w-10 h-10 border-4 border-[#268072] border-t-transparent rounded-full animate-spin" aria-hidden="true"></div>
         </div>
         <Footer />
       </div>
@@ -183,7 +201,7 @@ export default function MyAccountPage() {
   // Handle Not Logged In State
   if (!isLoggedIn) {
     return (
-      <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+      <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
         
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex items-center justify-center">
@@ -203,12 +221,14 @@ export default function MyAccountPage() {
 
             <div className="flex flex-col gap-4">
               <button
+                type="button"
                 onClick={() => setIsLoginOpen(true)}
                 className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-4 rounded transition-all cursor-pointer border-0 w-full shadow-lg shadow-[#EC2300]/15"
               >
                 Access Portal Login
               </button>
               <button
+                type="button"
                 onClick={() => setIsApplyOpen(true)}
                 className="bg-transparent hover:bg-white/5 text-white/80 hover:text-white text-xs font-bold uppercase tracking-wider py-4 rounded transition-all cursor-pointer border border-white/10 w-full"
               >
@@ -238,27 +258,28 @@ export default function MyAccountPage() {
     setAccountSuccess("");
     setAccountError("");
 
-    if (accountForm.newPassword) {
-      if (accountForm.newPassword !== accountForm.confirmPassword) {
-        setAccountError("New passwords do not match.");
-        return;
-      }
-      if (!accountForm.currentPassword) {
-        setAccountError("Current password is required to change password.");
-        return;
-      }
+    const normalizedProfile = {
+      firstName: accountForm.firstName.trim(),
+      lastName: accountForm.lastName.trim(),
+      displayName: accountForm.displayName.trim(),
+      email: accountForm.email.trim().toLowerCase(),
+      phone: accountForm.phone.trim(),
+      company: accountForm.company,
+    };
+
+    if (!normalizedProfile.firstName || !normalizedProfile.lastName || !normalizedProfile.displayName || !normalizedProfile.phone) {
+      setAccountError("Please complete all required account fields.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedProfile.email)) {
+      setAccountError("Please enter a valid partner email address.");
+      return;
     }
 
-    updateUser({
-      firstName: accountForm.firstName,
-      lastName: accountForm.lastName,
-      displayName: accountForm.displayName,
-      email: accountForm.email,
-      phone: accountForm.phone,
-      company: accountForm.company
-    });
+    updateUser(normalizedProfile);
 
-    setAccountSuccess("Account details updated successfully!");
+    setAccountForm((prev) => ({ ...prev, ...normalizedProfile }));
+    setAccountSuccess("Account preview updated for this session.");
     
     // Clear passwords
     setAccountForm(prev => ({
@@ -272,18 +293,42 @@ export default function MyAccountPage() {
   // Handle Address Updates
   const handleShippingSubmit = (e) => {
     e.preventDefault();
-    updateUser({ shippingAddress: { ...shippingForm } });
+    const normalizedAddress = Object.fromEntries(
+      Object.entries(shippingForm).map(([key, value]) => [key, value.trim()]),
+    );
+    if (["street", "city", "state", "zip", "country"].some((key) => !normalizedAddress[key])) {
+      setShippingMessage("Please complete all required shipping fields.");
+      return;
+    }
+    updateUser({ shippingAddress: normalizedAddress });
+    setShippingForm(normalizedAddress);
+    setShippingMessage("Shipping address preview updated for this session.");
     setEditShipping(false);
+  };
+
+  const handleAccountFieldChange = (field) => (event) => {
+    setAccountForm((prev) => ({ ...prev, [field]: event.target.value }));
+    setAccountSuccess("");
+    setAccountError("");
   };
 
   const handleBillingSubmit = (e) => {
     e.preventDefault();
-    updateUser({ billingAddress: { ...billingForm } });
+    const normalizedAddress = Object.fromEntries(
+      Object.entries(billingForm).map(([key, value]) => [key, value.trim()]),
+    );
+    if (["street", "city", "state", "zip", "country"].some((key) => !normalizedAddress[key])) {
+      setBillingMessage("Please complete all required billing fields.");
+      return;
+    }
+    updateUser({ billingAddress: normalizedAddress });
+    setBillingForm(normalizedAddress);
+    setBillingMessage("Billing address preview updated for this session.");
     setEditBilling(false);
   };
 
   return (
-    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
+    <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       {/* Hero Header Section */}
@@ -291,9 +336,11 @@ export default function MyAccountPage() {
         <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,_var(--tw-gradient-stops))] from-[#268072]/10 via-transparent to-transparent opacity-60"></div>
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative flex items-center gap-4 sm:gap-6">
           {/* Avatar */}
-          <div
+          <button
+            type="button"
             onClick={() => avatarInputRef.current?.click()}
-            className="relative w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white/20 hover:border-[#268072] cursor-pointer overflow-hidden group shrink-0 bg-[#131313] flex items-center justify-center transition-all"
+            aria-label="Choose a new profile photo"
+            className="relative w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white/20 hover:border-[#268072] cursor-pointer overflow-hidden group shrink-0 bg-[#131313] flex items-center justify-center transition-all p-0"
           >
             {user.avatar ? (
               <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
@@ -306,23 +353,25 @@ export default function MyAccountPage() {
               <Camera className="w-5 h-5 text-white" />
               <span className="text-[9px] font-mono text-white uppercase">Change</span>
             </div>
-          </div>
+          </button>
           <input
             ref={avatarInputRef}
+            id="account-avatar-upload"
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={handleAvatarChange}
+            aria-describedby="avatar-upload-feedback"
             className="hidden"
           />
 
-          <div>
+          <div className="min-w-0">
             <span className="text-[10px] font-mono tracking-widest text-[#82d6c5] uppercase">
               B2B Partner Portal
             </span>
-            <h1 className="font-headline-md text-3xl md:text-4xl font-bold text-white mt-1">
+            <h1 className="break-words font-headline-md text-3xl md:text-4xl font-bold text-white mt-1">
               My Account
             </h1>
-            <p className="text-sm text-white/50 mt-1.5 font-mono">
+            <p className="break-words text-sm text-white/50 mt-1.5 font-mono">
               Welcome back, <span className="text-[#82d6c5] font-bold">{user.displayName}</span> · ID: {user.accountId}
             </p>
           </div>
@@ -346,8 +395,10 @@ export default function MyAccountPage() {
               const active = activeTab === tab.id;
               return (
                 <button
+                  type="button"
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
+                  aria-pressed={active}
                   className={`flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-sm transition-all border-l-2 cursor-pointer text-left whitespace-nowrap lg:w-full select-none ${
                     active 
                       ? "bg-[#268072]/15 text-[#82d6c5] border-[#268072]" 
@@ -361,6 +412,7 @@ export default function MyAccountPage() {
             })}
             
             <button
+              type="button"
               onClick={handleLogoutAction}
               className="flex items-center gap-3 px-4 py-3 text-xs font-bold uppercase tracking-wider rounded-sm transition-all border-l-2 border-transparent text-[#ffb4ab] hover:text-[#ffb4ab] hover:bg-[#93000a]/10 cursor-pointer text-left whitespace-nowrap lg:w-full lg:mt-4"
             >
@@ -384,15 +436,15 @@ export default function MyAccountPage() {
                   
                   <p className="font-body-md text-sm text-white/70 leading-relaxed mb-6">
                     From your account dashboard, you can easily access your{" "}
-                    <button onClick={() => setActiveTab("orders")} className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer p-0">
+                    <button type="button" onClick={() => setActiveTab("orders")} className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer p-0">
                       recent orders
                     </button>
                     , manage your{" "}
-                    <button onClick={() => setActiveTab("addresses")} className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer p-0">
+                    <button type="button" onClick={() => setActiveTab("addresses")} className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer p-0">
                       shipping and billing addresses
                     </button>
                     , and update your{" "}
-                    <button onClick={() => setActiveTab("details")} className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer p-0">
+                    <button type="button" onClick={() => setActiveTab("details")} className="text-[#82d6c5] hover:underline font-bold bg-transparent border-0 cursor-pointer p-0">
                       password and account details
                     </button>
                     .
@@ -433,8 +485,8 @@ export default function MyAccountPage() {
                   {activeOrder ? (
                     <div className="bg-[#131313] border border-white/5 rounded-md p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div className="flex-grow">
-                        <div className="flex items-center gap-2 mb-1">
-                          <span className="text-sm font-bold text-white">Order #{activeOrder.number}</span>
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className="break-all text-sm font-bold text-white">Order #{activeOrder.number}</span>
                           <span className="text-[10px] font-mono bg-[#268072]/20 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded">
                             {orderStatusInfo(activeOrder.status).label}
                           </span>
@@ -445,6 +497,7 @@ export default function MyAccountPage() {
                         </p>
                       </div>
                       <button
+                        type="button"
                         onClick={() => setActiveTab("orders")}
                         className="bg-white/5 hover:bg-white/10 text-white border border-white/10 hover:border-white/30 text-[10px] font-bold uppercase tracking-wider px-4 py-2.5 rounded transition-all shrink-0 cursor-pointer"
                       >
@@ -562,6 +615,7 @@ export default function MyAccountPage() {
                                 </td>
                                 <td className="py-4 px-4 text-right">
                                   <button
+                                    type="button"
                                     onClick={() =>
                                       setExpandedOrderId(expandedOrderId === order.id ? null : order.id)
                                     }
@@ -634,6 +688,7 @@ export default function MyAccountPage() {
                       <div className="flex justify-between items-center border-t border-white/5 pt-3">
                         <span className="text-[10px] font-mono text-white/40">{doc.size}</span>
                         <button 
+                          type="button"
                           onClick={() => alert(`Downloading: ${doc.title}`)}
                           className="text-[10px] font-mono text-[#82d6c5] hover:text-white font-bold bg-transparent border-0 cursor-pointer flex items-center gap-1"
                         >
@@ -662,12 +717,22 @@ export default function MyAccountPage() {
                         Shipping Address
                       </h3>
                       <button 
-                        onClick={() => setEditShipping(!editShipping)}
+                        type="button"
+                        onClick={() => {
+                          setEditShipping(!editShipping);
+                          setShippingMessage("");
+                        }}
                         className="text-[10px] font-mono text-[#82d6c5] hover:text-white font-bold bg-transparent border-0 cursor-pointer"
                       >
                         {editShipping ? "Cancel" : "Edit"}
                       </button>
                     </div>
+
+                    {shippingMessage && (
+                      <p role={editShipping ? "alert" : "status"} className={`mb-3 text-xs ${editShipping ? "text-[#ffb4ab]" : "text-[#82d6c5]"}`}>
+                        {shippingMessage}
+                      </p>
+                    )}
 
                     {!editShipping ? (
                       <address className="not-italic text-xs text-white/70 leading-relaxed flex flex-col gap-1">
@@ -680,9 +745,12 @@ export default function MyAccountPage() {
                     ) : (
                       <form onSubmit={handleShippingSubmit} className="flex flex-col gap-3">
                         <div className="flex flex-col gap-1">
-                          <label className="text-[9px] font-mono uppercase text-white/50">Street Address</label>
+                          <label htmlFor="shipping-street" className="text-[9px] font-mono uppercase text-white/50">Street Address</label>
                           <input 
+                            id="shipping-street"
+                            name="shipping-street"
                             type="text" 
+                            autoComplete="shipping address-line1"
                             value={shippingForm.street} 
                             onChange={(e) => setShippingForm(prev => ({ ...prev, street: e.target.value }))}
                             className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none" 
@@ -690,20 +758,25 @@ export default function MyAccountPage() {
                           />
                         </div>
                         <div className="flex flex-col gap-1">
-                          <label className="text-[9px] font-mono uppercase text-white/50">Neighborhood</label>
+                          <label htmlFor="shipping-neighborhood" className="text-[9px] font-mono uppercase text-white/50">Neighborhood (Optional)</label>
                           <input 
+                            id="shipping-neighborhood"
+                            name="shipping-neighborhood"
                             type="text" 
+                            autoComplete="shipping address-line2"
                             value={shippingForm.neighborhood} 
                             onChange={(e) => setShippingForm(prev => ({ ...prev, neighborhood: e.target.value }))}
                             className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
-                            required
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-mono uppercase text-white/50">City</label>
+                            <label htmlFor="shipping-city" className="text-[9px] font-mono uppercase text-white/50">City</label>
                             <input 
+                              id="shipping-city"
+                              name="shipping-city"
                               type="text" 
+                              autoComplete="shipping address-level2"
                               value={shippingForm.city} 
                               onChange={(e) => setShippingForm(prev => ({ ...prev, city: e.target.value }))}
                               className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -711,9 +784,12 @@ export default function MyAccountPage() {
                             />
                           </div>
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-mono uppercase text-white/50">State / Region</label>
+                            <label htmlFor="shipping-state" className="text-[9px] font-mono uppercase text-white/50">State / Region</label>
                             <input 
+                              id="shipping-state"
+                              name="shipping-state"
                               type="text" 
+                              autoComplete="shipping address-level1"
                               value={shippingForm.state} 
                               onChange={(e) => setShippingForm(prev => ({ ...prev, state: e.target.value }))}
                               className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -721,11 +797,14 @@ export default function MyAccountPage() {
                             />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-mono uppercase text-white/50">Postal Code</label>
+                            <label htmlFor="shipping-postal-code" className="text-[9px] font-mono uppercase text-white/50">Postal Code</label>
                             <input 
+                              id="shipping-postal-code"
+                              name="shipping-postal-code"
                               type="text" 
+                              autoComplete="shipping postal-code"
                               value={shippingForm.zip} 
                               onChange={(e) => setShippingForm(prev => ({ ...prev, zip: e.target.value }))}
                               className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -733,9 +812,12 @@ export default function MyAccountPage() {
                             />
                           </div>
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-mono uppercase text-white/50">Country</label>
+                            <label htmlFor="shipping-country" className="text-[9px] font-mono uppercase text-white/50">Country</label>
                             <input 
+                              id="shipping-country"
+                              name="shipping-country"
                               type="text" 
+                              autoComplete="shipping country-name"
                               value={shippingForm.country} 
                               onChange={(e) => setShippingForm(prev => ({ ...prev, country: e.target.value }))}
                               className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -747,7 +829,7 @@ export default function MyAccountPage() {
                           type="submit"
                           className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded mt-2 cursor-pointer border-0 flex items-center justify-center gap-1.5 transition-colors"
                         >
-                          <Save className="w-3.5 h-3.5" /> Save Shipping
+                          <Save className="w-3.5 h-3.5" /> Apply Shipping Preview
                         </button>
                       </form>
                     )}
@@ -760,12 +842,22 @@ export default function MyAccountPage() {
                         Billing Address
                       </h3>
                       <button 
-                        onClick={() => setEditBilling(!editBilling)}
+                        type="button"
+                        onClick={() => {
+                          setEditBilling(!editBilling);
+                          setBillingMessage("");
+                        }}
                         className="text-[10px] font-mono text-[#82d6c5] hover:text-white font-bold bg-transparent border-0 cursor-pointer"
                       >
                         {editBilling ? "Cancel" : "Edit"}
                       </button>
                     </div>
+
+                    {billingMessage && (
+                      <p role={editBilling ? "alert" : "status"} className={`mb-3 text-xs ${editBilling ? "text-[#ffb4ab]" : "text-[#82d6c5]"}`}>
+                        {billingMessage}
+                      </p>
+                    )}
 
                     {!editBilling ? (
                       <address className="not-italic text-xs text-white/70 leading-relaxed flex flex-col gap-1">
@@ -778,9 +870,12 @@ export default function MyAccountPage() {
                     ) : (
                       <form onSubmit={handleBillingSubmit} className="flex flex-col gap-3">
                         <div className="flex flex-col gap-1">
-                          <label className="text-[9px] font-mono uppercase text-white/50">Street Address</label>
+                          <label htmlFor="billing-street" className="text-[9px] font-mono uppercase text-white/50">Street Address</label>
                           <input 
+                            id="billing-street"
+                            name="billing-street"
                             type="text" 
+                            autoComplete="billing address-line1"
                             value={billingForm.street} 
                             onChange={(e) => setBillingForm(prev => ({ ...prev, street: e.target.value }))}
                             className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -788,20 +883,25 @@ export default function MyAccountPage() {
                           />
                         </div>
                         <div className="flex flex-col gap-1">
-                          <label className="text-[9px] font-mono uppercase text-white/50">Neighborhood</label>
+                          <label htmlFor="billing-neighborhood" className="text-[9px] font-mono uppercase text-white/50">Neighborhood (Optional)</label>
                           <input 
+                            id="billing-neighborhood"
+                            name="billing-neighborhood"
                             type="text" 
+                            autoComplete="billing address-line2"
                             value={billingForm.neighborhood} 
                             onChange={(e) => setBillingForm(prev => ({ ...prev, neighborhood: e.target.value }))}
                             className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
-                            required
                           />
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-mono uppercase text-white/50">City</label>
+                            <label htmlFor="billing-city" className="text-[9px] font-mono uppercase text-white/50">City</label>
                             <input 
+                              id="billing-city"
+                              name="billing-city"
                               type="text" 
+                              autoComplete="billing address-level2"
                               value={billingForm.city} 
                               onChange={(e) => setBillingForm(prev => ({ ...prev, city: e.target.value }))}
                               className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -809,9 +909,12 @@ export default function MyAccountPage() {
                             />
                           </div>
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-mono uppercase text-white/50">State / Region</label>
+                            <label htmlFor="billing-state" className="text-[9px] font-mono uppercase text-white/50">State / Region</label>
                             <input 
+                              id="billing-state"
+                              name="billing-state"
                               type="text" 
+                              autoComplete="billing address-level1"
                               value={billingForm.state} 
                               onChange={(e) => setBillingForm(prev => ({ ...prev, state: e.target.value }))}
                               className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -819,11 +922,14 @@ export default function MyAccountPage() {
                             />
                           </div>
                         </div>
-                        <div className="grid grid-cols-2 gap-2">
+                        <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-mono uppercase text-white/50">Postal Code</label>
+                            <label htmlFor="billing-postal-code" className="text-[9px] font-mono uppercase text-white/50">Postal Code</label>
                             <input 
+                              id="billing-postal-code"
+                              name="billing-postal-code"
                               type="text" 
+                              autoComplete="billing postal-code"
                               value={billingForm.zip} 
                               onChange={(e) => setBillingForm(prev => ({ ...prev, zip: e.target.value }))}
                               className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -831,9 +937,12 @@ export default function MyAccountPage() {
                             />
                           </div>
                           <div className="flex flex-col gap-1">
-                            <label className="text-[9px] font-mono uppercase text-white/50">Country</label>
+                            <label htmlFor="billing-country" className="text-[9px] font-mono uppercase text-white/50">Country</label>
                             <input 
+                              id="billing-country"
+                              name="billing-country"
                               type="text" 
+                              autoComplete="billing country-name"
                               value={billingForm.country} 
                               onChange={(e) => setBillingForm(prev => ({ ...prev, country: e.target.value }))}
                               className="bg-[#131313] border border-white/10 rounded px-3 py-2 text-xs text-white focus:border-[#268072] outline-none"
@@ -845,7 +954,7 @@ export default function MyAccountPage() {
                           type="submit"
                           className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-[10px] font-bold uppercase tracking-wider py-2.5 px-4 rounded mt-2 cursor-pointer border-0 flex items-center justify-center gap-1.5 transition-colors"
                         >
-                          <Save className="w-3.5 h-3.5" /> Save Billing
+                          <Save className="w-3.5 h-3.5" /> Apply Billing Preview
                         </button>
                       </form>
                     )}
@@ -865,9 +974,11 @@ export default function MyAccountPage() {
                     Profile Photo
                   </h3>
                   <div className="flex items-center gap-6">
-                    <div
+                    <button
+                      type="button"
                       onClick={() => avatarInputRef.current?.click()}
-                      className="relative w-20 h-20 rounded-full border-2 border-dashed border-white/20 hover:border-[#268072] cursor-pointer overflow-hidden group transition-all bg-[#131313] flex items-center justify-center shrink-0"
+                      aria-label="Choose a new profile photo"
+                      className="relative w-20 h-20 rounded-full border-2 border-dashed border-white/20 hover:border-[#268072] cursor-pointer overflow-hidden group transition-all bg-[#131313] flex items-center justify-center shrink-0 p-0"
                     >
                       {user.avatar ? (
                         <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
@@ -879,7 +990,7 @@ export default function MyAccountPage() {
                       <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                         <Camera className="w-5 h-5 text-white" />
                       </div>
-                    </div>
+                    </button>
                     <div className="flex flex-col gap-2">
                       <button
                         type="button"
@@ -891,7 +1002,11 @@ export default function MyAccountPage() {
                       {user.avatar && (
                         <button
                           type="button"
-                          onClick={() => updateUser({ avatar: null })}
+                          onClick={() => {
+                            updateUser({ avatar: null });
+                            setAvatarError("");
+                            setAvatarMessage("Profile photo preview removed for this session.");
+                          }}
                           className="text-[#ffb4ab] text-xs font-medium hover:underline bg-transparent border-0 cursor-pointer text-left"
                         >
                           Remove photo
@@ -900,6 +1015,10 @@ export default function MyAccountPage() {
                       <span className="text-[10px] text-white/30 font-mono">JPG, PNG or WEBP · Max 4MB</span>
                     </div>
                   </div>
+                  <div id="avatar-upload-feedback" className="mt-4" aria-live="polite">
+                    {avatarMessage && <p className="text-xs text-[#82d6c5]">{avatarMessage}</p>}
+                    {avatarError && <p role="alert" className="text-xs text-[#ffb4ab]">{avatarError}</p>}
+                  </div>
                 </div>
 
                 {/* Account Details Form */}
@@ -907,16 +1026,19 @@ export default function MyAccountPage() {
                 <h3 className="font-headline-md text-lg font-bold text-white mb-6">
                   Account Details
                 </h3>
+                <p className="-mt-4 mb-6 text-xs leading-relaxed text-white/50">
+                  Profile and address edits are previewed for the current session until account synchronization is connected.
+                </p>
 
                 {accountSuccess && (
-                  <div className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs p-4 rounded mb-6 flex items-center gap-2">
+                  <div role="status" className="bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs p-4 rounded mb-6 flex items-center gap-2">
                     <Check className="w-4 h-4 shrink-0" />
                     <span>{accountSuccess}</span>
                   </div>
                 )}
 
                 {accountError && (
-                  <div className="bg-[#93000a]/15 border border-[#ffb4ab]/20 text-[#ffb4ab] text-xs p-4 rounded mb-6 flex items-center gap-2">
+                  <div role="alert" className="bg-[#93000a]/15 border border-[#ffb4ab]/20 text-[#ffb4ab] text-xs p-4 rounded mb-6 flex items-center gap-2">
                     <AlertCircle className="w-4 h-4 shrink-0" />
                     <span>{accountError}</span>
                   </div>
@@ -927,21 +1049,29 @@ export default function MyAccountPage() {
                   {/* General Profile */}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-mono uppercase text-white/50">First Name</label>
+                      <label htmlFor="account-first-name" className="text-[10px] font-mono uppercase text-white/50">First Name</label>
                       <input 
+                        id="account-first-name"
+                        name="first-name"
                         type="text" 
+                        autoComplete="given-name"
+                        maxLength={80}
                         value={accountForm.firstName} 
-                        onChange={(e) => setAccountForm(prev => ({ ...prev, firstName: e.target.value }))}
+                        onChange={handleAccountFieldChange("firstName")}
                         className="bg-[#131313] border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-[#268072] outline-none transition-colors"
                         required
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-mono uppercase text-white/50">Last Name</label>
+                      <label htmlFor="account-last-name" className="text-[10px] font-mono uppercase text-white/50">Last Name</label>
                       <input 
+                        id="account-last-name"
+                        name="last-name"
                         type="text" 
+                        autoComplete="family-name"
+                        maxLength={80}
                         value={accountForm.lastName} 
-                        onChange={(e) => setAccountForm(prev => ({ ...prev, lastName: e.target.value }))}
+                        onChange={handleAccountFieldChange("lastName")}
                         className="bg-[#131313] border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-[#268072] outline-none transition-colors"
                         required
                       />
@@ -950,22 +1080,30 @@ export default function MyAccountPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-mono uppercase text-white/50">Display Name</label>
+                      <label htmlFor="account-display-name" className="text-[10px] font-mono uppercase text-white/50">Display Name</label>
                       <input 
+                        id="account-display-name"
+                        name="display-name"
                         type="text" 
+                        autoComplete="name"
+                        maxLength={160}
                         value={accountForm.displayName} 
-                        onChange={(e) => setAccountForm(prev => ({ ...prev, displayName: e.target.value }))}
+                        onChange={handleAccountFieldChange("displayName")}
                         className="bg-[#131313] border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-[#268072] outline-none transition-colors"
                         required
                       />
                       <span className="text-[10px] text-white/40 italic">This will be how your name is shown on headers and greetings.</span>
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-mono uppercase text-white/50">Partner Email Address</label>
+                      <label htmlFor="account-email" className="text-[10px] font-mono uppercase text-white/50">Partner Email Address</label>
                       <input 
+                        id="account-email"
+                        name="email"
                         type="email" 
+                        autoComplete="email"
+                        maxLength={254}
                         value={accountForm.email} 
-                        onChange={(e) => setAccountForm(prev => ({ ...prev, email: e.target.value }))}
+                        onChange={handleAccountFieldChange("email")}
                         className="bg-[#131313] border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-[#268072] outline-none transition-colors"
                         required
                       />
@@ -974,19 +1112,26 @@ export default function MyAccountPage() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-mono uppercase text-white/50">Phone Number</label>
+                      <label htmlFor="account-phone" className="text-[10px] font-mono uppercase text-white/50">Phone Number</label>
                       <input 
-                        type="text" 
+                        id="account-phone"
+                        name="phone"
+                        type="tel"
+                        autoComplete="tel"
+                        maxLength={40}
                         value={accountForm.phone} 
-                        onChange={(e) => setAccountForm(prev => ({ ...prev, phone: e.target.value }))}
+                        onChange={handleAccountFieldChange("phone")}
                         className="bg-[#131313] border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-[#268072] outline-none transition-colors"
                         required
                       />
                     </div>
                     <div className="flex flex-col gap-1.5">
-                      <label className="text-[10px] font-mono uppercase text-white/50">Company Name</label>
+                      <label htmlFor="account-company" className="text-[10px] font-mono uppercase text-white/50">Company Name</label>
                       <input 
+                        id="account-company"
+                        name="company"
                         type="text" 
+                        autoComplete="organization"
                         value={accountForm.company} 
                         disabled
                         className="bg-[#131313]/60 border border-white/5 rounded px-4 py-3 text-sm text-white/50 cursor-not-allowed outline-none"
@@ -998,13 +1143,22 @@ export default function MyAccountPage() {
                   <div className="h-px bg-white/10 my-2"></div>
 
                   {/* Password Reset */}
-                  <div>
+                  <div className="rounded border border-white/10 bg-[#131313] p-4">
                     <h4 className="text-sm font-bold text-white mb-4 flex items-center gap-1.5">
                       <Lock className="w-4 h-4 text-[#82d6c5]" />
-                      Password Change
+                      Password Security
                     </h4>
+                    <p className="mb-3 text-xs leading-relaxed text-white/60">
+                      Password changes are handled by the secure account recovery page.
+                    </p>
+                    <a
+                      href="/api/auth/forgot-password"
+                      className="inline-flex text-xs font-bold text-[#82d6c5] transition-colors hover:text-white hover:underline"
+                    >
+                      Open secure password management
+                    </a>
                     
-                    <div className="flex flex-col gap-4">
+                    <div className="hidden" aria-hidden="true">
                       <div className="flex flex-col gap-1.5">
                         <label className="text-[10px] font-mono uppercase text-white/50">Current Password (leave blank to leave unchanged)</label>
                         <input 
@@ -1045,7 +1199,7 @@ export default function MyAccountPage() {
                     className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 cursor-pointer flex items-center justify-center gap-2 mt-4"
                   >
                     <Save className="w-4 h-4" />
-                    Save Account Changes
+                    Apply Account Preview
                   </button>
 
                   </form>

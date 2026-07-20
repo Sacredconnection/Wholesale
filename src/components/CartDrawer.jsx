@@ -2,13 +2,14 @@
 
 /* eslint-disable @next/next/no-img-element -- Cart images retain runtime WooCommerce error fallbacks. */
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
 import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, Loader2, Scale } from 'lucide-react';
 import { MIN_ORDER_GRAMS, NEW_CUSTOMER_ROLE, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
+import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
 export default function CartDrawer() {
   const { isLoggedIn, user } = useAuth();
@@ -28,6 +29,14 @@ export default function CartDrawer() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [orderError, setOrderError] = useState("");
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const drawerRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const closeCart = () => setIsCartOpen(false);
+
+  useDialogAccessibility(isCartOpen && !isLoginOpen, closeCart, {
+    containerRef: drawerRef,
+    initialFocusRef: closeButtonRef,
+  });
 
   if (!isCartOpen && !isLoginOpen) return null;
 
@@ -98,23 +107,34 @@ export default function CartDrawer() {
         <div className="fixed inset-0 z-50 overflow-hidden">
           {/* Backdrop Overlay */}
           <div 
-            onClick={() => setIsCartOpen(false)}
+            aria-hidden="true"
+            onClick={closeCart}
             className="absolute inset-0 bg-black/60 backdrop-blur-xs transition-opacity duration-300"
           ></div>
 
           {/* Drawer Panel */}
-          <div className="absolute inset-y-0 right-0 max-w-md w-full bg-[#1a1a1a] border-l border-white/10 shadow-2xl flex flex-col justify-between animate-fade-in-left">
+          <div
+            ref={drawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="cart-drawer-title"
+            tabIndex={-1}
+            className="absolute inset-y-0 right-0 max-w-md w-full bg-[#1a1a1a] border-l border-white/10 shadow-2xl flex flex-col justify-between animate-fade-in-left"
+          >
             
             {/* Header */}
             <div className="px-5 sm:px-8 py-5 sm:py-6 border-b border-white/10 flex justify-between items-center bg-[#131313]">
               <div className="flex items-center gap-3">
                 <ShoppingBag className="w-5 h-5 text-[#82d6c5]" />
-                <h3 className="font-headline-md text-xl font-bold text-white">
+                <h3 id="cart-drawer-title" className="font-headline-md text-xl font-bold text-white">
                   Bulk Order Sheet
                 </h3>
               </div>
               <button 
-                onClick={() => setIsCartOpen(false)}
+                ref={closeButtonRef}
+                type="button"
+                aria-label="Close bulk order sheet"
+                onClick={closeCart}
                 className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 text-white/60 hover:text-white flex items-center justify-center transition-all cursor-pointer border-0"
               >
                 <X className="w-4 h-4" />
@@ -166,6 +186,8 @@ export default function CartDrawer() {
                         {/* Quantity controls */}
                         <div className="flex items-center bg-[#131313] border border-white/10 rounded-sm">
                           <button
+                            type="button"
+                            aria-label={`Decrease quantity of ${item.name}`}
                             onClick={() => updateQuantity(item.sku, -1)}
                             className="p-1.5 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
                           >
@@ -175,6 +197,8 @@ export default function CartDrawer() {
                             {item.quantity}
                           </span>
                           <button
+                            type="button"
+                            aria-label={`Increase quantity of ${item.name}`}
                             onClick={() => updateQuantity(item.sku, 1)}
                             className="p-1.5 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
                           >
@@ -183,6 +207,7 @@ export default function CartDrawer() {
                         </div>
 
                         <button 
+                          type="button"
                           onClick={() => removeFromCart(item.sku)}
                           className="text-[10px] text-white/35 hover:text-[#e02401] uppercase tracking-wider font-semibold transition-colors cursor-pointer bg-transparent border-0"
                         >
@@ -197,7 +222,8 @@ export default function CartDrawer() {
                   <ShoppingBag className="w-12 h-12 stroke-[1.5]" />
                   <p className="text-sm font-semibold">Your B2B order sheet is currently empty.</p>
                   <button
-                    onClick={() => setIsCartOpen(false)}
+                    type="button"
+                    onClick={closeCart}
                     className="text-xs font-bold text-[#82d6c5] uppercase tracking-widest hover:underline cursor-pointer bg-transparent border-0"
                   >
                     Browse Catalog
@@ -269,14 +295,16 @@ export default function CartDrawer() {
               </div>
 
               {orderError && (
-                <div className="bg-[#93000a]/15 border border-[#ffb4ab]/25 text-[#ffb4ab] text-xs px-4 py-3 rounded-sm leading-relaxed">
+                <div role="alert" className="bg-[#93000a]/15 border border-[#ffb4ab]/25 text-[#ffb4ab] text-xs px-4 py-3 rounded-sm leading-relaxed">
                   {orderError}
                 </div>
               )}
 
               <button
+                type="button"
                 onClick={handleCheckout}
                 disabled={cart.length === 0 || isSubmitting || (isLoggedIn && !meetsMinimumWeight)}
+                aria-busy={isSubmitting}
                 className="w-full bg-[#EC2300] hover:bg-[#c51d00] disabled:opacity-40 disabled:hover:bg-[#EC2300] text-white text-xs font-bold uppercase tracking-widest py-5 rounded-sm transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 flex items-center justify-center gap-3 cursor-pointer disabled:cursor-not-allowed border-0"
               >
                 {isSubmitting ? (

@@ -195,7 +195,7 @@ export default function CatalogPage() {
   }
 
   return (
-    <div className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
+    <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       {/* Navigation Header */}
       <Header 
         onOpenLogin={() => setIsLoginOpen(true)}
@@ -418,11 +418,11 @@ export default function CatalogPage() {
                           )}
                         </h3>
                       </Link>
-                      <div className="flex gap-2">
-                        <span className="inline-block text-[10px] font-semibold bg-[#268072]/15 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
+                      <div className="flex min-w-0 flex-wrap gap-2">
+                        <span className="max-w-full break-words text-[10px] font-semibold bg-[#268072]/15 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
                           {product.category}
                         </span>
-                        <span className="inline-block text-[10px] font-semibold bg-white/5 text-white/50 border border-white/10 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
+                        <span className="max-w-full break-words text-[10px] font-semibold bg-white/5 text-white/50 border border-white/10 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
                           {product.tribe}
                         </span>
                       </div>
@@ -430,7 +430,7 @@ export default function CatalogPage() {
 
                     {/* SKU Column */}
                     <div className="col-span-1 lg:col-span-2 text-left lg:text-center">
-                      <span className="text-[11px] font-mono text-white/45 bg-[#131313] border border-white/5 px-2 py-1.5 rounded-sm tracking-wide">
+                      <span className="break-all text-[11px] font-mono text-white/45 bg-[#131313] border border-white/5 px-2 py-1.5 rounded-sm tracking-wide">
                         {product.options[currentOptIdx]?.sku || product.sku}
                       </span>
                     </div>

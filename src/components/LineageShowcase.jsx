@@ -3,8 +3,10 @@
 import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowUpRight, Globe, ShieldCheck, HeartHandshake, Eye } from 'lucide-react';
 import { getEthnicityColor } from '@/lib/ethnicity-colors';
+import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
 const TRIBES_DATA = [
   {
@@ -118,6 +120,15 @@ export default function LineageShowcase() {
   const scrollLeft = useRef(0);
   const [hasMoved, setHasMoved] = useState(false);
   const dragStartPos = useRef({ x: 0, y: 0 });
+  const activeTriggerRef = useRef(null);
+  const closeButtonRef = useRef(null);
+  const dialogRef = useRef(null);
+
+  useDialogAccessibility(Boolean(selectedTribe), () => setSelectedTribe(null), {
+    containerRef: dialogRef,
+    initialFocusRef: closeButtonRef,
+    returnFocusRef: activeTriggerRef,
+  });
 
   const handleMouseDown = (e) => {
     isDown.current = true;
@@ -197,33 +208,13 @@ export default function LineageShowcase() {
     };
   }, []);
 
-  useEffect(() => {
-    if (!selectedTribe) return;
-
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const handleKeyDown = (event) => {
-      if (event.key === 'Escape') {
-        setSelectedTribe(null);
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-
-    return () => {
-      document.body.style.overflow = previousOverflow;
-      window.removeEventListener('keydown', handleKeyDown);
-    };
-  }, [selectedTribe]);
-
   return (
-    <section id="tribes" className="theme-dark-zone lineage-showcase relative isolate flex flex-col gap-8 sm:gap-10 lg:gap-12 py-10 sm:py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
+    <section id="tribes" aria-labelledby="lineage-title" className="theme-dark-zone lineage-showcase relative isolate flex flex-col gap-8 sm:gap-10 lg:gap-12 py-10 sm:py-12 border-t border-white/10 scroll-mt-24 w-full before:absolute before:inset-y-0 before:left-1/2 before:-z-10 before:w-screen before:-translate-x-1/2 before:bg-[#131313]">
       
       {/* Header and Controls */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6 w-full">
         <div>
-          <h2 className="lineage-heading font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white mb-3 sm:mb-4">
+          <h2 id="lineage-title" className="lineage-heading font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white mb-3 sm:mb-4">
             Sourced Across 10 Indigenous Nations
           </h2>
           <p className="lineage-description font-body-md text-lg text-white/70 max-w-2xl font-normal leading-relaxed">
@@ -233,12 +224,12 @@ export default function LineageShowcase() {
         
         {/* Controls block */}
         <div className="flex items-center gap-6 shrink-0 w-full md:w-auto justify-between md:justify-end">
-          <a 
+          <Link
             className="lineage-link text-[#82d6c5] hover:text-[#268072] font-label-sm text-sm uppercase tracking-widest hover:underline flex items-center gap-1.5 transition-colors"
             href="/catalog"
           >
-            Explore Lineage <ArrowUpRight className="w-4 h-4" />
-          </a>
+            Explore Lineage <ArrowUpRight className="w-4 h-4" aria-hidden="true" />
+          </Link>
         </div>
       </div>
 
@@ -262,31 +253,47 @@ export default function LineageShowcase() {
           {[...TRIBES_DATA, ...TRIBES_DATA].map((tribe, index) => {
             const accentColor = getEthnicityColor(tribe.id);
             const readableAccentColor = `color-mix(in srgb, ${accentColor} 55%, white 45%)`;
+            const isDuplicate = index >= TRIBES_DATA.length;
 
             return (
-              <div 
+              <button
+                type="button"
                 key={`${tribe.id}-${index}`}
-                onClick={() => {
-                  if (!hasMoved) {
+                onClick={(event) => {
+                  if (event.detail === 0 || !hasMoved) {
+                    activeTriggerRef.current = isDuplicate
+                      ? sliderRef.current?.querySelector(`[data-tribe-id="${tribe.id}"]:not([aria-hidden="true"])`)
+                      : event.currentTarget;
                     setSelectedTribe(tribe);
                   }
                 }}
-                className="lineage-card group cursor-pointer relative overflow-hidden rounded bg-[#1a1a1a] border border-white/5 aspect-[3/4] w-[280px] sm:w-[320px] shrink-0 transition-all duration-300 hover:[border-color:var(--ethnicity-accent)] hover:shadow-xl hover:shadow-black/30 select-none"
+                onFocus={() => { isHovered.current = true; }}
+                onBlur={() => { isHovered.current = false; }}
+                aria-label={`View details about the ${tribe.name} people`}
+                aria-haspopup="dialog"
+                data-tribe-id={tribe.id}
+                aria-hidden={isDuplicate || undefined}
+                tabIndex={isDuplicate ? -1 : 0}
+                className="lineage-card group cursor-pointer relative overflow-hidden rounded bg-[#1a1a1a] border border-white/5 aspect-[3/4] w-[280px] sm:w-[320px] shrink-0 p-0 text-left transition-all duration-300 hover:[border-color:var(--ethnicity-accent)] hover:shadow-xl hover:shadow-black/30 select-none focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#82d6c5]"
                 style={{
                   '--ethnicity-accent': accentColor,
                   '--ethnicity-readable': readableAccentColor,
                 }}
               >
                 {/* Image Overlay */}
-                <div 
-                  className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105 opacity-60 mix-blend-luminosity group-hover:mix-blend-normal object-cover"
-                  style={{ backgroundImage: `url('${tribe.image}')` }}
-                ></div>
+                <Image
+                  src={tribe.image}
+                  alt=""
+                  fill
+                  sizes="320px"
+                  className="object-cover object-center opacity-60 mix-blend-luminosity transition-transform duration-700 group-hover:scale-105 group-hover:mix-blend-normal"
+                  draggable={false}
+                />
                 <div className="absolute inset-0 bg-gradient-to-t from-[#131313] via-[#131313]/40 to-transparent"></div>
                 
                 {/* Hover Eye Badge */}
-                <div className="lineage-glass-surface absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                  <Eye className="w-4 h-4" style={{ color: readableAccentColor }} />
+                <div className="lineage-glass-surface absolute top-4 right-4 bg-black/60 backdrop-blur-md border border-white/10 rounded-full p-2 opacity-0 group-hover:opacity-100 group-focus-visible:opacity-100 transition-opacity duration-300">
+                  <Eye className="w-4 h-4" style={{ color: readableAccentColor }} aria-hidden="true" />
                 </div>
 
                 {/* Bottom details */}
@@ -294,11 +301,11 @@ export default function LineageShowcase() {
                   <span className="lineage-location font-label-sm text-xs text-[#82d6c5] uppercase tracking-widest transition-colors group-hover:[color:var(--ethnicity-readable)]">
                     {tribe.region}
                   </span>
-                  <h3 className="font-headline-md text-2xl font-bold text-white">
+                  <span className="font-headline-md text-2xl font-bold text-white">
                     {tribe.name}
-                  </h3>
+                  </span>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -312,20 +319,27 @@ export default function LineageShowcase() {
           onClick={() => setSelectedTribe(null)}
         >
           <div 
+            ref={dialogRef}
             className="bg-[#1a1a1a] border border-white/15 rounded-lg max-w-2xl w-full max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain shadow-2xl relative animate-fade-in-up my-auto"
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
             aria-labelledby="tribe-dialog-title"
+            tabIndex={-1}
           >
             {/* Top Image Banner */}
             <div className="h-60 relative w-full">
-              <div 
-                className="absolute inset-0 bg-cover bg-center opacity-80"
-                style={{ backgroundImage: `url('${selectedTribe.image}')` }}
-              ></div>
+              <Image
+                src={selectedTribe.image}
+                alt={`${selectedTribe.name} community`}
+                fill
+                sizes="(max-width: 672px) 100vw, 672px"
+                className="object-cover object-center opacity-80"
+              />
               <div className="absolute inset-0 bg-gradient-to-t from-[#1a1a1a] to-transparent"></div>
               <button 
+                ref={closeButtonRef}
+                type="button"
                 onClick={() => setSelectedTribe(null)}
                 className="absolute top-4 right-4 w-8 h-8 rounded-full bg-black/75 hover:bg-black text-white flex items-center justify-center font-bold border border-white/10 hover:border-white/30 transition-all cursor-pointer"
                 aria-label="Close tribe details"
@@ -381,6 +395,7 @@ export default function LineageShowcase() {
               {/* Bottom Actions */}
               <div className="flex justify-end gap-3 pt-2">
                 <button
+                  type="button"
                   onClick={() => setSelectedTribe(null)}
                   className="bg-transparent hover:bg-white/5 text-white/70 hover:text-white text-xs font-bold uppercase tracking-wider px-6 py-3 rounded-sm border border-white/10 transition-colors cursor-pointer"
                 >

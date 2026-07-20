@@ -61,6 +61,7 @@ export default function RegisterPage() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submitting) return;
     const err = validate();
     if (err) {
       setError(err);
@@ -72,11 +73,11 @@ export default function RegisterPage() {
 
     try {
       await register({
-        firstName: form.username.split(" ")[0] || form.username,
-        lastName: form.username.split(" ").slice(1).join(" ") || "",
-        displayName: form.username,
-        email: form.email,
-        phone: form.phone,
+        firstName: form.username.trim().split(/\s+/)[0] || form.username.trim(),
+        lastName: form.username.trim().split(/\s+/).slice(1).join(" "),
+        displayName: form.username.trim(),
+        email: form.email.trim().toLowerCase(),
+        phone: form.phone.trim(),
         country: form.country,
         company: `${form.username} Wholesale`,
         businessType: "Wholesale Partner",
@@ -90,26 +91,26 @@ export default function RegisterPage() {
         creditLimit: 0,
         discountRate: 0,
         shippingAddress: {
-          street: form.address,
+          street: form.address.trim(),
           neighborhood: "",
-          city: form.city,
-          state: form.state,
-          zip: form.zip,
+          city: form.city.trim(),
+          state: form.state.trim(),
+          zip: form.zip.trim(),
           country: form.country
         },
         billingAddress: {
-          street: form.address,
+          street: form.address.trim(),
           neighborhood: "",
-          city: form.city,
-          state: form.state,
-          zip: form.zip,
+          city: form.city.trim(),
+          state: form.state.trim(),
+          zip: form.zip.trim(),
           country: form.country
         }
       });
-      setSubmitting(false);
       setSubmitted(true);
     } catch (err) {
       setError(err.message || "Registration failed. Please try again.");
+    } finally {
       setSubmitting(false);
     }
   };
@@ -132,7 +133,11 @@ export default function RegisterPage() {
 
         <div className="w-full max-w-md z-10">
           {!submitted ? (
-            <form onSubmit={handleSubmit} className="bg-[#1a1a1a] border border-white/10 rounded-sm p-5 sm:p-8 shadow-2xl flex flex-col gap-5 sm:gap-6">
+            <form
+              onSubmit={handleSubmit}
+              aria-busy={submitting}
+              className="bg-[#1a1a1a] border border-white/10 rounded-sm p-5 sm:p-8 shadow-2xl flex flex-col gap-5 sm:gap-6"
+            >
               
               <div>
                 <span className="text-[10px] font-mono tracking-widest text-[#82d6c5] uppercase block mb-1">
@@ -147,7 +152,7 @@ export default function RegisterPage() {
               </div>
 
               {error && (
-                <div className="flex items-center gap-2 bg-[#93000a]/15 border border-[#ffb4ab]/20 text-[#ffb4ab] text-xs p-3 rounded-sm animate-shake">
+                <div role="alert" className="flex items-center gap-2 bg-[#93000a]/15 border border-[#ffb4ab]/20 text-[#ffb4ab] text-xs p-3 rounded-sm animate-shake">
                   <AlertCircle className="w-4 h-4 shrink-0" />
                   {error}
                 </div>
@@ -354,7 +359,7 @@ export default function RegisterPage() {
             </form>
           ) : (
             /* Success Screen */
-            <div className="bg-[#1a1a1a] border border-white/10 rounded-sm p-6 sm:p-10 flex flex-col items-center text-center gap-5 sm:gap-6 shadow-2xl animate-fade-in">
+            <div role="status" className="bg-[#1a1a1a] border border-white/10 rounded-sm p-6 sm:p-10 flex flex-col items-center text-center gap-5 sm:gap-6 shadow-2xl animate-fade-in">
               <div className="w-16 h-16 rounded-full bg-[#268072]/10 border border-[#268072]/20 flex items-center justify-center text-[#82d6c5]">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
@@ -374,17 +379,17 @@ export default function RegisterPage() {
               </div>
 
               <div className="bg-[#131313] border border-white/5 rounded-sm p-4 w-full flex flex-col gap-2 font-mono text-left max-w-sm">
-                <div className="flex justify-between text-xs">
+                <div className="flex flex-col gap-1 text-xs sm:flex-row sm:justify-between">
                   <span className="text-white/40">USERNAME:</span>
-                  <span className="text-[#82d6c5] font-bold">{form.username}</span>
+                  <span className="break-all text-[#82d6c5] font-bold sm:text-right">{form.username}</span>
                 </div>
-                <div className="flex justify-between text-xs">
+                <div className="flex flex-col gap-1 text-xs sm:flex-row sm:justify-between">
                   <span className="text-white/40">EMAIL:</span>
-                  <span className="text-white font-bold">{form.email}</span>
+                  <span className="break-all text-white font-bold sm:text-right">{form.email}</span>
                 </div>
-                <div className="flex justify-between text-xs">
+                <div className="flex flex-col gap-1 text-xs sm:flex-row sm:justify-between">
                   <span className="text-white/40">STATUS:</span>
-                  <span className="text-yellow-400 font-bold uppercase">PENDING APPROVAL</span>
+                  <span className="text-yellow-400 font-bold uppercase sm:text-right">PENDING APPROVAL</span>
                 </div>
               </div>
 

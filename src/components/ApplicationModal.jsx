@@ -1,8 +1,9 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Send, FileText, CheckCircle2, ShieldCheck, Loader2 } from 'lucide-react';
+import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
 export default function ApplicationModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -19,8 +20,13 @@ export default function ApplicationModal({ isOpen, onClose }) {
   const [errors, setErrors] = useState({});
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const dialogRef = useRef(null);
+  const fullNameInputRef = useRef(null);
+  const submitTimerRef = useRef(null);
 
-  if (!isOpen) return null;
+  useEffect(() => () => {
+    if (submitTimerRef.current) window.clearTimeout(submitTimerRef.current);
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -52,18 +58,25 @@ export default function ApplicationModal({ isOpen, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    if (submitting) return;
     if (!validate()) return;
 
     setSubmitting(true);
     
-    // Simulate premium B2B network verification submission
-    setTimeout(() => {
+    // Brief client-side validation transition; no application is sent here.
+    submitTimerRef.current = window.setTimeout(() => {
       setSubmitting(false);
       setSubmitted(true);
-    }, 2000);
+      submitTimerRef.current = null;
+    }, 600);
   };
 
   const handleClose = () => {
+    if (submitTimerRef.current) {
+      window.clearTimeout(submitTimerRef.current);
+      submitTimerRef.current = null;
+    }
+    setSubmitting(false);
     setSubmitted(false);
     setFormData({
       fullName: '',
@@ -79,12 +92,26 @@ export default function ApplicationModal({ isOpen, onClose }) {
     onClose();
   };
 
+  useDialogAccessibility(isOpen, handleClose, {
+    containerRef: dialogRef,
+    initialFocusRef: fullNameInputRef,
+  });
+
+  if (!isOpen) return null;
+
   return (
-    <div className="fixed inset-0 bg-[#0c0c0c]/85 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto">
+    <div
+      className="fixed inset-0 bg-[#0c0c0c]/85 backdrop-blur-md z-[60] flex items-center justify-center p-4 overflow-y-auto"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) handleClose();
+      }}
+    >
       <div 
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="application-title"
+        tabIndex={-1}
         className="bg-[#1a1a1a] border border-white/10 rounded-lg max-w-xl w-full shadow-2xl relative animate-fade-in-up"
         onClick={(e) => e.stopPropagation()}
       >
@@ -99,7 +126,11 @@ export default function ApplicationModal({ isOpen, onClose }) {
         </button>
 
         {!submitted ? (
-          <form onSubmit={handleSubmit} className="p-5 sm:p-8 flex flex-col gap-5 sm:gap-6">
+          <form
+            onSubmit={handleSubmit}
+            aria-busy={submitting}
+            className="p-5 sm:p-8 flex flex-col gap-5 sm:gap-6"
+          >
             
             {/* Header */}
             <div>
@@ -124,6 +155,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   Authorized Contact Name
                 </label>
                 <input 
+                  ref={fullNameInputRef}
                   id="application-full-name"
                   type="text" 
                   name="fullName"
@@ -135,7 +167,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   placeholder="e.g. John Doe"
                   className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors"
                 />
-                {errors.fullName && <span className="text-xs text-[#ffb4ab]">{errors.fullName}</span>}
+                {errors.fullName && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.fullName}</span>}
               </div>
 
               {/* Business Name */}
@@ -155,7 +187,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   placeholder="e.g. Ancestral Botanicals Ltd."
                   className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors"
                 />
-                {errors.businessName && <span className="text-xs text-[#ffb4ab]">{errors.businessName}</span>}
+                {errors.businessName && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.businessName}</span>}
               </div>
 
               {/* Tax ID */}
@@ -174,7 +206,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   placeholder="e.g. EIN-12-3456789"
                   className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors"
                 />
-                {errors.taxId && <span className="text-xs text-[#ffb4ab]">{errors.taxId}</span>}
+                {errors.taxId && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.taxId}</span>}
               </div>
 
               {/* Contact Grid */}
@@ -195,7 +227,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                     placeholder="john@company.com"
                     className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors"
                   />
-                  {errors.email && <span className="text-xs text-[#ffb4ab]">{errors.email}</span>}
+                  {errors.email && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.email}</span>}
                 </div>
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="application-phone" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
@@ -213,7 +245,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                     placeholder="+1 (555) 123-4567"
                     className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors"
                   />
-                  {errors.phone && <span className="text-xs text-[#ffb4ab]">{errors.phone}</span>}
+                  {errors.phone && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.phone}</span>}
                 </div>
               </div>
 
@@ -269,7 +301,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   I agree to respect the sacred origins of the botanical blends and support the direct profit-sharing program back to the tribal gatherers.
                 </label>
               </div>
-              {errors.agreeEthical && <span className="text-xs text-[#ffb4ab]">{errors.agreeEthical}</span>}
+              {errors.agreeEthical && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.agreeEthical}</span>}
 
             </div>
 
@@ -290,12 +322,12 @@ export default function ApplicationModal({ isOpen, onClose }) {
                 {submitting ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
-                    Submitting Application...
+                    Validating Details...
                   </>
                 ) : (
                   <>
                     <Send className="w-3.5 h-3.5" />
-                    Submit Application
+                    Validate Application Details
                   </>
                 )}
               </button>
@@ -304,7 +336,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
           </form>
         ) : (
           /* Success Screen */
-          <div className="p-6 sm:p-10 flex flex-col items-center text-center gap-5 sm:gap-6 animate-fade-in">
+          <div role="status" className="p-6 sm:p-10 flex flex-col items-center text-center gap-5 sm:gap-6 animate-fade-in">
             <div className="w-16 h-16 rounded-full bg-[#268072]/10 border border-[#268072]/20 flex items-center justify-center text-[#82d6c5]">
               <CheckCircle2 className="w-8 h-8" />
             </div>
@@ -328,7 +360,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                 <span className="text-white font-bold uppercase">READY TO REGISTER</span>
               </div>
               <div className="flex justify-between text-xs">
-                <span className="text-white/40">NOTIFICATIONS TO:</span>
+                <span className="text-white/40">CONTACT EMAIL:</span>
                 <span className="text-white">{formData.email}</span>
               </div>
             </div>

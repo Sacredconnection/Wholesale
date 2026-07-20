@@ -260,6 +260,36 @@ html[data-theme="dark"] body .site-background-page > main {
   background-color: transparent !important;
 }
 
+/* Accessible secondary-text hierarchy on dark surfaces. */
+html[data-theme="dark"] :is(
+  [class~="text-white/20"],
+  [class~="text-white/25"],
+  [class~="text-white/30"],
+  [class~="text-white/35"],
+  [class~="text-white/40"],
+  [class~="text-white/45"]
+) {
+  color: #a3b8b0 !important;
+}
+
+html[data-theme="dark"] :is(
+  [class~="text-white/50"],
+  [class~="text-white/55"],
+  [class~="text-white/60"]
+) {
+  color: #b8c8c2 !important;
+}
+
+html[data-theme="dark"] :is(
+  [class~="placeholder-white/30"],
+  [class~="placeholder-white/35"],
+  [class~="placeholder:text-white/30"],
+  [class~="placeholder:text-white/35"]
+)::placeholder {
+  color: #a3b8b0 !important;
+  opacity: 1;
+}
+
 html[data-theme="light"] [class~="bg-[#131313]"],
 html[data-theme="light"] [class~="bg-[#131313]/60"] {
   background-color: #f5f7f6 !important;
@@ -291,33 +321,24 @@ html[data-theme="light"] [class~="text-white/70"] {
   color: rgb(23 32 30 / 0.7) !important;
 }
 
-html[data-theme="light"] [class~="text-white/60"] {
-  color: rgb(23 32 30 / 0.62) !important;
+html[data-theme="light"] :is(
+  [class~="text-white/50"],
+  [class~="text-white/55"],
+  [class~="text-white/60"],
+  [class~="text-white/65"]
+) {
+  color: #46524e !important;
 }
 
-html[data-theme="light"] [class~="text-white/55"] {
-  color: rgb(23 32 30 / 0.58) !important;
-}
-
-html[data-theme="light"] [class~="text-white/50"] {
-  color: rgb(23 32 30 / 0.56) !important;
-}
-
-html[data-theme="light"] [class~="text-white/45"] {
-  color: rgb(23 32 30 / 0.52) !important;
-}
-
-html[data-theme="light"] [class~="text-white/40"] {
-  color: rgb(23 32 30 / 0.48) !important;
-}
-
-html[data-theme="light"] [class~="text-white/35"],
-html[data-theme="light"] [class~="text-white/30"] {
-  color: rgb(23 32 30 / 0.42) !important;
-}
-
-html[data-theme="light"] [class~="text-white/20"] {
-  color: rgb(23 32 30 / 0.32) !important;
+html[data-theme="light"] :is(
+  [class~="text-white/20"],
+  [class~="text-white/25"],
+  [class~="text-white/30"],
+  [class~="text-white/35"],
+  [class~="text-white/40"],
+  [class~="text-white/45"]
+) {
+  color: #5b6864 !important;
 }
 
 html[data-theme="light"] [class~="text-[#82d6c5]"] {
@@ -365,8 +386,11 @@ html[data-theme="light"] [class~="hover:bg-white/10"]:hover {
 }
 
 html[data-theme="light"] [class~="placeholder-white/30"]::placeholder,
-html[data-theme="light"] [class~="placeholder-white/35"]::placeholder {
-  color: rgb(23 32 30 / 0.42) !important;
+html[data-theme="light"] [class~="placeholder-white/35"]::placeholder,
+html[data-theme="light"] [class~="placeholder:text-white/30"]::placeholder,
+html[data-theme="light"] [class~="placeholder:text-white/35"]::placeholder {
+  color: #5b6864 !important;
+  opacity: 1;
 }
 
 html[data-theme="light"] [class~="divide-white/5"] > :not(:last-child) {
@@ -467,12 +491,27 @@ html[data-theme="light"] .theme-dark-zone [class~="text-white/70"] {
   color: rgb(255 255 255 / 0.7) !important;
 }
 
-html[data-theme="light"] .theme-dark-zone [class~="text-white/60"] {
-  color: rgb(255 255 255 / 0.6) !important;
+html[data-theme="light"] .theme-dark-zone :is(
+  [class~="text-white/50"],
+  [class~="text-white/55"],
+  [class~="text-white/60"]
+) {
+  color: #b8c8c2 !important;
 }
 
-html[data-theme="light"] .theme-dark-zone [class~="text-white/50"] {
-  color: rgb(255 255 255 / 0.5) !important;
+html[data-theme="light"] .theme-dark-zone [class~="text-white/65"] {
+  color: rgb(255 255 255 / 0.65) !important;
+}
+
+html[data-theme="light"] .theme-dark-zone :is(
+  [class~="text-white/20"],
+  [class~="text-white/25"],
+  [class~="text-white/30"],
+  [class~="text-white/35"],
+  [class~="text-white/40"],
+  [class~="text-white/45"]
+) {
+  color: #a3b8b0 !important;
 }
 
 html[data-theme="light"] .theme-dark-zone [class~="text-[#82d6c5]"] {
@@ -840,7 +879,7 @@ html[data-theme="light"] .home-no-glass .compendium-icon-shell {
   position: relative;
   z-index: 1;
   margin-top: -1px;
-  background-color: #131313;
+  background-color: transparent;
 }
 
 .editorial-copy > p + p,

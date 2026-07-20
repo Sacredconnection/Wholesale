@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -15,6 +15,19 @@ export default function Header({ onOpenLogin }) {
   const router = useRouter();
   const { isLoggedIn, logout } = useAuth();
   const { cartTotalItems, setIsCartOpen } = useCart();
+
+  useEffect(() => {
+    if (!mobileMenuOpen) return undefined;
+
+    const handleKeyDown = (event) => {
+      if (event.key === 'Escape') {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [mobileMenuOpen]);
 
   const handleHomeClick = (e) => {
     if (pathname === '/') {
@@ -44,11 +57,12 @@ export default function Header({ onOpenLogin }) {
         </Link>
 
         {/* Navigation Links (Center - Desktop Only) */}
-        <nav className="hidden self-stretch items-center gap-8 text-sm font-medium tracking-wide text-white/70 font-body-md lg:flex">
+        <nav aria-label="Primary navigation" className="hidden self-stretch items-center gap-8 text-sm font-medium tracking-wide text-white/70 font-body-md lg:flex">
           <Link
             className={`${pathname === '/' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:after:scale-x-100 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/"
             onClick={handleHomeClick}
+            aria-current={pathname === '/' ? 'page' : undefined}
           >
             Home
           </Link>
@@ -58,12 +72,14 @@ export default function Header({ onOpenLogin }) {
           <Link
             className={`${pathname === '/catalog' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:after:scale-x-100 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/catalog"
+            aria-current={pathname === '/catalog' ? 'page' : undefined}
           >
             Wholesale Catalog
           </Link>
           <Link
             className={`${pathname === '/contact' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:after:scale-x-100 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/contact"
+            aria-current={pathname === '/contact' ? 'page' : undefined}
           >
             Contact
           </Link>
@@ -75,12 +91,14 @@ export default function Header({ onOpenLogin }) {
 
           {/* Cart Icon Trigger */}
           <button
+            type="button"
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0"
+            aria-label={`Open order sheet${cartTotalItems > 0 ? `, ${cartTotalItems} items` : ''}`}
+            className="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5]"
           >
-            <ShoppingBag className="w-4 h-4" />
+            <ShoppingBag className="w-4 h-4" aria-hidden="true" />
             {cartTotalItems > 0 && (
-              <span className="absolute -top-1.5 -right-1.5 bg-[#268072] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border border-[#131313]">
+              <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 bg-[#268072] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border border-[#131313]">
                 {cartTotalItems}
               </span>
             )}
@@ -90,11 +108,13 @@ export default function Header({ onOpenLogin }) {
             <>
               <Link
                 href="/my-account"
+                aria-current={pathname === '/my-account' ? 'page' : undefined}
                 className={`text-sm font-medium ${pathname === '/my-account' ? 'text-white border-b-2 border-[#268072]' : 'text-[#82d6c5] hover:text-white'} pb-1 transition-colors`}
               >
                 My Account
               </Link>
               <button 
+                type="button"
                 onClick={handleHeaderLogout}
                 className="bg-[#93000a]/15 hover:bg-[#93000a]/30 text-[#ffb4ab] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-[#93000a]/30 hover:border-[#ffb4ab]/40 transition-all duration-300 flex items-center gap-2 cursor-pointer"
               >
@@ -105,6 +125,7 @@ export default function Header({ onOpenLogin }) {
           ) : (
             <>
               <button 
+                type="button"
                 onClick={onOpenLogin}
                 className="text-sm font-medium text-white/80 hover:text-white transition-colors font-body-md bg-transparent border-0 cursor-pointer text-left"
               >
@@ -126,32 +147,39 @@ export default function Header({ onOpenLogin }) {
           <ThemeToggle />
 
           <button
+            type="button"
             onClick={() => setIsCartOpen(true)}
-            className="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0"
+            aria-label={`Open order sheet${cartTotalItems > 0 ? `, ${cartTotalItems} items` : ''}`}
+            className="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5]"
           >
-            <ShoppingBag className="w-4 h-4" />
+            <ShoppingBag className="w-4 h-4" aria-hidden="true" />
             {cartTotalItems > 0 && (
-              <span className="absolute -top-1 -right-1 bg-[#268072] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#131313]">
+              <span aria-hidden="true" className="absolute -top-1 -right-1 bg-[#268072] text-white text-[9px] font-bold w-4 h-4 rounded-full flex items-center justify-center border border-[#131313]">
                 {cartTotalItems}
               </span>
             )}
           </button>
           
           <button 
+            type="button"
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            className="text-white/80 hover:text-white focus:outline-none cursor-pointer"
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
+            aria-expanded={mobileMenuOpen}
+            aria-controls="mobile-navigation"
+            className="rounded-sm text-white/80 hover:text-white cursor-pointer focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#82d6c5]"
           >
-            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+            {mobileMenuOpen ? <X className="w-6 h-6" aria-hidden="true" /> : <Menu className="w-6 h-6" aria-hidden="true" />}
           </button>
         </div>
       </div>
 
       {/* Mobile Drawer Navigation overlay */}
       {mobileMenuOpen && (
-        <div className="absolute top-[100%] left-0 z-40 flex max-h-[calc(100dvh-4rem)] w-full flex-col gap-5 overflow-y-auto border-b border-white/10 bg-[#212121] px-4 py-6 shadow-xl backdrop-blur-md animate-fade-in sm:px-6 lg:hidden">
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="absolute top-[100%] left-0 z-40 flex max-h-[calc(100dvh-4rem)] w-full flex-col gap-5 overflow-y-auto border-b border-white/10 bg-[#212121] px-4 py-6 shadow-xl backdrop-blur-md animate-fade-in sm:px-6 lg:hidden">
           <Link
             className={`${pathname === '/' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/"
+            aria-current={pathname === '/' ? 'page' : undefined}
             onClick={(e) => {
               setMobileMenuOpen(false);
               handleHomeClick(e);
@@ -169,6 +197,7 @@ export default function Header({ onOpenLogin }) {
           <Link
             className={`${pathname === '/catalog' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/catalog"
+            aria-current={pathname === '/catalog' ? 'page' : undefined}
             onClick={() => setMobileMenuOpen(false)}
           >
             Wholesale Catalog
@@ -176,6 +205,7 @@ export default function Header({ onOpenLogin }) {
           <Link
             className={`${pathname === '/contact' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/contact"
+            aria-current={pathname === '/contact' ? 'page' : undefined}
             onClick={() => setMobileMenuOpen(false)}
           >
             Contact
@@ -185,12 +215,14 @@ export default function Header({ onOpenLogin }) {
             <>
               <Link
                 href="/my-account"
+                aria-current={pathname === '/my-account' ? 'page' : undefined}
                 onClick={() => setMobileMenuOpen(false)}
                 className={`text-base font-medium ${pathname === '/my-account' ? 'text-white' : 'text-[#82d6c5] hover:text-white'} transition-colors`}
               >
                 My Account
               </Link>
               <button
+                type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   handleHeaderLogout();
@@ -204,6 +236,7 @@ export default function Header({ onOpenLogin }) {
           ) : (
             <>
               <button
+                type="button"
                 onClick={() => {
                   setMobileMenuOpen(false);
                   onOpenLogin();
@@ -221,7 +254,7 @@ export default function Header({ onOpenLogin }) {
               </Link>
             </>
           )}
-        </div>
+        </nav>
       )}
     </header>
   );
