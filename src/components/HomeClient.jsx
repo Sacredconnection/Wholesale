@@ -31,7 +31,7 @@ export default function HomeClient() {
 
       {/* Main Page Area */}
       <main className="flex-grow w-full bg-[#23403B] pb-12 sm:pb-14 lg:pb-16">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-12 px-4 pb-12 sm:gap-14 sm:px-6 sm:pb-14 lg:gap-16 lg:px-8 lg:pb-16">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 pb-12 pt-10 sm:gap-12 sm:px-6 sm:pb-14 sm:pt-12 lg:gap-12 lg:px-8 lg:pb-16 lg:pt-12">
           {/* B2B Onboarding Steps */}
           <Onboarding />
 

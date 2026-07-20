@@ -379,7 +379,7 @@ export default function CatalogPage() {
                 return (
                   <div 
                     key={product.id}
-                    className="grid grid-cols-1 items-center gap-4 rounded-sm border border-white/10 bg-[#171717] px-4 py-6 shadow-sm shadow-black/20 transition-colors hover:bg-white/[0.01] sm:px-6 sm:py-6 lg:grid-cols-12 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-8 lg:shadow-none"
+                    className="catalog-product-row grid grid-cols-1 items-center gap-4 rounded-sm border border-white/10 bg-[#171717] px-4 py-6 shadow-sm shadow-black/20 transition-colors hover:bg-white/[0.01] sm:px-6 sm:py-6 lg:grid-cols-12 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-8 lg:shadow-none"
                   >
                     {/* Image Column — product thumbnail, tribe-letter fallback */}
                     <div className="col-span-1 lg:col-span-1 flex items-center">
@@ -409,7 +409,7 @@ export default function CatalogPage() {
                     {/* Name Column */}
                     <div className="col-span-1 lg:col-span-4 flex flex-col gap-1">
                       <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="hover:text-[#82d6c5] transition-colors text-left no-underline group">
-                        <h3 className="font-headline-md text-lg font-bold text-white group-hover:text-[#82d6c5] transition-colors flex items-center gap-2 flex-wrap">
+                        <h3 className="catalog-product-title font-headline-md text-lg font-bold text-white group-hover:text-[#82d6c5] transition-colors flex items-center gap-2 flex-wrap">
                           {product.name}
                           {product.isNew && (
                             <span className="inline-block text-[9px] font-black tracking-widest bg-emerald-500 text-white px-1.5 py-0.5 rounded-sm uppercase align-middle">
@@ -437,7 +437,7 @@ export default function CatalogPage() {
 
                     {/* Price Column */}
                     <div className="col-span-1 lg:col-span-1 text-left lg:text-right">
-                      <span className="text-base font-bold text-[#82d6c5] font-headline-md whitespace-nowrap">
+                      <span className="catalog-product-price text-base font-bold text-[#82d6c5] font-headline-md whitespace-nowrap">
                         ${optionPriceForUser(product.options[currentOptIdx], user, product.category).toFixed(2)}
                       </span>
                     </div>

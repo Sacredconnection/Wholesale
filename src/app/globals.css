@@ -345,6 +345,20 @@ html[data-theme="light"] [class~="text-[#82d6c5]"] {
   color: #006b5e !important;
 }
 
+/* Catalog rows are cards below the desktop breakpoint. Keep their light-theme
+   surface and primary product information neutral for clear mobile contrast. */
+@media (max-width: 1023px) {
+  html[data-theme="light"] .catalog-product-row {
+    background-color: #ffffff !important;
+  }
+
+  html[data-theme="light"] .catalog-product-title,
+  html[data-theme="light"] .catalog-product-title:hover,
+  html[data-theme="light"] .catalog-product-price {
+    color: #17201e !important;
+  }
+}
+
 html[data-theme="light"] [class~="hover:text-white"]:hover {
   color: #17201e !important;
 }
