@@ -155,12 +155,12 @@ export default function LoginModal({ isOpen, onClose }) {
                 </button>
               </div>
               <div className="flex justify-end pt-1">
-                <Link
+                <a
                   href="/api/auth/forgot-password"
                   className="text-[11px] font-semibold text-[#82d6c5] transition-colors hover:text-white hover:underline"
                 >
                   Forgot your password?
-                </Link>
+                </a>
               </div>
             </div>
           </div>
