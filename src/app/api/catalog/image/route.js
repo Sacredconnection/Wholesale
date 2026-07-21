@@ -40,15 +40,11 @@ export async function GET(request) {
       .png({ compressionLevel: 9, adaptiveFiltering: true })
       .toBuffer();
 
-    const body = new Uint8Array(
-      optimized.buffer,
-      optimized.byteOffset,
-      optimized.byteLength
-    );
-
-    return new Response(body, {
+    return Response.json({
+      format: "PNG",
+      base64: optimized.toString("base64"),
+    }, {
       headers: {
-        "Content-Type": "image/png",
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
         "X-Content-Type-Options": "nosniff",
       },
