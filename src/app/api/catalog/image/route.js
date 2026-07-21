@@ -37,12 +37,12 @@ export async function GET(request) {
     const optimized = await sharp(Buffer.from(image))
       .rotate()
       .resize(240, 240, { fit: "cover", position: "centre" })
-      .jpeg({ quality: 82, mozjpeg: true })
+      .png({ compressionLevel: 9, adaptiveFiltering: true })
       .toBuffer();
 
     return new Response(optimized, {
       headers: {
-        "Content-Type": "image/jpeg",
+        "Content-Type": "image/png",
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
         "X-Content-Type-Options": "nosniff",
       },

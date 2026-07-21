@@ -337,12 +337,12 @@ function drawCatalogLogo(pdf, logo, x, y, width = 45) {
 
 function drawGreenCoverBackground(pdf, background) {
   if (!background) return;
-  pdf.addImage(background, "PNG", 0, 0, 210, 297, "catalog-cover-background", "NONE");
+  pdf.addImage(background, "PNG", 0, 0, 210, 297, "catalog-cover-background", "FAST");
 }
 
 function drawCoverDecoration(pdf, decoration) {
   if (!decoration) return;
-  pdf.addImage(decoration, "PNG", 105, 0, 105, 42, "catalog-cover-decoration", "NONE");
+  pdf.addImage(decoration, "PNG", 105, 0, 105, 42, "catalog-cover-decoration", "FAST");
 }
 
 function drawContactIcon(pdf, type, x, y) {
@@ -588,7 +588,16 @@ function drawGridProductCard(pdf, product, image, user, includeLinks, x, y) {
   pdf.setFillColor(239, 244, 242);
   pdf.roundedRect(x + 4, y + 5, 30, 30, 1.2, 1.2, "F");
   if (image) {
-    pdf.addImage(image, "JPEG", x + 4, y + 5, 30, 30, undefined, "FAST");
+    pdf.addImage(
+      image,
+      "PNG",
+      x + 4,
+      y + 5,
+      30,
+      30,
+      `catalog-product-${pdfSafeText(product.id || product.sku || product.name)}`,
+      "FAST"
+    );
   } else {
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(18);
@@ -869,7 +878,13 @@ export async function exportCatalogPdf({ products, user, includeLinks, filterLab
       });
     }
   });
-  const pdf = new jsPDF({ unit: "mm", format: "a4", orientation: "portrait" });
+  const pdf = new jsPDF({
+    unit: "mm",
+    format: "a4",
+    orientation: "portrait",
+    compress: true,
+    putOnlyUsedFonts: true,
+  });
   pdf.setDisplayMode("100%", "continuous", "UseNone");
   pdf.setProperties({
     title: "Sacred Connection Wholesale Catalog",
