@@ -119,22 +119,6 @@ export default function FilterSidebar({
           </div>
         </fieldset>
 
-        <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-white/10 bg-[#131313] p-3.5 transition-colors hover:border-[#268072]/60">
-          <input
-            type="checkbox"
-            checked={filters.inStock}
-            onChange={(event) => update("inStock", event.target.checked)}
-            className="mt-0.5 h-4 w-4 accent-[#268072]"
-          />
-          <span>
-            <span className="block text-sm font-semibold text-white">
-              Available stock only
-            </span>
-            <span className="mt-0.5 block text-xs leading-5 text-white/40">
-              Hide products currently unavailable.
-            </span>
-          </span>
-        </label>
       </div>
     </aside>
   );

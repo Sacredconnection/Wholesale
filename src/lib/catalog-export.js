@@ -358,31 +358,54 @@ function drawCoverDecoration(pdf, decoration) {
   pdf.addImage(decoration, "PNG", 105, 0, 105, 42, "catalog-cover-decoration", "FAST");
 }
 
-function drawContactIcon(pdf, type, x, y) {
-  pdf.setDrawColor(255, 255, 255);
-  pdf.setLineWidth(0.55);
+const contactIconSvg = (content) =>
+  `<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${content}</svg>`;
 
-  if (type === "email") {
-    pdf.roundedRect(x, y + 1, 6.5, 4.8, 0.6, 0.6, "S");
-    pdf.line(x + 0.3, y + 1.4, x + 3.25, y + 3.6);
-    pdf.line(x + 6.2, y + 1.4, x + 3.25, y + 3.6);
-  } else if (type === "phone") {
-    pdf.line(x + 0.8, y + 0.8, x + 2.1, y + 2.2);
-    pdf.line(x + 2.1, y + 2.2, x + 1.6, y + 3.3);
-    pdf.line(x + 1.6, y + 3.3, x + 4.1, y + 5.8);
-    pdf.line(x + 4.1, y + 5.8, x + 5.3, y + 5.3);
-    pdf.line(x + 5.3, y + 5.3, x + 6.6, y + 6.6);
-    pdf.line(x + 0.5, y + 1.1, x + 1.3, y + 0.4);
-    pdf.line(x + 5.8, y + 7, x + 6.6, y + 6.6);
-  } else {
-    pdf.circle(x + 3.3, y + 2.8, 2.2, "S");
-    pdf.circle(x + 3.3, y + 2.8, 0.7, "S");
-    pdf.line(x + 1.7, y + 4.3, x + 3.3, y + 7);
-    pdf.line(x + 4.9, y + 4.3, x + 3.3, y + 7);
-  }
+const CONTACT_ICON_SVGS = {
+  email: contactIconSvg(
+    '<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/>'
+  ),
+  phone: contactIconSvg(
+    '<path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/>'
+  ),
+  location: contactIconSvg(
+    '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>'
+  ),
+};
+
+function svgIconToPng(svg) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 192;
+      canvas.height = 192;
+      const context = canvas.getContext("2d");
+      if (!context) {
+        reject(new Error("Canvas is unavailable for PDF contact icons."));
+        return;
+      }
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+      resolve(canvas.toDataURL("image/png"));
+    };
+    image.onerror = () => reject(new Error("PDF contact icon could not be rendered."));
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  });
 }
 
-function drawCoverContactInfo(pdf) {
+async function loadContactIcons() {
+  const entries = await Promise.all(
+    Object.entries(CONTACT_ICON_SVGS).map(async ([type, svg]) => [type, await svgIconToPng(svg)])
+  );
+  return Object.fromEntries(entries);
+}
+
+function drawContactIcon(pdf, type, x, y, contactIcons) {
+  const icon = contactIcons[type];
+  if (icon) pdf.addImage(icon, "PNG", x, y, 7.5, 7.5, `catalog-contact-${type}`, "FAST");
+}
+
+function drawCoverContactInfo(pdf, contactIcons) {
   const iconX = 116;
   const textX = 128;
 
@@ -411,7 +434,7 @@ function drawCoverContactInfo(pdf) {
   ];
 
   rows.forEach((row) => {
-    drawContactIcon(pdf, row.type, iconX, row.y);
+    drawContactIcon(pdf, row.type, iconX, row.y, contactIcons);
     pdf.setFont("helvetica", "bold");
     pdf.setFontSize(6.7);
     pdf.setTextColor(255, 255, 255);
@@ -422,7 +445,7 @@ function drawCoverContactInfo(pdf) {
   });
 }
 
-function drawPdfCover(pdf, logo, coverBackground, coverDecoration, products, filterLabel) {
+function drawPdfCover(pdf, logo, coverBackground, coverDecoration, contactIcons, products, filterLabel) {
   const categoryCount = new Set(products.map((product) => product.category).filter(Boolean)).size;
   const tribeCount = new Set(products.map((product) => product.tribe).filter(Boolean)).size;
   pdf.setFillColor(20, 65, 57);
@@ -484,7 +507,7 @@ function drawPdfCover(pdf, logo, coverBackground, coverDecoration, products, fil
     pdf.text(label, x, 213, { align: "center" });
   });
 
-  drawCoverContactInfo(pdf);
+  drawCoverContactInfo(pdf, contactIcons);
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(7.5);
@@ -932,6 +955,13 @@ export async function exportCatalogPdf({ products, user, includeLinks, filterLab
     // The black cover bar remains clean until the optional decoration is added.
   }
 
+  let contactIcons = {};
+  try {
+    contactIcons = await loadContactIcons();
+  } catch {
+    // Contact text and links remain available if an icon cannot be rendered.
+  }
+
   const imageCache = new Map();
   const loadProductImage = (product) => {
     if (!product.image) return Promise.resolve(null);
@@ -952,7 +982,7 @@ export async function exportCatalogPdf({ products, user, includeLinks, filterLab
     productImages.push(...(await Promise.all(batch.map(loadProductImage))));
   }
   const imagesByProduct = new Map(products.map((product, index) => [product.id || product.sku, productImages[index]]));
-  drawPdfCover(pdf, logo, coverBackground, coverDecoration, products, filterLabel);
+  drawPdfCover(pdf, logo, coverBackground, coverDecoration, contactIcons, products, filterLabel);
   let currentPage = 1;
   indexPages.forEach((columns, indexPage) => {
     pdf.addPage("a4", "portrait");

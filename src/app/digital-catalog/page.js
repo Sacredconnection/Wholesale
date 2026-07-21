@@ -24,7 +24,6 @@ const EMPTY_FILTERS = {
   category: "",
   minPrice: "",
   maxPrice: "",
-  inStock: false,
 };
 
 const EMPTY_PAGINATION = {
@@ -89,8 +88,6 @@ export default function CatalogPage() {
       if (filters.category) params.set("category", filters.category);
       if (filters.minPrice !== "") params.set("minPrice", filters.minPrice);
       if (filters.maxPrice !== "") params.set("maxPrice", filters.maxPrice);
-      if (filters.inStock) params.set("inStock", "true");
-
       try {
         const response = await fetch(`/api/catalog?${params.toString()}`, {
           credentials: "same-origin",
@@ -132,7 +129,6 @@ export default function CatalogPage() {
     filters.category,
     filters.minPrice,
     filters.maxPrice,
-    filters.inStock,
     isLoggedIn,
     reloadKey,
   ]);
@@ -143,7 +139,6 @@ export default function CatalogPage() {
     if (filters.category) params.set("category", filters.category);
     if (filters.minPrice !== "") params.set("minPrice", filters.minPrice);
     if (filters.maxPrice !== "") params.set("maxPrice", filters.maxPrice);
-    if (filters.inStock) params.set("inStock", "true");
     if (page > 1) params.set("page", String(page));
     const query = params.toString();
     window.history.replaceState(null, "", query ? `/digital-catalog?${query}` : "/digital-catalog");
@@ -176,8 +171,6 @@ export default function CatalogPage() {
     if (filters.category) params.set("category", filters.category);
     if (filters.minPrice !== "") params.set("minPrice", filters.minPrice);
     if (filters.maxPrice !== "") params.set("maxPrice", filters.maxPrice);
-    if (filters.inStock) params.set("inStock", "true");
-
     const response = await fetch(`/api/catalog?${params.toString()}`, {
       credentials: "same-origin",
       cache: "no-store",
@@ -198,7 +191,6 @@ export default function CatalogPage() {
     if (filters.category) labels.push(`Category: ${filters.category}`);
     if (filters.minPrice !== "") labels.push(`Min: $${filters.minPrice}`);
     if (filters.maxPrice !== "") labels.push(`Max: $${filters.maxPrice}`);
-    if (filters.inStock) labels.push("Available stock only");
     return labels.length ? labels.join(" | ") : "Complete catalog";
   };
 

@@ -4,7 +4,7 @@
 
 import { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Check, CircleHelp, LockKeyhole, PackageX, ShoppingBag } from "lucide-react";
+import { ArrowUpRight, LockKeyhole, ShoppingBag } from "lucide-react";
 import { optionPriceForUser } from "@/lib/pricing";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
 
@@ -47,35 +47,13 @@ export default function ProductCard({
         </div>
       )}
 
-      <div className="absolute left-3 top-3 flex flex-wrap gap-2">
-        {product.isNew && (
+      {product.isNew && (
+        <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           <span className="rounded-sm bg-[#268072] px-2 py-1 text-[9px] font-black uppercase tracking-[0.16em] text-white">
             New
           </span>
-        )}
-        <span
-          className={`inline-flex items-center gap-1 rounded-sm px-2 py-1 text-[9px] font-black uppercase tracking-[0.12em] ${
-            product.stockKnown === false
-              ? "bg-[#20231f]/90 text-[#d8c99b]"
-              : product.inStock
-              ? "bg-[#11241f]/90 text-[#82d6c5]"
-              : "bg-[#2b1714]/90 text-[#ff806b]"
-          }`}
-        >
-          {product.stockKnown === false ? (
-            <CircleHelp className="h-3 w-3" aria-hidden="true" />
-          ) : product.inStock ? (
-            <Check className="h-3 w-3" aria-hidden="true" />
-          ) : (
-            <PackageX className="h-3 w-3" aria-hidden="true" />
-          )}
-          {product.stockKnown === false
-            ? "Stock not synced"
-            : product.inStock
-              ? "In stock"
-              : "Unavailable"}
-        </span>
-      </div>
+        </div>
+      )}
     </>
   );
 
