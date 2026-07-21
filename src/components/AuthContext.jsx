@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useState } from "react";
 
 const AuthContext = createContext(null);
 
@@ -66,12 +66,16 @@ export function AuthProvider({ children }) {
     return data.user;
   };
 
+  const invalidateSession = useCallback(() => {
+    setIsLoggedIn(false);
+    setUser(null);
+  }, []);
+
   const logout = async () => {
     try {
       await fetch("/api/auth/logout", { method: "POST", credentials: "same-origin" });
     } finally {
-      setIsLoggedIn(false);
-      setUser(null);
+      invalidateSession();
     }
   };
 
@@ -84,7 +88,7 @@ export function AuthProvider({ children }) {
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, loading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, loading, login, register, logout, invalidateSession, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

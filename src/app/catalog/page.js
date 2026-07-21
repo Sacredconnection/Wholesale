@@ -371,7 +371,7 @@ export default function CatalogPage() {
             <div className="flex flex-col items-center justify-center py-16 sm:py-20 lg:py-24 px-4 sm:px-6 gap-4 text-center">
               <PackageOpen className="w-16 h-16 text-white/20" />
               <p className="text-sm text-white/50 font-medium max-w-md">
-                We could not load the wholesale catalog right now. Please try again shortly.
+                {productsError || "We could not load the wholesale catalog right now. Please try again shortly."}
               </p>
               <button
                 onClick={reload}

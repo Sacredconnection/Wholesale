@@ -1,22 +1,24 @@
 "use client";
 
-// Provides the product catalog to client components. Products come exclusively
-// from the WooCommerce API (/api/products) — nothing is pre-loaded, so the UI
-// must render a loading state until the fetch resolves.
+// Loads each WooCommerce catalog independently. The first store to respond is
+// rendered immediately; a slow or unavailable secondary store cannot keep the
+// entire catalog behind a spinner.
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/AuthContext";
 
 const ProductsContext = createContext(null);
+const CATALOG_STORES = ["sacred-connection", "maya-herbs"];
+const CLIENT_CATALOG_TIMEOUT_MS = 35000;
 
 export function ProductsProvider({ children }) {
-  const { isLoggedIn, loading: authLoading } = useAuth();
+  const { isLoggedIn, loading: authLoading, invalidateSession } = useAuth();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
-  const reload = useCallback(() => setReloadKey((k) => k + 1), []);
+  const reload = useCallback(() => setReloadKey((key) => key + 1), []);
 
   useEffect(() => {
     let cancelled = false;
@@ -31,32 +33,72 @@ export function ProductsProvider({ children }) {
       return () => window.clearTimeout(clearTimer);
     }
 
+    async function loadStore(storeId) {
+      const response = await fetch(`/api/products?store=${encodeURIComponent(storeId)}`, {
+        credentials: "same-origin",
+        cache: "no-store",
+        signal: AbortSignal.timeout(CLIENT_CATALOG_TIMEOUT_MS),
+      });
+      let data = {};
+      try {
+        data = await response.json();
+      } catch {
+        // The status and store id still provide an actionable error below.
+      }
+      if (!response.ok) {
+        const error = new Error(data.error || `${storeId} catalog responded ${response.status}`);
+        error.status = response.status;
+        throw error;
+      }
+      return Array.isArray(data.products) ? data.products : [];
+    }
+
     async function loadCatalog() {
       setLoading(true);
       setError("");
-      try {
-        const res = await fetch("/api/products", {
-          credentials: "same-origin",
-          cache: "no-store",
-        });
-        const data = await res.json();
-        if (!res.ok) throw new Error(data.error || `Catalog API responded ${res.status}`);
-        if (!cancelled) setProducts(Array.isArray(data.products) ? data.products : []);
-      } catch (err) {
-        if (!cancelled) {
-          setProducts([]);
-          setError(err.message || "Could not load the catalog.");
+      let successfulStores = 0;
+      const failures = [];
+
+      await Promise.allSettled(
+        CATALOG_STORES.map(async (storeId) => {
+          try {
+            const storeProducts = await loadStore(storeId);
+            if (cancelled) return;
+            successfulStores += 1;
+            setProducts((currentProducts) =>
+              [
+                ...currentProducts.filter((product) => product.storeId !== storeId),
+                ...storeProducts,
+              ].sort((a, b) => a.name.localeCompare(b.name))
+            );
+            // Render as soon as either store is ready.
+            setLoading(false);
+          } catch (storeError) {
+            failures.push({ storeId, error: storeError });
+          }
+        })
+      );
+
+      if (cancelled) return;
+      if (successfulStores === 0) {
+        setProducts([]);
+        const unauthorized = failures.some(({ error: storeError }) => storeError.status === 401);
+        if (unauthorized) {
+          invalidateSession();
+          return;
         }
-      } finally {
-        if (!cancelled) setLoading(false);
+        setError(failures[0]?.error?.message || "Could not load the catalog.");
+      } else if (failures.length > 0) {
+        console.error("Some catalog stores could not be loaded:", failures);
       }
+      setLoading(false);
     }
 
     loadCatalog();
     return () => {
       cancelled = true;
     };
-  }, [authLoading, isLoggedIn, reloadKey]);
+  }, [authLoading, invalidateSession, isLoggedIn, reloadKey]);
 
   return (
     <ProductsContext.Provider value={{ products, loading, error, reload }}>
@@ -67,8 +109,6 @@ export function ProductsProvider({ children }) {
 
 export function useProducts() {
   const context = useContext(ProductsContext);
-  if (!context) {
-    throw new Error("useProducts must be used within a ProductsProvider");
-  }
+  if (!context) throw new Error("useProducts must be used within a ProductsProvider");
   return context;
 }
