@@ -29,9 +29,6 @@ export const metadata = {
   description:
     "Direct fair-trade sourcing of sacred Amazonian botanicals and traditional forest remedies for wholesale partners.",
   applicationName: "Sacred Connection Wholesale",
-  icons: {
-    icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
-  },
 };
 
 export default function RootLayout({ children }) {
