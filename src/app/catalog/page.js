@@ -7,6 +7,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
+import ProductOptionsModal from "@/components/ProductOptionsModal";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
@@ -38,11 +39,25 @@ const normalizeStr = (str) =>
     .normalize("NFD")
     .replace(/[\u0300-\u036f]/g, "");
 
+const getPaginationItems = (currentPage, totalPages) => {
+  if (totalPages <= 7) return Array.from({ length: totalPages }, (_, index) => index + 1);
+
+  const items = [1];
+  const rangeStart = Math.max(2, Math.min(currentPage - 2, totalPages - 5));
+  const rangeEnd = Math.min(totalPages - 1, Math.max(currentPage + 2, 6));
+
+  if (rangeStart > 2) items.push("ellipsis-start");
+  for (let page = rangeStart; page <= rangeEnd; page += 1) items.push(page);
+  if (rangeEnd < totalPages - 1) items.push("ellipsis-end");
+  items.push(totalPages);
+  return items;
+};
 export default function CatalogPage() {
   const { products, loading: productsLoading, error: productsError, warning: productsWarning, reload } = useProducts();
   const { isLoggedIn, user, loading: authLoading } = useAuth();
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
+  const [optionsProduct, setOptionsProduct] = useState(null);
 
   // Inline Option and Quantity States
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -184,6 +199,11 @@ export default function CatalogPage() {
 
     return [firstVisiblePage, firstVisiblePage + 1, firstVisiblePage + 2];
   }, [currentPage, totalPages]);
+
+  const desktopPageItems = useMemo(
+    () => getPaginationItems(currentPage, totalPages),
+    [currentPage, totalPages]
+  );
 
   // Handle clear filters
   const handleClearFilters = () => {
@@ -464,12 +484,13 @@ export default function CatalogPage() {
                     {/* Actions Column */}
                     <div className="col-span-1 lg:col-span-4 flex items-center justify-start lg:justify-end gap-3 flex-wrap lg:flex-nowrap">
                       {!product.optionsLoaded ? (
-                        <Link
-                          href={`/product/${product.id}?fromPage=${currentPage}`}
-                          className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm shadow-md transition-all no-underline"
+                        <button
+                          type="button"
+                          onClick={() => setOptionsProduct(product)}
+                          className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm shadow-md transition-all border-0 cursor-pointer"
                         >
                           View options
-                        </Link>
+                        </button>
                       ) : (
                         <>
                       {/* Option Select Dropdown */}
@@ -573,22 +594,28 @@ export default function CatalogPage() {
                 ))}
               </div>
 
-              <div className="hidden items-center gap-2 sm:flex">
-                {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                  <button
-                    key={page}
-                    onClick={() => setCurrentPage(page)}
-                    aria-label={`Go to catalog page ${page}`}
-                    aria-current={currentPage === page ? "page" : undefined}
-                    className={`w-10 h-10 rounded-sm text-xs font-bold font-mono transition-all border cursor-pointer ${
-                      currentPage === page
-                        ? "bg-[#268072] text-white border-[#268072]"
-                        : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    {page}
-                  </button>
-                ))}
+              <div className="hidden max-w-full items-center justify-center gap-2 sm:flex">
+                {desktopPageItems.map((item) =>
+                  typeof item === "string" ? (
+                    <span key={item} aria-hidden="true" className="w-6 text-center text-white/35">
+                      &hellip;
+                    </span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setCurrentPage(item)}
+                      aria-label={`Go to catalog page ${item}`}
+                      aria-current={currentPage === item ? "page" : undefined}
+                      className={`h-10 w-10 shrink-0 rounded-sm border font-mono text-xs font-bold transition-all cursor-pointer ${
+                        currentPage === item
+                          ? "bg-[#268072] text-white border-[#268072]"
+                          : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white"
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
               </div>
 
               <button
@@ -606,6 +633,17 @@ export default function CatalogPage() {
       </main>
 
       {/* Shared Modals */}
+      <ProductOptionsModal
+        key={optionsProduct?.id || "closed-product-options"}
+        product={optionsProduct}
+        user={user}
+        onClose={() => setOptionsProduct(null)}
+        onAddToCart={(product, optionIndex, quantity) => {
+          addToCart(product, optionIndex, quantity);
+          setOptionsProduct(null);
+          setIsCartOpen(true);
+        }}
+      />
       <LoginModal 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 
