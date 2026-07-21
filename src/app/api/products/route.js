@@ -33,7 +33,7 @@ async function loadStoreCatalog(storeId, storeName, role) {
 
 const getCachedStoreCatalog = unstable_cache(
   loadStoreCatalog,
-  ["multi-store-catalog-v3"],
+  ["multi-store-catalog-v4-english-maya"],
   { revalidate: catalogCacheSeconds, tags: ["woocommerce-catalog"] }
 );
 

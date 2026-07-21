@@ -14,6 +14,7 @@ const STORE_DEFINITIONS = [
   {
     id: MAYA_HERBS_STORE_ID,
     name: "Maya Herbs",
+    catalogLanguage: "en",
     urlEnv: "WOOCOMMERCE_URL_MAYA",
     keyEnv: "WOOCOMMERCE_CONSUMER_KEY_MAYA",
     secretEnv: "WOOCOMMERCE_CONSUMER_SECRET_MAYA",
@@ -42,6 +43,7 @@ export function getCommerceStore(storeId = PRIMARY_STORE_ID) {
   return {
     id: definition.id,
     name: definition.name,
+    catalogLanguage: definition.catalogLanguage || "",
     baseUrl: rawUrl,
     consumerKey: process.env[definition.keyEnv] || "",
     consumerSecret: process.env[definition.secretEnv] || "",

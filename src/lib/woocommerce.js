@@ -94,9 +94,11 @@ async function wcFetch(storeId, path, { params = {}, method = "GET", body, reval
 // ── Catalog ─────────────────────────────────────────────────────────
 
 export async function getAllProducts(storeId = PRIMARY_STORE_ID) {
+  const { catalogLanguage } = getCommerceStore(storeId);
   const productParams = {
     per_page: 100,
     status: "publish",
+    ...(catalogLanguage ? { lang: catalogLanguage } : {}),
     _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data",
   };
   const { data: firstPage, headers } = await wcFetch(storeId, "products", {
@@ -152,8 +154,14 @@ export async function getVariationById(productId, variationId, storeId = PRIMARY
 }
 
 export async function getCategories(storeId = PRIMARY_STORE_ID) {
+  const { catalogLanguage } = getCommerceStore(storeId);
   const { data } = await wcFetch(storeId, "products/categories", {
-    params: { per_page: 100, hide_empty: true, _fields: "id,name,parent" },
+    params: {
+      per_page: 100,
+      hide_empty: true,
+      ...(catalogLanguage ? { lang: catalogLanguage } : {}),
+      _fields: "id,name,parent",
+    },
   });
   return data;
 }
