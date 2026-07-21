@@ -1,14 +1,13 @@
 "use client";
 
-// Loads each WooCommerce catalog independently. The first store to respond is
-// rendered immediately; a slow or unavailable secondary store cannot keep the
-// entire catalog behind a spinner.
+// Preloads the combined catalog as soon as authentication is restored. Keeping
+// this provider above the pages means navigation to /catalog can reuse the
+// already loaded data and both stores become visible in the same render.
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/AuthContext";
 
 const ProductsContext = createContext(null);
-const CATALOG_STORES = ["sacred-connection", "maya-herbs"];
 const CLIENT_CATALOG_TIMEOUT_MS = 35000;
 
 export function ProductsProvider({ children }) {
@@ -35,69 +34,40 @@ export function ProductsProvider({ children }) {
       return () => window.clearTimeout(clearTimer);
     }
 
-    async function loadStore(storeId) {
-      const response = await fetch(`/api/products?store=${encodeURIComponent(storeId)}`, {
-        credentials: "same-origin",
-        cache: "no-store",
-        signal: AbortSignal.timeout(CLIENT_CATALOG_TIMEOUT_MS),
-      });
-      let data = {};
-      try {
-        data = await response.json();
-      } catch {
-        // The status and store id still provide an actionable error below.
-      }
-      if (!response.ok) {
-        const error = new Error(data.error || `${storeId} catalog responded ${response.status}`);
-        error.status = response.status;
-        throw error;
-      }
-      return Array.isArray(data.products) ? data.products : [];
-    }
-
     async function loadCatalog() {
       setLoading(true);
       setError("");
       setWarning("");
-      let successfulStores = 0;
-      const failures = [];
 
-      await Promise.allSettled(
-        CATALOG_STORES.map(async (storeId) => {
-          try {
-            const storeProducts = await loadStore(storeId);
-            if (cancelled) return;
-            successfulStores += 1;
-            setProducts((currentProducts) =>
-              [
-                ...currentProducts.filter((product) => product.storeId !== storeId),
-                ...storeProducts,
-              ].sort((a, b) => a.name.localeCompare(b.name))
-            );
-            // Render as soon as either store is ready.
-            setLoading(false);
-          } catch (storeError) {
-            failures.push({ storeId, error: storeError });
+      try {
+        const response = await fetch("/api/products", {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: AbortSignal.timeout(CLIENT_CATALOG_TIMEOUT_MS),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 401) {
+            invalidateSession();
+            return;
           }
-        })
-      );
-
-      if (cancelled) return;
-      if (successfulStores === 0) {
-        setProducts([]);
-        const unauthorized = failures.some(({ error: storeError }) => storeError.status === 401);
-        if (unauthorized) {
-          invalidateSession();
-          return;
+          throw new Error(data.error || "Could not load the combined catalog.");
         }
-        setError(failures[0]?.error?.message || "Could not load the catalog.");
-      } else if (failures.length > 0) {
-        console.error("Some catalog stores could not be loaded:", failures);
-        setWarning(
-          failures.map(({ error: storeError }) => storeError.message).join(" ")
-        );
+        if (!cancelled) {
+          setProducts(Array.isArray(data.products) ? data.products : []);
+        }
+      } catch (catalogError) {
+        if (!cancelled) {
+          setProducts([]);
+          setError(
+            catalogError.name === "TimeoutError"
+              ? "The combined catalog took too long to load. Please try again."
+              : catalogError.message
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
       }
-      setLoading(false);
     }
 
     loadCatalog();

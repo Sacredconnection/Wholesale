@@ -94,23 +94,27 @@ async function wcFetch(storeId, path, { params = {}, method = "GET", body, reval
 // ── Catalog ─────────────────────────────────────────────────────────
 
 export async function getAllProducts(storeId = PRIMARY_STORE_ID) {
-  const products = [];
-  let page = 1;
-  for (;;) {
-    const { data, headers } = await wcFetch(storeId, "products", {
-      params: {
-        per_page: 100,
-        page,
-        status: "publish",
-        _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data",
-      },
-    });
-    products.push(...data);
-    const totalPages = Number(headers.get("x-wp-totalpages") || 1);
-    if (page >= totalPages) break;
-    page += 1;
-  }
-  return products;
+  const productParams = {
+    per_page: 100,
+    status: "publish",
+    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data",
+  };
+  const { data: firstPage, headers } = await wcFetch(storeId, "products", {
+    params: { ...productParams, page: 1 },
+  });
+  const totalPages = Number(headers.get("x-wp-totalpages") || 1);
+  if (totalPages <= 1) return firstPage;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => index + 2).map(async (page) => {
+      const { data } = await wcFetch(storeId, "products", {
+        params: { ...productParams, page },
+      });
+      return data;
+    })
+  );
+
+  return [firstPage, ...remainingPages].flat();
 }
 
 export async function getProductBySlug(slug, storeId = PRIMARY_STORE_ID) {
