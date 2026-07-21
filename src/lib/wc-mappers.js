@@ -1,7 +1,17 @@
 // Maps WooCommerce REST payloads to the internal product shape used by the UI.
 
+const decodeHtmlEntities = (value) =>
+  String(value || "")
+    .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
+    .replace(/&#x([\da-f]+);/gi, (_, code) => String.fromCodePoint(Number.parseInt(code, 16)))
+    .replace(/&amp;/gi, "&")
+    .replace(/&quot;/gi, '"')
+    .replace(/&#0*39;|&apos;/gi, "'")
+    .replace(/&lt;/gi, "<")
+    .replace(/&gt;/gi, ">");
+
 const stripHtml = (html) =>
-  (html || "")
+  decodeHtmlEntities(html)
     .replace(/<[^>]*>/g, " ")
     .replace(/\s+/g, " ")
     .trim();
@@ -14,6 +24,7 @@ const attributeOption = (attributes, name) => {
   );
   if (!attr) return null;
   if (Array.isArray(attr.options)) return attr.options[0] || null;
+  if (Array.isArray(attr.terms)) return attr.terms[0]?.name || null;
   return attr.option || null;
 };
 
@@ -67,8 +78,41 @@ export function mapVariationToOption(variation) {
     sku: variation.sku || String(variation.id),
     weightGrams: extractWeightGrams(name, variation.weight),
     wcVariationId: variation.id,
+    inStock: variation.stock_status !== "outofstock",
+    stockQuantity:
+      variation.stock_quantity == null ? null : Number(variation.stock_quantity),
   };
 }
+
+const storePrice = (prices = {}) => {
+  const amount = Number(prices.price);
+  const minorUnit = Number(prices.currency_minor_unit ?? 2);
+  if (!Number.isFinite(amount) || !Number.isFinite(minorUnit)) return 0;
+  return amount / (10 ** minorUnit);
+};
+
+const storeVariationName = (variation) => {
+  const attributes = (variation.attributes || [])
+    .map((attribute) => attribute.value || attribute.option)
+    .filter(Boolean);
+  if (attributes.length) return attributes.join(" / ");
+  const variationLabel = String(variation.variation || "");
+  return variationLabel.replace(/^[^:]+:\s*/, "") || variation.sku || String(variation.id);
+};
+
+const mapStoreVariationToOption = (variation) => {
+  const name = storeVariationName(variation);
+  return {
+    name,
+    price: storePrice(variation.prices),
+    rolePrices: {},
+    sku: variation.sku || String(variation.id),
+    weightGrams: extractWeightGrams(name, null),
+    wcVariationId: variation.id,
+    inStock: variation.is_in_stock !== false,
+    stockQuantity: null,
+  };
+};
 
 // Pre-computes category hierarchy info used by mapProduct: which categories
 // are subcategories (their names double as the tribe list, e.g. "Huni Kuin"
@@ -191,8 +235,19 @@ export function mapProduct(product, variations = [], categoryContext = {}) {
             sku: product.sku || String(product.id),
             weightGrams: extractWeightGrams(product.name, product.weight),
             wcVariationId: null,
+            inStock: product.stock_status !== "outofstock",
+            stockQuantity:
+              product.stock_quantity == null ? null : Number(product.stock_quantity),
           },
         ];
+
+  const trackedQuantities = options
+    .map((option) => option.stockQuantity)
+    .filter(Number.isFinite);
+  const stockQuantity =
+    trackedQuantities.length > 0
+      ? trackedQuantities.reduce((total, quantity) => total + quantity, 0)
+      : null;
 
   // Category hierarchy: top-level categories ("Rapé Indigenous", "Sacred
   // Connection") are the product category; subcategories are the tribe.
@@ -209,7 +264,7 @@ export function mapProduct(product, variations = [], categoryContext = {}) {
     // The slug doubles as the route param (/product/[id])
     id: product.slug,
     wcId: product.id,
-    name: product.name,
+    name: decodeHtmlEntities(product.name),
     sku: product.sku || String(product.id),
     category:
       topCats[0]?.name ||
@@ -221,6 +276,65 @@ export function mapProduct(product, variations = [], categoryContext = {}) {
     images: (product.images || []).map((img) => img.src),
     description: stripHtml(product.short_description) || stripHtml(product.description),
     isNew: product.featured === true || (product.tags || []).some((t) => t.slug === "new"),
+    inStock:
+      product.stock_status !== "outofstock" &&
+      options.some((option) => option.inStock !== false),
+    stockQuantity,
+    options,
+  };
+}
+
+export function mapStoreProduct(product, variations = [], categoryContext = {}) {
+  const { parentById = {}, nameById = {} } = categoryContext;
+  const options =
+    product.type === "variable" && variations.length > 0
+      ? variations
+          .filter((variation) => variation.is_purchasable !== false)
+          .map(mapStoreVariationToOption)
+          .sort((a, b) => (a.weightGrams ?? Infinity) - (b.weightGrams ?? Infinity))
+      : [
+          {
+            name: parseGramsFromText(product.name)
+              ? `${parseGramsFromText(product.name)}g`
+              : "Default",
+            price: storePrice(product.prices),
+            rolePrices: {},
+            sku: product.sku || String(product.id),
+            weightGrams: extractWeightGrams(product.name, null),
+            wcVariationId: null,
+            inStock: product.is_in_stock !== false,
+            stockQuantity: null,
+          },
+        ];
+
+  const cats = product.categories || [];
+  const topCats = cats.filter((category) => !parentById[category.id]);
+  const subCats = cats.filter((category) => parentById[category.id]);
+  const tribe =
+    attributeOption(product.attributes, "tribe") ||
+    subCats[0]?.name ||
+    "";
+
+  return {
+    id: product.slug,
+    wcId: product.id,
+    name: decodeHtmlEntities(product.name),
+    sku: product.sku || String(product.id),
+    category:
+      topCats[0]?.name ||
+      (subCats[0] && topLevelCategoryName(subCats[0].id, parentById, nameById)) ||
+      cats[0]?.name ||
+      "Uncategorized",
+    tribe,
+    image: product.images?.[0]?.src || null,
+    images: (product.images || []).map((image) => image.src),
+    description: stripHtml(product.short_description) || stripHtml(product.description),
+    isNew: (product.tags || []).some((tag) => tag.slug === "new"),
+    inStock:
+      product.is_in_stock !== false &&
+      options.some((option) => option.inStock !== false),
+    stockQuantity: null,
+    stockKnown: true,
     options,
   };
 }

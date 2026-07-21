@@ -9,6 +9,7 @@ if (typeof window !== "undefined") {
 }
 
 const API_VERSION = "wc/v3";
+const STORE_API_VERSION = "wc/store/v1";
 
 export function getWooCommerceBaseUrl() {
   const rawUrl = (process.env.WOOCOMMERCE_URL || "").replace(/\/+$/, "");
@@ -34,6 +35,15 @@ export function isWooCommerceConfigured() {
       process.env.WOOCOMMERCE_CONSUMER_KEY &&
       process.env.WOOCOMMERCE_CONSUMER_SECRET
     );
+  } catch {
+    return false;
+  }
+}
+
+export function isWooCommerceStoreConfigured() {
+  try {
+    getWooCommerceBaseUrl();
+    return true;
   } catch {
     return false;
   }
@@ -101,6 +111,106 @@ async function wcFetch(path, { params = {}, method = "GET", body, revalidate } =
   }
 
   return { data: await res.json(), headers: res.headers };
+}
+
+async function storeFetch(path, { params = {}, revalidate } = {}) {
+  if (!isWooCommerceStoreConfigured()) {
+    throw new WooCommerceApiError("WooCommerce URL is not configured.", 0);
+  }
+
+  const url = new URL(`${baseUrl()}/wp-json/${STORE_API_VERSION}/${path.replace(/^\/+/, "")}`);
+  Object.entries(params).forEach(([key, value]) => {
+    if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
+  });
+
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    next: { revalidate: revalidate ?? revalidateSeconds() },
+  });
+
+  if (!res.ok) {
+    let details;
+    try {
+      details = await res.json();
+    } catch {
+      // non-JSON error body
+    }
+    throw new WooCommerceApiError(
+      `WooCommerce Store API GET ${path} failed with status ${res.status}`,
+      res.status,
+      details
+    );
+  }
+
+  return { data: await res.json(), headers: res.headers };
+}
+
+async function getAllStoreProducts() {
+  const products = [];
+  let page = 1;
+  for (;;) {
+    const { data, headers } = await storeFetch("products", {
+      params: { per_page: 100, page },
+    });
+    products.push(...data);
+    const totalPages = Number(headers.get("x-wp-totalpages") || 1);
+    if (page >= totalPages) break;
+    page += 1;
+  }
+  return products;
+}
+
+async function getStoreCategories() {
+  const { data } = await storeFetch("products/categories", {
+    params: { per_page: 100 },
+  });
+  return data;
+}
+
+async function getStoreVariations(variationIds) {
+  const uniqueIds = [...new Set(variationIds.filter(Boolean))];
+  const batches = [];
+  for (let start = 0; start < uniqueIds.length; start += 100) {
+    batches.push(uniqueIds.slice(start, start + 100));
+  }
+
+  const responses = await Promise.all(
+    batches.map((ids) =>
+      storeFetch("products", {
+        params: {
+          type: "variation",
+          include: ids.join(","),
+          per_page: 100,
+          orderby: "include",
+        },
+      })
+    )
+  );
+  return responses.flatMap(({ data }) => data);
+}
+
+export async function getPublicStoreCatalog() {
+  const [products, categories] = await Promise.all([
+    getAllStoreProducts(),
+    getStoreCategories(),
+  ]);
+  const variationReferences = products.flatMap((product) => product.variations || []);
+  const referencesById = new Map(
+    variationReferences.map((variation) => [variation.id, variation])
+  );
+  const variations = await getStoreVariations([...referencesById.keys()]);
+
+  return {
+    products,
+    categories,
+    variations: variations.map((variation) => ({
+      ...variation,
+      attributes:
+        variation.attributes?.length > 0
+          ? variation.attributes
+          : referencesById.get(variation.id)?.attributes || [],
+    })),
+  };
 }
 
 // ── Catalog ─────────────────────────────────────────────────────────

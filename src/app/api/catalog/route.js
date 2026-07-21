@@ -1,0 +1,262 @@
+import { readFile } from "node:fs/promises";
+import {
+  getAllProducts,
+  getCategories,
+  getCustomerByEmail,
+  getPublicStoreCatalog,
+  getProductVariations,
+  isWooCommerceConfigured,
+  isWooCommerceStoreConfigured,
+  WooCommerceApiError,
+} from "@/lib/woocommerce";
+import {
+  buildCategoryContext,
+  isApprovedWholesaleCustomer,
+  mapProductForRole,
+  mapStoreProduct,
+} from "@/lib/wc-mappers";
+import { optionPriceForUser } from "@/lib/pricing";
+import { getSession } from "@/lib/session";
+
+const PAGE_SIZE = 30;
+
+export const runtime = "nodejs";
+
+const normalize = (value) =>
+  String(value || "")
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+
+const queryText = (params, key, maxLength = 100) =>
+  (params.get(key) || "").trim().slice(0, maxLength);
+
+const positiveNumber = (value) => {
+  if (value == null || value === "") return null;
+  const number = Number(value);
+  return Number.isFinite(number) && number >= 0 ? number : null;
+};
+
+const pageNumber = (value) => {
+  const page = Number.parseInt(value || "1", 10);
+  return Number.isFinite(page) && page > 0 ? page : 1;
+};
+
+async function resolveCustomer() {
+  const session = await getSession();
+  if (!session) return null;
+
+  const customer = await getCustomerByEmail(session.email);
+  if (
+    !isApprovedWholesaleCustomer(customer) ||
+    customer.id !== session.customerId
+  ) {
+    return null;
+  }
+
+  return customer;
+}
+
+async function loadLocalCatalogSnapshot() {
+  const snapshotPath = process.env.CATALOG_SNAPSHOT_PATH;
+  if (process.env.NODE_ENV === "production" || !snapshotPath) return null;
+
+  const snapshot = JSON.parse(await readFile(snapshotPath, "utf8"));
+  if (!Array.isArray(snapshot.products)) {
+    throw new Error("The local catalog snapshot must contain a products array.");
+  }
+
+  return snapshot.products.map((product) => {
+    const options = Array.isArray(product.options)
+      ? product.options.map((option) => ({
+          ...option,
+          price: Number(option.price) || 0,
+          inStock: null,
+          stockQuantity: null,
+        }))
+      : [];
+    const prices = options.map((option) => option.price).filter(Number.isFinite);
+
+    return {
+      ...product,
+      options,
+      inStock: null,
+      stockKnown: false,
+      stockQuantity: null,
+      priceMin: prices.length ? Math.min(...prices) : 0,
+      priceMax: prices.length ? Math.max(...prices) : 0,
+      productUrl: `/product/${product.id}`,
+    };
+  });
+}
+
+export async function GET(request) {
+  const { searchParams } = new URL(request.url);
+  const search = queryText(searchParams, "q");
+  const category = queryText(searchParams, "category");
+  const minPrice = positiveNumber(searchParams.get("minPrice"));
+  const maxPrice = positiveNumber(searchParams.get("maxPrice"));
+  const onlyInStock = searchParams.get("inStock") === "true";
+  const exportAll = searchParams.get("export") === "true";
+  const requestedPage = pageNumber(searchParams.get("page"));
+
+  try {
+    let customer = null;
+    let products = null;
+    let source = "snapshot";
+
+    if (isWooCommerceConfigured()) {
+      source = "woocommerce-rest";
+      const [resolvedCustomer, wcProducts, categories] = await Promise.all([
+        resolveCustomer(),
+        getAllProducts(),
+        getCategories(),
+      ]);
+      customer = resolvedCustomer;
+      const categoryContext = buildCategoryContext(categories);
+      const user = customer ? { role: customer.role } : null;
+
+      products = await Promise.all(
+        wcProducts.map(async (product) => {
+          const variations =
+            product.type === "variable"
+              ? await getProductVariations(product.id)
+              : [];
+          const mapped = mapProductForRole(
+            product,
+            variations,
+            categoryContext,
+            customer?.role || null
+          );
+          const prices = mapped.options
+            .map((option) => optionPriceForUser(option, user, mapped.category))
+            .filter(Number.isFinite);
+
+          return {
+            ...mapped,
+            priceMin: prices.length ? Math.min(...prices) : 0,
+            priceMax: prices.length ? Math.max(...prices) : 0,
+            productUrl: `/product/${mapped.id}`,
+          };
+        })
+      );
+    } else if (isWooCommerceStoreConfigured()) {
+      source = "woocommerce-store";
+      const storeCatalog = await getPublicStoreCatalog();
+      const categoryContext = buildCategoryContext(storeCatalog.categories);
+      const variationsByParent = new Map();
+      storeCatalog.variations.forEach((variation) => {
+        if (!variationsByParent.has(variation.parent)) {
+          variationsByParent.set(variation.parent, []);
+        }
+        variationsByParent.get(variation.parent).push(variation);
+      });
+
+      products = storeCatalog.products.map((product) => {
+        const mapped = mapStoreProduct(
+          product,
+          variationsByParent.get(product.id) || [],
+          categoryContext
+        );
+        const prices = mapped.options
+          .map((option) => Number(option.price))
+          .filter(Number.isFinite);
+        return {
+          ...mapped,
+          priceMin: prices.length ? Math.min(...prices) : 0,
+          priceMax: prices.length ? Math.max(...prices) : 0,
+          productUrl: `/product/${mapped.id}`,
+        };
+      });
+    } else {
+      products = await loadLocalCatalogSnapshot();
+      if (!products) {
+        return Response.json(
+          { error: "Catalog backend unavailable." },
+          { status: 503 }
+        );
+      }
+    }
+
+    const availableCategories = Array.from(
+      new Set(products.map((product) => product.category).filter(Boolean))
+    ).sort((a, b) => normalize(a).localeCompare(normalize(b)));
+
+    const allPrices = products.flatMap((product) => [
+      product.priceMin,
+      product.priceMax,
+    ]);
+    const priceBounds = {
+      min: allPrices.length ? Math.floor(Math.min(...allPrices)) : 0,
+      max: allPrices.length ? Math.ceil(Math.max(...allPrices)) : 0,
+    };
+
+    const normalizedSearch = normalize(search);
+    const normalizedCategory = normalize(category);
+    const filtered = products
+      .filter((product) => {
+        const matchesSearch =
+          !normalizedSearch ||
+          normalize(product.name).includes(normalizedSearch) ||
+          normalize(product.sku).includes(normalizedSearch) ||
+          product.options.some((option) =>
+            normalize(option.sku).includes(normalizedSearch)
+          );
+        const matchesCategory =
+          !normalizedCategory ||
+          normalize(product.category) === normalizedCategory;
+        const matchesMin =
+          minPrice == null || product.priceMax >= minPrice;
+        const matchesMax =
+          maxPrice == null || product.priceMin <= maxPrice;
+        const matchesStock = !onlyInStock || product.inStock === true;
+
+        return (
+          matchesSearch &&
+          matchesCategory &&
+          matchesMin &&
+          matchesMax &&
+          matchesStock
+        );
+      })
+      .sort((a, b) => normalize(a.name).localeCompare(normalize(b.name)));
+
+    const totalItems = filtered.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    const page = exportAll ? 1 : Math.min(requestedPage, totalPages);
+    const start = (page - 1) * PAGE_SIZE;
+    const visibleProducts = exportAll
+      ? filtered
+      : filtered.slice(start, start + PAGE_SIZE);
+
+    return Response.json(
+      {
+        source,
+        products: visibleProducts,
+        pagination: {
+          page,
+          pageSize: exportAll ? totalItems : PAGE_SIZE,
+          totalItems,
+          totalPages: exportAll ? 1 : totalPages,
+        },
+        filters: {
+          categories: availableCategories,
+          priceBounds,
+        },
+        viewer: {
+          authenticated: Boolean(customer),
+        },
+      },
+      { headers: { "Cache-Control": "private, no-store" } }
+    );
+  } catch (error) {
+    console.error("GET /api/catalog failed:", error);
+    const status =
+      error instanceof WooCommerceApiError && error.status >= 400 ? 502 : 500;
+    return Response.json(
+      { error: "Failed to load the public catalog." },
+      { status }
+    );
+  }
+}
