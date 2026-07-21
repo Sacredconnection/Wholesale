@@ -155,9 +155,11 @@ export function mapCustomerToUser(customer) {
 }
 
 // Light order shape sent to the client (never expose the raw WC payload).
-export function mapOrder(order) {
+export function mapOrder(order, store = { id: "sacred-connection", name: "Sacred Connection" }) {
   return {
-    id: order.id,
+    id: `${store.id}:${order.id}`,
+    storeId: store.id,
+    storeName: store.name,
     number: order.number,
     status: order.status,
     dateCreated: order.date_created,
@@ -174,7 +176,12 @@ export function mapOrder(order) {
   };
 }
 
-export function mapProduct(product, variations = [], categoryContext = {}) {
+export function mapProduct(
+  product,
+  variations = [],
+  categoryContext = {},
+  store = { id: "sacred-connection", name: "Sacred Connection" }
+) {
   const { parentById = {}, nameById = {} } = categoryContext;
 
   const options =
@@ -206,8 +213,10 @@ export function mapProduct(product, variations = [], categoryContext = {}) {
     "";
 
   return {
-    // The slug doubles as the route param (/product/[id])
-    id: product.slug,
+    // Prefix with the store id so equal slugs from different backends never collide.
+    id: `${store.id}~${product.slug}`,
+    storeId: store.id,
+    storeName: store.name,
     wcId: product.id,
     name: product.name,
     sku: product.sku || String(product.id),
@@ -225,8 +234,8 @@ export function mapProduct(product, variations = [], categoryContext = {}) {
   };
 }
 
-export function mapProductForRole(product, variations, categoryContext, role) {
-  const mapped = mapProduct(product, variations, categoryContext);
+export function mapProductForRole(product, variations, categoryContext, role, store) {
+  const mapped = mapProduct(product, variations, categoryContext, store);
   return {
     ...mapped,
     options: mapped.options.map((option) => ({

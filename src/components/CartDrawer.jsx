@@ -21,6 +21,7 @@ export default function CartDrawer() {
     updateQuantity,
     removeFromCart,
     clearCart,
+    removeItemsByStore,
     cartSubtotal,
     cartTotalItems,
     cartTotalWeightGrams
@@ -71,8 +72,9 @@ export default function CartDrawer() {
         credentials: "same-origin",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          items: cart.map(({ sku, quantity, wcProductId, wcVariationId }) => ({
+          items: cart.map(({ sku, quantity, wcProductId, wcVariationId, storeId }) => ({
             sku,
+            storeId,
             quantity,
             wcProductId,
             wcVariationId,
@@ -85,10 +87,22 @@ export default function CartDrawer() {
         throw new Error(data.error || "Order submission failed. Please try again.");
       }
 
+      const completedStoreIds = (data.orders || []).map((order) => order.storeId);
+      if (data.failures?.length) {
+        removeItemsByStore(completedStoreIds);
+        throw new Error(
+          `Orders were created for ${data.orders.map((order) => order.storeName).join(", ")}, but failed for ${data.failures.map((failure) => failure.storeName).join(", ")}. The remaining items are still in your cart.`
+        );
+      }
+
       clearCart();
       setIsCartOpen(false);
+      const orderSummary = data.orders
+        .map((order) => `${order.storeName} #${order.number}`)
+        .join(" · ");
+      const orderTotal = data.orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
       router.push(
-        `/order-received?number=${encodeURIComponent(data.order.number)}&total=${encodeURIComponent(data.order.total)}`
+        `/order-received?orders=${encodeURIComponent(orderSummary)}&total=${encodeURIComponent(orderTotal.toFixed(2))}`
       );
     } catch (err) {
       setOrderError(err.message || "Order submission failed. Please try again.");
@@ -146,7 +160,7 @@ export default function CartDrawer() {
               {cart.length > 0 ? (
                 <div className="flex flex-col gap-5 divide-y divide-white/5">
                   {cart.map((item, index) => (
-                    <div key={item.sku} className={`flex flex-col items-start justify-between gap-4 sm:flex-row ${index > 0 ? "pt-5" : ""}`}>
+                    <div key={item.cartKey} className={`flex flex-col items-start justify-between gap-4 sm:flex-row ${index > 0 ? "pt-5" : ""}`}>
                       <div className="flex w-full min-w-0 flex-grow gap-3">
                         <div className="w-10 h-10 rounded bg-white/5 border border-white/10 flex items-center justify-center text-xl shrink-0 select-none overflow-hidden">
                           {item.image ? (
@@ -171,6 +185,9 @@ export default function CartDrawer() {
                             <span className="text-[10px] font-bold bg-[#268072]/10 text-[#82d6c5] border border-[#268072]/30 px-1.5 py-0.5 rounded-sm uppercase tracking-wide">
                               {item.optionName}
                             </span>
+                            <span className="text-[10px] font-semibold text-white/45">
+                              {item.storeName}
+                            </span>
                             <span className="break-all text-[10px] font-mono text-white/35">
                               {item.sku}
                             </span>
@@ -188,7 +205,7 @@ export default function CartDrawer() {
                           <button
                             type="button"
                             aria-label={`Decrease quantity of ${item.name}`}
-                            onClick={() => updateQuantity(item.sku, -1)}
+                            onClick={() => updateQuantity(item.cartKey, -1)}
                             className="p-1.5 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
                           >
                             <Minus className="w-3 h-3" />
@@ -199,7 +216,7 @@ export default function CartDrawer() {
                           <button
                             type="button"
                             aria-label={`Increase quantity of ${item.name}`}
-                            onClick={() => updateQuantity(item.sku, 1)}
+                            onClick={() => updateQuantity(item.cartKey, 1)}
                             className="p-1.5 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
                           >
                             <Plus className="w-3 h-3" />
@@ -208,7 +225,7 @@ export default function CartDrawer() {
 
                         <button 
                           type="button"
-                          onClick={() => removeFromCart(item.sku)}
+                          onClick={() => removeFromCart(item.cartKey)}
                           className="text-[10px] text-white/35 hover:text-[#e02401] uppercase tracking-wider font-semibold transition-colors cursor-pointer bg-transparent border-0"
                         >
                           Remove

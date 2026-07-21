@@ -5,9 +5,13 @@ import {
   getOrdersByEmail,
   getProductById,
   getVariationById,
-  isWooCommerceConfigured,
   WooCommerceApiError,
 } from "@/lib/woocommerce";
+import {
+  getMissingCommerceStores,
+  getRequiredCommerceStores,
+  PRIMARY_STORE_ID,
+} from "@/lib/commerce-stores";
 import {
   extractWeightGrams,
   isApprovedWholesaleCustomer,
@@ -31,39 +35,73 @@ import {
 } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
 
-const notConfigured = () =>
-  Response.json({ error: "WooCommerce backend is not configured." }, { status: 503 });
-
-// Payment instructions attached to every order as the customer-provided note.
 const paymentInstructions = () =>
   cleanText(process.env.ORDER_PAYMENT_INSTRUCTIONS, 4000, { multiline: true });
 
-// Lists the orders belonging to a billing email (used by My Account).
+const missingBackendsResponse = () => {
+  const missingStores = getMissingCommerceStores();
+  return missingStores.length > 0
+    ? Response.json(
+        {
+          error: `WooCommerce backends are not configured: ${missingStores.map((store) => store.name).join(", ")}.`,
+        },
+        { status: 503 }
+      )
+    : null;
+};
+
+const orderErrorStatus = (err) =>
+  err instanceof WooCommerceApiError && err.status >= 400 ? 502 : 500;
+
+// Lists orders from both backends for My Account.
 export async function GET() {
   const session = await getSession();
   if (!session) return securityError("Authentication required.", 401);
-  if (!isWooCommerceConfigured()) return notConfigured();
+  const configurationError = missingBackendsResponse();
+  if (configurationError) return configurationError;
 
-  try {
-    const orders = await getOrdersByEmail(session.email);
+  const stores = getRequiredCommerceStores();
+  const results = await Promise.allSettled(
+    stores.map(async (store) => {
+      const orders = await getOrdersByEmail(session.email, store.id);
+      return orders.map((order) => mapOrder(order, store));
+    })
+  );
+
+  const orders = results
+    .flatMap((result) => (result.status === "fulfilled" ? result.value : []))
+    .sort((a, b) => new Date(b.dateCreated) - new Date(a.dateCreated));
+  const failures = results.flatMap((result, index) =>
+    result.status === "rejected"
+      ? [{ storeId: stores[index].id, storeName: stores[index].name }]
+      : []
+  );
+
+  if (orders.length === 0 && failures.length === stores.length) {
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.error(`GET /api/orders failed for ${stores[index].id}:`, result.reason);
+      }
+    });
     return Response.json(
-      { orders: orders.map(mapOrder) },
-      { headers: { "Cache-Control": "no-store" } }
+      { error: "Failed to load orders from the configured WooCommerce stores." },
+      { status: 502 }
     );
-  } catch (err) {
-    console.error("GET /api/orders failed:", err);
-    const status = err instanceof WooCommerceApiError && err.status >= 400 ? 502 : 500;
-    return Response.json({ error: "Failed to load orders from WooCommerce." }, { status });
   }
+
+  return Response.json(
+    { orders, failures },
+    { headers: { "Cache-Control": "no-store" } }
+  );
 }
 
-// Registers a wholesale order in WooCommerce. No online payment is taken:
-// the order lands as "on-hold" and the team contacts the buyer to arrange it.
+// Creates one WooCommerce order per backend represented in the cart.
 export async function POST(request) {
   if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
   const session = await getSession();
   if (!session) return securityError("Authentication required.", 401);
-  if (!isWooCommerceConfigured()) return notConfigured();
+  const configurationError = missingBackendsResponse();
+  if (configurationError) return configurationError;
 
   let body;
   try {
@@ -80,36 +118,38 @@ export async function POST(request) {
   }
 
   try {
-    // The buyer's access level (WP role) drives role-based pricing. Resolved
-    // server-side from the customer record — never trusted from the client.
-    const wcCustomer = await getCustomerByEmail(session.email);
+    // Authentication and buyer profile remain authoritative in Sacred Connection.
+    const wcCustomer = await getCustomerByEmail(session.email, PRIMARY_STORE_ID);
     if (!isApprovedWholesaleCustomer(wcCustomer) || wcCustomer.id !== session.customerId) {
       return securityError("Authentication required.", 401);
     }
     const customer = mapCustomerToUser(wcCustomer);
-    const role = wcCustomer?.role || null;
+    const role = wcCustomer.role || null;
+    const stores = getRequiredCommerceStores();
+    const storeById = new Map(stores.map((store) => [store.id, store]));
 
-    // Phase 1 — resolve each cart item to its WooCommerce payload so price
-    // (per access level) and weight are authoritative. Items from the live
-    // catalog carry ids; otherwise fall back to SKU lookup.
     const resolved = [];
     const unresolved = [];
     let totalWeightGrams = 0;
-
-    // Parent products fetched once per request (variations don't carry the
-    // categories that pick the progressive tier table).
     const productCache = new Map();
-    const getParentProduct = async (id) => {
-      if (!productCache.has(id)) productCache.set(id, await getProductById(id));
-      return productCache.get(id);
+    const getParentProduct = async (storeId, id) => {
+      const key = `${storeId}:${id}`;
+      if (!productCache.has(key)) {
+        productCache.set(key, await getProductById(id, storeId));
+      }
+      return productCache.get(key);
     };
     const tableKeyFromCategories = (categories = []) =>
-      categories.some((c) => progressiveTableKeyFor(c.name) === "shamanic")
+      categories.some((category) => progressiveTableKeyFor(category.name) === "shamanic")
         ? "shamanic"
         : "default";
 
     for (const item of items) {
       if (!item || typeof item !== "object") return securityError("Invalid order item.", 400);
+
+      const storeId = cleanText(item.storeId, 64) || PRIMARY_STORE_ID;
+      const store = storeById.get(storeId);
+      if (!store) return securityError("Invalid product store.", 400);
 
       const quantity = Number(item.quantity);
       const requestedProductId = Number(item.wcProductId);
@@ -125,19 +165,18 @@ export async function POST(request) {
         return securityError("Invalid product identifier.", 400);
       }
 
-      let payload = null; // full WC product or variation object
+      let payload = null;
       let productId = null;
       let variationId = null;
-
       if (requestedProductId && requestedVariationId) {
-        payload = await getVariationById(requestedProductId, requestedVariationId);
+        payload = await getVariationById(requestedProductId, requestedVariationId, storeId);
         productId = requestedProductId;
         variationId = requestedVariationId;
       } else if (requestedProductId) {
-        payload = await getProductById(requestedProductId);
+        payload = await getProductById(requestedProductId, storeId);
         productId = requestedProductId;
       } else if (sku) {
-        const found = await findProductBySku(sku);
+        const found = await findProductBySku(sku, storeId);
         if (found) {
           payload = found;
           productId = found.parent_id || found.id;
@@ -146,24 +185,21 @@ export async function POST(request) {
       }
 
       if (!payload) {
-        unresolved.push(sku || "unknown item");
+        unresolved.push(`${store.name}: ${sku || "unknown item"}`);
         continue;
       }
 
       const optionText =
-        (payload.attributes || [])
-          .map((a) => a.option)
-          .filter(Boolean)
-          .join(" ") || payload.name;
+        (payload.attributes || []).map((attribute) => attribute.option).filter(Boolean).join(" ") ||
+        payload.name;
       const weightGrams = extractWeightGrams(optionText, payload.weight) || 0;
       totalWeightGrams += weightGrams * quantity;
-
-      // Categories live on the parent product, not the variation
       const categories = variationId
-        ? (await getParentProduct(productId)).categories
+        ? (await getParentProduct(storeId, productId)).categories
         : payload.categories;
 
       resolved.push({
+        store,
         productId,
         variationId,
         quantity,
@@ -176,14 +212,10 @@ export async function POST(request) {
 
     if (unresolved.length > 0) {
       return Response.json(
-        {
-          error: `Some items were not found in the store catalog: ${unresolved.join(", ")}.`,
-          unresolved,
-        },
+        { error: `Some items were not found in their store catalogs: ${unresolved.join(", ")}.`, unresolved },
         { status: 422 }
       );
     }
-
     if (totalWeightGrams < MIN_ORDER_GRAMS) {
       return Response.json(
         {
@@ -193,90 +225,118 @@ export async function POST(request) {
       );
     }
 
-    // Phase 2 — price each line. New Customer gets progressive per-gram
-    // pricing: the tier is set by the TOTAL order weight, the rate comes from
-    // each item's own table (indigenous vs shamanic). Other levels use their
-    // flat role prices (falling back to the catalog base price).
     const isProgressive = role === NEW_CUSTOMER_ROLE;
-    const appliedRates = {}; // tableKey → rate, recorded in order meta
+    const entriesByStore = new Map();
+    for (const entry of resolved) {
+      if (!entriesByStore.has(entry.store.id)) entriesByStore.set(entry.store.id, []);
+      entriesByStore.get(entry.store.id).push(entry);
+    }
 
-    const lineItems = resolved.map((entry) => {
-      let unitPrice;
-      const rate = isProgressive
-        ? progressivePerGramRate(totalWeightGrams, entry.tableKey)
-        : null;
-      if (rate != null && entry.weightGrams > 0) {
-        unitPrice = entry.weightGrams * rate;
-        appliedRates[entry.tableKey] = rate;
-      } else {
-        unitPrice = entry.rolePrice != null ? entry.rolePrice : entry.basePrice;
-      }
-      const lineTotal = (unitPrice * entry.quantity).toFixed(2);
-
-      return {
-        product_id: entry.productId,
-        ...(entry.variationId ? { variation_id: entry.variationId } : {}),
-        quantity: entry.quantity,
-        // Explicit totals so the order reflects the buyer's access-level
-        // pricing (the role-pricing plugin only hooks the WP storefront cart).
-        subtotal: lineTotal,
-        total: lineTotal,
-      };
-    });
-
-    // Customer-facing note: payment instructions on every order, plus any
-    // note the buyer typed. Internal context goes to meta_data instead.
     const instructions = paymentInstructions();
     const customerNote = [instructions, note ? `Buyer note: ${note}` : ""]
       .filter(Boolean)
       .join("\n---\n");
+    const billing = {
+      first_name: customer.firstName || "",
+      last_name: customer.lastName || "",
+      company: customer.company || "",
+      email: customer.email,
+      phone: customer.phone || "",
+      ...toWcAddress(customer.billingAddress),
+    };
+    const shipping = {
+      first_name: customer.firstName || "",
+      last_name: customer.lastName || "",
+      company: customer.company || "",
+      ...toWcAddress(customer.shippingAddress),
+    };
 
-    const order = await createOrder({
-      status: "on-hold",
-      set_paid: false,
-      payment_method: "sc_offline",
-      payment_method_title: "Offline: Sacred Connection team will contact you to arrange payment",
-      billing: {
-        first_name: customer.firstName || "",
-        last_name: customer.lastName || "",
-        company: customer.company || "",
-        email: customer.email,
-        phone: customer.phone || "",
-        ...toWcAddress(customer.billingAddress),
-      },
-      shipping: {
-        first_name: customer.firstName || "",
-        last_name: customer.lastName || "",
-        company: customer.company || "",
-        ...toWcAddress(customer.shippingAddress),
-      },
-      line_items: lineItems,
-      customer_note: customerNote,
-      meta_data: [
-        { key: "sc_channel", value: "wholesale-portal" },
-        { key: "sc_access_level", value: role || "none (base prices)" },
-        { key: "sc_total_weight_grams", value: String(Math.round(totalWeightGrams)) },
-        ...(Object.keys(appliedRates).length > 0
-          ? [
-              {
-                key: "sc_per_gram_rate",
-                value: Object.entries(appliedRates)
-                  .map(([table, rate]) => `${table}: $${rate.toFixed(2)}/g`)
-                  .join(" · "),
-              },
-            ]
-          : []),
-        ...(customer.accountId ? [{ key: "sc_account_id", value: String(customer.accountId) }] : []),
-        ...(customer.discountRate
-          ? [{ key: "sc_discount_rate", value: String(customer.discountRate) }]
-          : []),
-      ],
+    const storesInOrder = stores.filter((store) => entriesByStore.has(store.id));
+    const creationResults = await Promise.allSettled(
+      storesInOrder.map(async (store) => {
+        const appliedRates = {};
+        const lineItems = entriesByStore.get(store.id).map((entry) => {
+          const rate = isProgressive
+            ? progressivePerGramRate(totalWeightGrams, entry.tableKey)
+            : null;
+          const unitPrice =
+            rate != null && entry.weightGrams > 0
+              ? entry.weightGrams * rate
+              : entry.rolePrice != null
+                ? entry.rolePrice
+                : entry.basePrice;
+          if (rate != null && entry.weightGrams > 0) appliedRates[entry.tableKey] = rate;
+          const lineTotal = (unitPrice * entry.quantity).toFixed(2);
+          return {
+            product_id: entry.productId,
+            ...(entry.variationId ? { variation_id: entry.variationId } : {}),
+            quantity: entry.quantity,
+            subtotal: lineTotal,
+            total: lineTotal,
+          };
+        });
+
+        const order = await createOrder(
+          {
+            status: "on-hold",
+            set_paid: false,
+            payment_method: "sc_offline",
+            payment_method_title: "Offline: Sacred Connection team will contact you to arrange payment",
+            billing,
+            shipping,
+            line_items: lineItems,
+            customer_note: customerNote,
+            meta_data: [
+              { key: "sc_channel", value: "wholesale-portal" },
+              { key: "sc_source_store", value: store.id },
+              { key: "sc_access_level", value: role || "none (base prices)" },
+              { key: "sc_total_weight_grams", value: String(Math.round(totalWeightGrams)) },
+              ...(Object.keys(appliedRates).length > 0
+                ? [{
+                    key: "sc_per_gram_rate",
+                    value: Object.entries(appliedRates)
+                      .map(([table, rate]) => `${table}: $${rate.toFixed(2)}/g`)
+                      .join(" · "),
+                  }]
+                : []),
+              ...(customer.accountId ? [{ key: "sc_account_id", value: String(customer.accountId) }] : []),
+              ...(customer.discountRate
+                ? [{ key: "sc_discount_rate", value: String(customer.discountRate) }]
+                : []),
+            ],
+          },
+          store.id
+        );
+        return mapOrder(order, store);
+      })
+    );
+
+    const orders = creationResults.flatMap((result) =>
+      result.status === "fulfilled" ? [result.value] : []
+    );
+    const failures = creationResults.flatMap((result, index) => {
+      if (result.status === "fulfilled") return [];
+      const store = storesInOrder[index];
+      console.error(`POST /api/orders failed for ${store.id}:`, result.reason);
+      return [{ storeId: store.id, storeName: store.name }];
     });
 
-    return Response.json({ order: mapOrder(order) }, { status: 201 });
+    if (orders.length === 0) {
+      return Response.json(
+        { error: "Failed to register the order in the configured WooCommerce stores.", orders, failures },
+        { status: 502 }
+      );
+    }
+
+    return Response.json(
+      { orders, failures },
+      { status: failures.length > 0 ? 207 : 201 }
+    );
   } catch (err) {
-    console.error("POST /api/orders failed:", err);
-    const status = err instanceof WooCommerceApiError && err.status >= 400 ? 502 : 500;
-    return Response.json({ error: "Failed to register the order in WooCommerce." }, { status });
+    console.error("POST /api/orders failed before order creation:", err);
+    return Response.json(
+      { error: "Failed to validate the order against WooCommerce." },
+      { status: orderErrorStatus(err) }
+    );
   }
 }

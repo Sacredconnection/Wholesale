@@ -430,8 +430,13 @@ export default function CatalogPage() {
                         <span className="max-w-full break-words text-[10px] font-semibold bg-[#268072]/15 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
                           {product.category}
                         </span>
-                        <span className="max-w-full break-words text-[10px] font-semibold bg-white/5 text-white/50 border border-white/10 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
-                          {product.tribe}
+                        {product.tribe && (
+                          <span className="max-w-full break-words text-[10px] font-semibold bg-white/5 text-white/50 border border-white/10 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
+                            {product.tribe}
+                          </span>
+                        )}
+                        <span className="max-w-full break-words text-[10px] font-semibold text-white/40 px-1 py-0.5 uppercase tracking-wide font-label-sm">
+                          {product.storeName}
                         </span>
                       </div>
                     </div>

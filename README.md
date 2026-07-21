@@ -74,25 +74,28 @@ npm run dev
 ```
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-### Headless WooCommerce Backend
+### Headless WooCommerce Backends
 
-The catalog can be served live from a WordPress/WooCommerce backend. Configuration is entirely via environment variables (see [.env.example](.env.example)):
+The catalog is aggregated from Sacred Connection and Maya Herbs. Configuration is entirely server-side through environment variables (see [.env.example](.env.example)):
 
 | Variable | Description |
 | --- | --- |
-| `WOOCOMMERCE_URL` | Base URL of the WooCommerce install (currently `https://wholesale.sacred-snuff.com`) |
-| `WOOCOMMERCE_CONSUMER_KEY` | REST API consumer key (`ck_...`) |
-| `WOOCOMMERCE_CONSUMER_SECRET` | REST API consumer secret (`cs_...`) |
-| `WC_REVALIDATE_SECONDS` | Optional server-side cache TTL for API responses (default `300`) |
+| `WOOCOMMERCE_URL` | Sacred Connection WooCommerce base URL |
+| `WOOCOMMERCE_CONSUMER_KEY` | Sacred Connection REST API key with Read/Write permission |
+| `WOOCOMMERCE_CONSUMER_SECRET` | Sacred Connection REST API secret |
+| `WOOCOMMERCE_URL_MAYA` | Maya Herbs WooCommerce base URL |
+| `WOOCOMMERCE_CONSUMER_KEY_MAYA` | Maya Herbs REST API key with Read/Write permission |
+| `WOOCOMMERCE_CONSUMER_SECRET_MAYA` | Maya Herbs REST API secret |
+| `WC_REVALIDATE_SECONDS` | Optional server-side catalog cache TTL (default `300`) |
 | `SESSION_SECRET` | Required random secret (minimum 32 characters) used to sign authentication cookies |
-| `ORDER_PAYMENT_INSTRUCTIONS` | Server-only payment text appended to wholesale orders |
+| `ORDER_PAYMENT_INSTRUCTIONS` | Server-only payment text appended to every created order |
 
-*   **Local dev:** copy `.env.example` to `.env.local` and fill in the keys (generated in WP Admin → WooCommerce → Settings → Advanced → REST API).
-*   **Vercel:** add the same variables in **Project Settings → Environment Variables**. When the backend URL changes, only `WOOCOMMERCE_URL` needs updating.
+*   **Local dev:** copy `.env.example` to `.env.local` and fill in both sets of keys (WP Admin → WooCommerce → Settings → Advanced → REST API).
+*   **Vercel:** add all variables for Production and Preview, then redeploy.
 
-**How it works:** credentials stay server-side — [src/lib/woocommerce.js](src/lib/woocommerce.js) talks to the WooCommerce REST API from Route Handlers (`/api/products`, `/api/products/[id]`), and [src/lib/wc-mappers.js](src/lib/wc-mappers.js) converts WC products/variations into the internal catalog shape. On the client, [ProductsContext](src/components/ProductsContext.jsx) renders the static catalog ([src/data/products.js](src/data/products.js)) instantly and swaps in live WooCommerce data when available. If the backend is unconfigured or offline, the site keeps working with static data.
+**How it works:** [src/lib/commerce-stores.js](src/lib/commerce-stores.js) defines the two server-only backends. `/api/products` loads both catalogs and tags each product with its source. The cart preserves this source, and `/api/orders` validates the items against their respective stores before creating one WooCommerce order per represented backend. Authentication and the buyer profile remain authoritative in Sacred Connection. Order history merges orders from both stores.
 
-> Product URLs use the WooCommerce **product slug** — keep WP slugs aligned with the ids in `src/data/products.js` (e.g. `apurina-awiry`) for stable links. The "tribe" filter reads a product attribute named **Tribe**; weight options come from product **variations** (weight in grams).
+> Product route IDs combine store ID and WooCommerce slug, so equal slugs and SKUs can coexist across the two catalogs. The secondary filter only uses real WooCommerce product attributes or subcategories.
 
 ### Building for Production
 

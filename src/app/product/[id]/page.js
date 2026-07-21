@@ -33,7 +33,11 @@ export default function ProductDetailPage() {
   const { products, loading: productsLoading } = useProducts();
 
   // Find product from shared data (static fallback or live WooCommerce catalog)
-  const product = products.find((p) => p.id === id);
+  const product = products.find(
+    (p) =>
+      p.id === id ||
+      (p.storeId === "sacred-connection" && p.id === `sacred-connection~${id}`)
+  );
 
   // Keep related products deterministic and derived from the shared catalog.
   const relatedProducts = useMemo(() => {
@@ -187,8 +191,13 @@ export default function ProductDetailPage() {
               <span className="inline-block text-[10px] font-bold bg-[#268072]/15 text-[#82d6c5] border border-[#268072]/30 px-3 py-1 rounded-full uppercase tracking-wider font-label-sm">
                 {product.category}
               </span>
-              <span className="inline-block text-[10px] font-bold bg-white/5 text-white/60 border border-white/10 px-3 py-1 rounded-full uppercase tracking-wider font-label-sm">
-                Origin: {product.tribe}
+              {product.tribe && (
+                <span className="inline-block text-[10px] font-bold bg-white/5 text-white/60 border border-white/10 px-3 py-1 rounded-full uppercase tracking-wider font-label-sm">
+                  Origin: {product.tribe}
+                </span>
+              )}
+              <span className="inline-block text-[10px] font-bold text-white/45 px-2 py-1 uppercase tracking-wider font-label-sm">
+                Store: {product.storeName}
               </span>
             </div>
 
