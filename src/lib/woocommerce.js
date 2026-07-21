@@ -1,3 +1,5 @@
+import { getCommerceStore, isCommerceStoreConfigured, PRIMARY_STORE_ID } from "@/lib/commerce-stores";
+
 // Server-side WooCommerce REST API client.
 // Credentials are read from env vars and never reach the browser — only import
 // this module from Route Handlers (src/app/api/*) or Server Components.
@@ -11,43 +13,27 @@ if (typeof window !== "undefined") {
 const API_VERSION = "wc/v3";
 const STORE_API_VERSION = "wc/store/v1";
 
-export function getWooCommerceBaseUrl() {
-  const rawUrl = (process.env.WOOCOMMERCE_URL || "").replace(/\/+$/, "");
-  if (!rawUrl) throw new Error("WOOCOMMERCE_URL is not configured.");
-
-  const url = new URL(rawUrl);
-  const isLocalDevelopment =
-    process.env.NODE_ENV !== "production" &&
-    url.protocol === "http:" &&
-    ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
-  if (url.protocol !== "https:" && !isLocalDevelopment) {
-    throw new Error("WOOCOMMERCE_URL must use HTTPS.");
-  }
-  return rawUrl;
+export function getWooCommerceBaseUrl(storeId = PRIMARY_STORE_ID) {
+  return getCommerceStore(storeId).baseUrl;
 }
 
-const baseUrl = () => getWooCommerceBaseUrl();
-
-export function isWooCommerceConfigured() {
-  try {
-    getWooCommerceBaseUrl();
-    return Boolean(
-      process.env.WOOCOMMERCE_CONSUMER_KEY &&
-      process.env.WOOCOMMERCE_CONSUMER_SECRET
-    );
-  } catch {
-    return false;
-  }
+export function isWooCommerceConfigured(storeId = PRIMARY_STORE_ID) {
+  return isCommerceStoreConfigured(storeId);
 }
 
-export function isWooCommerceStoreConfigured() {
+export function isWooCommerceStoreConfigured(storeId = PRIMARY_STORE_ID) {
   try {
-    getWooCommerceBaseUrl();
+    getWooCommerceBaseUrl(storeId);
     return true;
   } catch {
     return false;
   }
 }
+
+const requestTimeoutMs = () => {
+  const n = Number(process.env.WC_REQUEST_TIMEOUT_MS);
+  return Number.isFinite(n) && n >= 1000 ? n : 15000;
+};
 
 const revalidateSeconds = () => {
   const n = Number(process.env.WC_REVALIDATE_SECONDS);
@@ -67,21 +53,22 @@ export class WooCommerceApiError extends Error {
  * Low-level fetch against the WooCommerce REST API (Basic auth over HTTPS).
  * GET responses are cached in the Next.js data cache for WC_REVALIDATE_SECONDS.
  */
-async function wcFetch(path, { params = {}, method = "GET", body, revalidate } = {}) {
-  if (!isWooCommerceConfigured()) {
+async function wcFetch(storeId, path, { params = {}, method = "GET", body, revalidate } = {}) {
+  if (!isWooCommerceConfigured(storeId)) {
     throw new WooCommerceApiError(
-      "WooCommerce is not configured (missing WOOCOMMERCE_URL / _CONSUMER_KEY / _CONSUMER_SECRET).",
+      `WooCommerce store ${storeId} is not configured.`,
       0
     );
   }
 
-  const url = new URL(`${baseUrl()}/wp-json/${API_VERSION}/${path.replace(/^\/+/, "")}`);
+  const store = getCommerceStore(storeId);
+  const url = new URL(`${store.baseUrl}/wp-json/${API_VERSION}/${path.replace(/^\/+/, "")}`);
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
   });
 
   const auth = Buffer.from(
-    `${process.env.WOOCOMMERCE_CONSUMER_KEY}:${process.env.WOOCOMMERCE_CONSUMER_SECRET}`
+    `${store.consumerKey}:${store.consumerSecret}`
   ).toString("base64");
 
   const res = await fetch(url, {
@@ -91,6 +78,7 @@ async function wcFetch(path, { params = {}, method = "GET", body, revalidate } =
       "Content-Type": "application/json",
     },
     body: body ? JSON.stringify(body) : undefined,
+    signal: AbortSignal.timeout(requestTimeoutMs()),
     ...(method === "GET"
       ? { next: { revalidate: revalidate ?? revalidateSeconds() } }
       : { cache: "no-store" }),
@@ -113,18 +101,21 @@ async function wcFetch(path, { params = {}, method = "GET", body, revalidate } =
   return { data: await res.json(), headers: res.headers };
 }
 
-async function storeFetch(path, { params = {}, revalidate } = {}) {
-  if (!isWooCommerceStoreConfigured()) {
-    throw new WooCommerceApiError("WooCommerce URL is not configured.", 0);
+async function storeFetch(storeId, path, { params = {}, revalidate } = {}) {
+  if (!isWooCommerceStoreConfigured(storeId)) {
+    throw new WooCommerceApiError(`WooCommerce store ${storeId} URL is not configured.`, 0);
   }
 
-  const url = new URL(`${baseUrl()}/wp-json/${STORE_API_VERSION}/${path.replace(/^\/+/, "")}`);
+  const url = new URL(
+    `${getWooCommerceBaseUrl(storeId)}/wp-json/${STORE_API_VERSION}/${path.replace(/^\/+/, "")}`
+  );
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
   });
 
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
+    signal: AbortSignal.timeout(requestTimeoutMs()),
     next: { revalidate: revalidate ?? revalidateSeconds() },
   });
 
@@ -145,12 +136,17 @@ async function storeFetch(path, { params = {}, revalidate } = {}) {
   return { data: await res.json(), headers: res.headers };
 }
 
-async function getAllStoreProducts() {
+async function getAllStoreProducts(storeId) {
+  const { catalogLanguage } = getCommerceStore(storeId);
   const products = [];
   let page = 1;
   for (;;) {
-    const { data, headers } = await storeFetch("products", {
-      params: { per_page: 100, page },
+    const { data, headers } = await storeFetch(storeId, "products", {
+      params: {
+        per_page: 100,
+        page,
+        ...(catalogLanguage ? { lang: catalogLanguage } : {}),
+      },
     });
     products.push(...data);
     const totalPages = Number(headers.get("x-wp-totalpages") || 1);
@@ -160,14 +156,18 @@ async function getAllStoreProducts() {
   return products;
 }
 
-async function getStoreCategories() {
-  const { data } = await storeFetch("products/categories", {
-    params: { per_page: 100 },
+async function getStoreCategories(storeId) {
+  const { catalogLanguage } = getCommerceStore(storeId);
+  const { data } = await storeFetch(storeId, "products/categories", {
+    params: {
+      per_page: 100,
+      ...(catalogLanguage ? { lang: catalogLanguage } : {}),
+    },
   });
   return data;
 }
 
-async function getStoreVariations(variationIds) {
+async function getStoreVariations(storeId, variationIds) {
   const uniqueIds = [...new Set(variationIds.filter(Boolean))];
   const batches = [];
   for (let start = 0; start < uniqueIds.length; start += 100) {
@@ -176,7 +176,7 @@ async function getStoreVariations(variationIds) {
 
   const responses = await Promise.all(
     batches.map((ids) =>
-      storeFetch("products", {
+      storeFetch(storeId, "products", {
         params: {
           type: "variation",
           include: ids.join(","),
@@ -189,16 +189,16 @@ async function getStoreVariations(variationIds) {
   return responses.flatMap(({ data }) => data);
 }
 
-export async function getPublicStoreCatalog() {
+export async function getPublicStoreCatalog(storeId = PRIMARY_STORE_ID) {
   const [products, categories] = await Promise.all([
-    getAllStoreProducts(),
-    getStoreCategories(),
+    getAllStoreProducts(storeId),
+    getStoreCategories(storeId),
   ]);
   const variationReferences = products.flatMap((product) => product.variations || []);
   const referencesById = new Map(
     variationReferences.map((variation) => [variation.id, variation])
   );
-  const variations = await getStoreVariations([...referencesById.keys()]);
+  const variations = await getStoreVariations(storeId, [...referencesById.keys()]);
 
   return {
     products,
@@ -215,68 +215,88 @@ export async function getPublicStoreCatalog() {
 
 // ── Catalog ─────────────────────────────────────────────────────────
 
-export async function getAllProducts() {
-  const products = [];
-  let page = 1;
-  for (;;) {
-    const { data, headers } = await wcFetch("products", {
-      params: { per_page: 100, page, status: "publish" },
-    });
-    products.push(...data);
-    const totalPages = Number(headers.get("x-wp-totalpages") || 1);
-    if (page >= totalPages) break;
-    page += 1;
-  }
-  return products;
+export async function getAllProducts(storeId = PRIMARY_STORE_ID) {
+  const { catalogLanguage } = getCommerceStore(storeId);
+  const productParams = {
+    per_page: 100,
+    status: "publish",
+    ...(catalogLanguage ? { lang: catalogLanguage } : {}),
+    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data",
+  };
+  const { data: firstPage, headers } = await wcFetch(storeId, "products", {
+    params: { ...productParams, page: 1 },
+  });
+  const totalPages = Number(headers.get("x-wp-totalpages") || 1);
+  if (totalPages <= 1) return firstPage;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => index + 2).map(async (page) => {
+      const { data } = await wcFetch(storeId, "products", {
+        params: { ...productParams, page },
+      });
+      return data;
+    })
+  );
+
+  return [firstPage, ...remainingPages].flat();
 }
 
-export async function getProductBySlug(slug) {
-  const { data } = await wcFetch("products", { params: { slug, status: "publish" } });
+export async function getProductBySlug(slug, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, "products", { params: { slug, status: "publish" } });
   return data[0] || null;
 }
 
-export async function getProductVariations(productId) {
-  const { data } = await wcFetch(`products/${productId}/variations`, {
-    params: { per_page: 100 },
+export async function getProductVariations(productId, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, `products/${productId}/variations`, {
+    params: {
+      per_page: 100,
+      _fields: "id,name,sku,price,weight,purchasable,attributes,meta_data",
+    },
   });
   return data;
 }
 
 // SKU lookup matches both products and variations (variations come back with
 // type "variation" and a parent_id). Uncached — used while creating orders.
-export async function findProductBySku(sku) {
-  const { data } = await wcFetch("products", { params: { sku }, revalidate: 0 });
+export async function findProductBySku(sku, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, "products", { params: { sku }, revalidate: 0 });
   return data[0] || null;
 }
 
-export async function getProductById(productId) {
-  const { data } = await wcFetch(`products/${productId}`, { revalidate: 0 });
+export async function getProductById(productId, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, `products/${productId}`, { revalidate: 0 });
   return data;
 }
 
-export async function getVariationById(productId, variationId) {
-  const { data } = await wcFetch(`products/${productId}/variations/${variationId}`, {
+export async function getVariationById(productId, variationId, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, `products/${productId}/variations/${variationId}`, {
     revalidate: 0,
   });
   return data;
 }
 
-export async function getCategories() {
-  const { data } = await wcFetch("products/categories", {
-    params: { per_page: 100, hide_empty: true },
+export async function getCategories(storeId = PRIMARY_STORE_ID) {
+  const { catalogLanguage } = getCommerceStore(storeId);
+  const { data } = await wcFetch(storeId, "products/categories", {
+    params: {
+      per_page: 100,
+      hide_empty: true,
+      ...(catalogLanguage ? { lang: catalogLanguage } : {}),
+      _fields: "id,name,parent",
+    },
   });
   return data;
 }
 
 // ── Customers ───────────────────────────────────────────────────────
 
-export async function createCustomer(customer) {
-  const { data } = await wcFetch("customers", { method: "POST", body: customer });
+export async function createCustomer(customer, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, "customers", { method: "POST", body: customer });
   return data;
 }
 
-export async function getCustomerByEmail(email) {
-  const { data } = await wcFetch("customers", {
+export async function getCustomerByEmail(email, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, "customers", {
     params: { email, role: "all", per_page: 10 },
     revalidate: 0,
   });
@@ -287,15 +307,15 @@ export async function getCustomerByEmail(email) {
 
 // ── Orders ──────────────────────────────────────────────────────────
 
-export async function createOrder(order) {
-  const { data } = await wcFetch("orders", { method: "POST", body: order });
+export async function createOrder(order, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, "orders", { method: "POST", body: order });
   return data;
 }
 
 // WC core has no billing-email filter, so search by the email and then keep
 // only exact billing matches. Uncached so new orders show up immediately.
-export async function getOrdersByEmail(email) {
-  const { data } = await wcFetch("orders", {
+export async function getOrdersByEmail(email, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, "orders", {
     params: { search: email, per_page: 50, orderby: "date", order: "desc" },
     revalidate: 0,
   });

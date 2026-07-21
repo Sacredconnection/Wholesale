@@ -487,6 +487,7 @@ export default function MyAccountPage() {
                       <div className="flex-grow">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span className="break-all text-sm font-bold text-white">Order #{activeOrder.number}</span>
+                          <span className="text-[10px] text-white/45">{activeOrder.storeName}</span>
                           <span className="text-[10px] font-mono bg-[#268072]/20 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded">
                             {orderStatusInfo(activeOrder.status).label}
                           </span>
@@ -531,7 +532,7 @@ export default function MyAccountPage() {
                         <div>
                           <span className="text-[10px] font-mono text-white/50">Order Reference</span>
                           <p className="text-sm font-bold text-white mt-0.5">
-                            Order #{activeOrder.number} · {formatOrderDate(activeOrder.dateCreated)}
+                            Order #{activeOrder.number} · {activeOrder.storeName} · {formatOrderDate(activeOrder.dateCreated)}
                           </p>
                         </div>
                         <div>
@@ -605,7 +606,10 @@ export default function MyAccountPage() {
                           {orders.map((order) => (
                             <Fragment key={order.id}>
                               <tr>
-                                <td className="py-4 px-4 font-bold text-white">#{order.number}</td>
+                                <td className="py-4 px-4 font-bold text-white">
+                                  <span className="block">#{order.number}</span>
+                                  <span className="block text-[10px] font-normal text-white/40">{order.storeName}</span>
+                                </td>
                                 <td className="py-4 px-4">{formatOrderDate(order.dateCreated)}</td>
                                 <td className="py-4 px-4">${Number(order.total).toFixed(2)}</td>
                                 <td className="py-4 px-4">

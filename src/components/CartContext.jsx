@@ -18,7 +18,19 @@ export function CartProvider({ children }) {
       try {
         const storedCart = localStorage.getItem('sc_wholesale_cart');
         const parsedCart = storedCart ? JSON.parse(storedCart) : [];
-        setCart(Array.isArray(parsedCart) ? parsedCart : []);
+        setCart(
+          Array.isArray(parsedCart)
+            ? parsedCart.map((item) => {
+                const storeId = item.storeId || "sacred-connection";
+                return {
+                  ...item,
+                  storeId,
+                  storeName: item.storeName || "Sacred Connection",
+                  cartKey: item.cartKey || `${storeId}:${item.sku}`,
+                };
+              })
+            : []
+        );
       } catch (e) {
         console.error("Failed to load cart from localStorage", e);
         setCart([]);
@@ -43,7 +55,9 @@ export function CartProvider({ children }) {
     if (!selectedOption) return;
 
     setCart((prevCart) => {
-      const existingItemIndex = prevCart.findIndex((item) => item.sku === selectedOption.sku);
+      const storeId = product.storeId || "sacred-connection";
+      const cartKey = `${storeId}:${selectedOption.sku}`;
+      const existingItemIndex = prevCart.findIndex((item) => item.cartKey === cartKey);
       
       if (existingItemIndex > -1) {
         // Update existing item quantity immutably
@@ -59,6 +73,9 @@ export function CartProvider({ children }) {
           ...prevCart,
           {
             id: product.id,
+            cartKey,
+            storeId,
+            storeName: product.storeName || "Sacred Connection",
             name: product.name,
             sku: selectedOption.sku,
             optionName: selectedOption.name,
@@ -80,11 +97,11 @@ export function CartProvider({ children }) {
   };
 
   // Update item quantity
-  const updateQuantity = (sku, change) => {
+  const updateQuantity = (cartKey, change) => {
     setCart((prevCart) =>
       prevCart
         .map((item) => {
-          if (item.sku === sku) {
+          if (item.cartKey === cartKey) {
             const nextQty = item.quantity + change;
             return { ...item, quantity: Math.max(1, nextQty) };
           }
@@ -94,13 +111,18 @@ export function CartProvider({ children }) {
   };
 
   // Remove item from cart
-  const removeFromCart = (sku) => {
-    setCart((prevCart) => prevCart.filter((item) => item.sku !== sku));
+  const removeFromCart = (cartKey) => {
+    setCart((prevCart) => prevCart.filter((item) => item.cartKey !== cartKey));
   };
 
   // Clear entire cart
   const clearCart = () => {
     setCart([]);
+  };
+
+  const removeItemsByStore = (storeIds) => {
+    const selectedStores = new Set(storeIds);
+    setCart((prevCart) => prevCart.filter((item) => !selectedStores.has(item.storeId)));
   };
 
   const cartTotalItems = useMemo(() => {
@@ -134,6 +156,7 @@ export function CartProvider({ children }) {
       updateQuantity,
       removeFromCart,
       clearCart,
+      removeItemsByStore,
       cartSubtotal,
       cartTotalItems,
       cartTotalWeightGrams

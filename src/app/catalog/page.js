@@ -39,7 +39,7 @@ const normalizeStr = (str) =>
     .replace(/[\u0300-\u036f]/g, "");
 
 export default function CatalogPage() {
-  const { products, loading: productsLoading, error: productsError, reload } = useProducts();
+  const { products, loading: productsLoading, error: productsError, warning: productsWarning, reload } = useProducts();
   const { isLoggedIn, user, loading: authLoading } = useAuth();
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -348,6 +348,12 @@ export default function CatalogPage() {
           </div>
         </div>
 
+        {productsWarning && (
+          <div role="status" className="rounded-sm border border-yellow-400/25 bg-yellow-400/10 px-4 py-3 text-xs text-yellow-200">
+            {productsWarning} Products from the available store are shown below.
+          </div>
+        )}
+
         {/* Product Table Grid */}
         <div ref={productListRef} className="border border-white/10 rounded-sm overflow-hidden bg-[#1a1a1a]">
           {/* Header Row */}
@@ -371,7 +377,7 @@ export default function CatalogPage() {
             <div className="flex flex-col items-center justify-center py-16 sm:py-20 lg:py-24 px-4 sm:px-6 gap-4 text-center">
               <PackageOpen className="w-16 h-16 text-white/20" />
               <p className="text-sm text-white/50 font-medium max-w-md">
-                We could not load the wholesale catalog right now. Please try again shortly.
+                {productsError || "We could not load the wholesale catalog right now. Please try again shortly."}
               </p>
               <button
                 onClick={reload}
@@ -430,8 +436,13 @@ export default function CatalogPage() {
                         <span className="max-w-full break-words text-[10px] font-semibold bg-[#268072]/15 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
                           {product.category}
                         </span>
-                        <span className="max-w-full break-words text-[10px] font-semibold bg-white/5 text-white/50 border border-white/10 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
-                          {product.tribe}
+                        {product.tribe && (
+                          <span className="max-w-full break-words text-[10px] font-semibold bg-white/5 text-white/50 border border-white/10 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
+                            {product.tribe}
+                          </span>
+                        )}
+                        <span className="max-w-full break-words text-[10px] font-semibold text-white/40 px-1 py-0.5 uppercase tracking-wide font-label-sm">
+                          {product.storeName}
                         </span>
                       </div>
                     </div>
@@ -452,6 +463,15 @@ export default function CatalogPage() {
 
                     {/* Actions Column */}
                     <div className="col-span-1 lg:col-span-4 flex items-center justify-start lg:justify-end gap-3 flex-wrap lg:flex-nowrap">
+                      {!product.optionsLoaded ? (
+                        <Link
+                          href={`/product/${product.id}?fromPage=${currentPage}`}
+                          className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm shadow-md transition-all no-underline"
+                        >
+                          View options
+                        </Link>
+                      ) : (
+                        <>
                       {/* Option Select Dropdown */}
                       {product.options.length > 1 ? (
                         <select
@@ -502,6 +522,8 @@ export default function CatalogPage() {
                       >
                         Add
                       </button>
+                        </>
+                      )}
                     </div>
 
                   </div>

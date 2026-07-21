@@ -11,6 +11,7 @@ import { Check, PhoneCall, ClipboardList, ArrowRight } from "lucide-react";
 function OrderReceivedContent() {
   const searchParams = useSearchParams();
   const orderNumber = searchParams.get("number");
+  const orderSummary = searchParams.get("orders");
   const total = searchParams.get("total");
 
   return (
@@ -23,10 +24,12 @@ function OrderReceivedContent() {
         <h1 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white">
           Order Received
         </h1>
-        {orderNumber && (
+        {(orderSummary || orderNumber) && (
           <p className="text-sm font-mono text-white/50">
-            Order number:{" "}
-            <span className="text-[#82d6c5] font-bold">#{orderNumber}</span>
+            {orderSummary ? "Orders: " : "Order number: "}
+            <span className="text-[#82d6c5] font-bold">
+              {orderSummary || `#${orderNumber}`}
+            </span>
             {total && (
               <>
                 {" "}· Est. total:{" "}
@@ -45,7 +48,7 @@ function OrderReceivedContent() {
           </span>
         </div>
         <p className="font-body-md text-sm text-white/70 leading-relaxed">
-          Your wholesale order has been registered. <strong className="text-white">No payment
+          Your wholesale order has been registered in the corresponding store backend. <strong className="text-white">No payment
           has been taken yet.</strong> A member of the Sacred Connection team will contact
           you within 24 hours to confirm availability, calculate shipping, and arrange payment.
         </p>
