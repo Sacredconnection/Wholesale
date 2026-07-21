@@ -16,6 +16,7 @@ export function ProductsProvider({ children }) {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [warning, setWarning] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
 
   const reload = useCallback(() => setReloadKey((key) => key + 1), []);
@@ -28,6 +29,7 @@ export function ProductsProvider({ children }) {
       const clearTimer = window.setTimeout(() => {
         setProducts([]);
         setError("");
+        setWarning("");
         setLoading(false);
       }, 0);
       return () => window.clearTimeout(clearTimer);
@@ -56,6 +58,7 @@ export function ProductsProvider({ children }) {
     async function loadCatalog() {
       setLoading(true);
       setError("");
+      setWarning("");
       let successfulStores = 0;
       const failures = [];
 
@@ -90,6 +93,9 @@ export function ProductsProvider({ children }) {
         setError(failures[0]?.error?.message || "Could not load the catalog.");
       } else if (failures.length > 0) {
         console.error("Some catalog stores could not be loaded:", failures);
+        setWarning(
+          failures.map(({ error: storeError }) => storeError.message).join(" ")
+        );
       }
       setLoading(false);
     }
@@ -101,7 +107,7 @@ export function ProductsProvider({ children }) {
   }, [authLoading, invalidateSession, isLoggedIn, reloadKey]);
 
   return (
-    <ProductsContext.Provider value={{ products, loading, error, reload }}>
+    <ProductsContext.Provider value={{ products, loading, error, warning, reload }}>
       {children}
     </ProductsContext.Provider>
   );

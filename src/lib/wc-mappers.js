@@ -218,6 +218,8 @@ export function mapProduct(
     storeId: store.id,
     storeName: store.name,
     wcId: product.id,
+    productType: product.type,
+    optionsLoaded: product.type !== "variable" || variations.length > 0,
     name: product.name,
     sku: product.sku || String(product.id),
     category:

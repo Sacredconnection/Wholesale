@@ -3,7 +3,6 @@ import {
   getAllProducts,
   getCategories,
   getCustomerByEmail,
-  getProductVariations,
   WooCommerceApiError,
 } from "@/lib/woocommerce";
 import {
@@ -19,25 +18,6 @@ const catalogCacheSeconds = (() => {
   return Number.isFinite(value) && value >= 30 ? value : 300;
 })();
 
-async function mapWithConcurrency(items, concurrency, mapper) {
-  const results = new Array(items.length);
-  let nextIndex = 0;
-
-  async function worker() {
-    for (;;) {
-      const index = nextIndex;
-      nextIndex += 1;
-      if (index >= items.length) return;
-      results[index] = await mapper(items[index], index);
-    }
-  }
-
-  await Promise.all(
-    Array.from({ length: Math.min(concurrency, items.length) }, () => worker())
-  );
-  return results;
-}
-
 async function loadStoreCatalog(storeId, storeName, role) {
   const [wcProducts, categories] = await Promise.all([
     getAllProducts(storeId),
@@ -46,18 +26,14 @@ async function loadStoreCatalog(storeId, storeName, role) {
   const categoryContext = buildCategoryContext(categories);
   const store = { id: storeId, name: storeName };
 
-  return mapWithConcurrency(wcProducts, 6, async (product) => {
-    const variations =
-      product.type === "variable"
-        ? await getProductVariations(product.id, storeId)
-        : [];
-    return mapProductForRole(product, variations, categoryContext, role, store);
-  });
+  return wcProducts.map((product) =>
+    mapProductForRole(product, [], categoryContext, role, store)
+  );
 }
 
 const getCachedStoreCatalog = unstable_cache(
   loadStoreCatalog,
-  ["multi-store-catalog-v2"],
+  ["multi-store-catalog-v3"],
   { revalidate: catalogCacheSeconds, tags: ["woocommerce-catalog"] }
 );
 
@@ -102,9 +78,15 @@ export async function GET(request) {
       `GET /api/products failed for ${stores.map((store) => store.id).join(",")}:`,
       err
     );
-    const status = err instanceof WooCommerceApiError && err.status >= 400 ? 502 : 504;
+    const upstreamStatus = err instanceof WooCommerceApiError ? err.status : 0;
+    const status = upstreamStatus >= 400 ? 502 : 504;
+    const storeNames = stores.map((store) => store.name).join(" and ");
+    const errorMessage =
+      upstreamStatus === 401
+        ? `${storeNames} rejected its WooCommerce API credentials.`
+        : `The ${storeNames} catalog took too long or could not be loaded.`;
     return Response.json(
-      { error: `The ${stores.map((store) => store.name).join(" and ")} catalog took too long or could not be loaded.` },
+      { error: errorMessage },
       { status }
     );
   }

@@ -39,7 +39,7 @@ const normalizeStr = (str) =>
     .replace(/[\u0300-\u036f]/g, "");
 
 export default function CatalogPage() {
-  const { products, loading: productsLoading, error: productsError, reload } = useProducts();
+  const { products, loading: productsLoading, error: productsError, warning: productsWarning, reload } = useProducts();
   const { isLoggedIn, user, loading: authLoading } = useAuth();
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -348,6 +348,12 @@ export default function CatalogPage() {
           </div>
         </div>
 
+        {productsWarning && (
+          <div role="status" className="rounded-sm border border-yellow-400/25 bg-yellow-400/10 px-4 py-3 text-xs text-yellow-200">
+            {productsWarning} Products from the available store are shown below.
+          </div>
+        )}
+
         {/* Product Table Grid */}
         <div ref={productListRef} className="border border-white/10 rounded-sm overflow-hidden bg-[#1a1a1a]">
           {/* Header Row */}
@@ -457,6 +463,15 @@ export default function CatalogPage() {
 
                     {/* Actions Column */}
                     <div className="col-span-1 lg:col-span-4 flex items-center justify-start lg:justify-end gap-3 flex-wrap lg:flex-nowrap">
+                      {!product.optionsLoaded ? (
+                        <Link
+                          href={`/product/${product.id}?fromPage=${currentPage}`}
+                          className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm shadow-md transition-all no-underline"
+                        >
+                          View options
+                        </Link>
+                      ) : (
+                        <>
                       {/* Option Select Dropdown */}
                       {product.options.length > 1 ? (
                         <select
@@ -507,6 +522,8 @@ export default function CatalogPage() {
                       >
                         Add
                       </button>
+                        </>
+                      )}
                     </div>
 
                   </div>

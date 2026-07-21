@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Runtime product URLs require native image fallbacks. */
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -32,12 +32,49 @@ export default function ProductDetailPage() {
   const { isLoggedIn, user, loading: authLoading } = useAuth();
   const { products, loading: productsLoading } = useProducts();
 
-  // Find product from shared data (static fallback or live WooCommerce catalog)
-  const product = products.find(
+  // Find the lightweight catalog product first, then hydrate variable options on demand.
+  const catalogProduct = products.find(
     (p) =>
       p.id === id ||
       (p.storeId === "sacred-connection" && p.id === `sacred-connection~${id}`)
   );
+  const [resolvedProduct, setResolvedProduct] = useState(null);
+  const [productLoadError, setProductLoadError] = useState("");
+  const product = resolvedProduct?.id === catalogProduct?.id ? resolvedProduct : catalogProduct;
+
+  useEffect(() => {
+    if (!catalogProduct || catalogProduct.optionsLoaded) return undefined;
+
+    let cancelled = false;
+
+    async function loadProductOptions() {
+      try {
+        const response = await fetch(`/api/products/${encodeURIComponent(catalogProduct.id)}`, {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: AbortSignal.timeout(20000),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          throw new Error(data.error || "Could not load this product's options.");
+        }
+        if (!cancelled) setResolvedProduct(data.product);
+      } catch (error) {
+        if (!cancelled) {
+          setProductLoadError(
+            error.name === "TimeoutError"
+              ? "This product's options took too long to load. Please try again."
+              : error.message
+          );
+        }
+      }
+    }
+
+    loadProductOptions();
+    return () => {
+      cancelled = true;
+    };
+  }, [catalogProduct]);
 
   // Keep related products deterministic and derived from the shared catalog.
   const relatedProducts = useMemo(() => {
@@ -113,6 +150,7 @@ export default function ProductDetailPage() {
   const finalPrice = basePrice - discountAmount;
 
   const handleAddToCartClick = () => {
+    if (!product.optionsLoaded) return;
     addToCart(product, selectedOptIdx, quantity);
     setIsCartOpen(true);
   };
@@ -267,7 +305,11 @@ export default function ProductDetailPage() {
             <div className="flex flex-col gap-4">
               
               {/* Size Select Dropdown */}
-              {product.options.length > 1 && (
+              {!product.optionsLoaded ? (
+                <div className="rounded border border-[#82d6c5]/20 bg-[#82d6c5]/5 px-4 py-3 text-xs text-[#82d6c5]">
+                  {productLoadError || "Loading product options..."}
+                </div>
+              ) : product.options.length > 1 && (
                 <div className="flex flex-col gap-1.5">
                   <label className="text-[10px] font-mono text-white/45 uppercase tracking-wider font-label-sm">
                     Weight / Packaging Size
@@ -317,10 +359,11 @@ export default function ProductDetailPage() {
                 <div className="flex-grow w-full">
                   <button
                     onClick={handleAddToCartClick}
+                    disabled={!product.optionsLoaded}
                     className="w-full bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-widest py-4 px-6 rounded shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/45 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
                   >
                     <ShoppingBag className="w-4 h-4" />
-                    Add to Basket
+                    {product.optionsLoaded ? "Add to Basket" : "Loading options..."}
                   </button>
                 </div>
 
