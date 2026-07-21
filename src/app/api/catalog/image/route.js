@@ -40,7 +40,13 @@ export async function GET(request) {
       .png({ compressionLevel: 9, adaptiveFiltering: true })
       .toBuffer();
 
-    return new Response(optimized, {
+    const body = new Uint8Array(
+      optimized.buffer,
+      optimized.byteOffset,
+      optimized.byteLength
+    );
+
+    return new Response(body, {
       headers: {
         "Content-Type": "image/png",
         "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",

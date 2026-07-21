@@ -315,6 +315,15 @@ async function fetchPdfAsset(url, { cache = "force-cache" } = {}) {
   return new Uint8Array(await response.arrayBuffer());
 }
 
+function detectPdfImageFormat(bytes) {
+  if (!(bytes instanceof Uint8Array) || bytes.length < 4) return null;
+  if (bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47) {
+    return "PNG";
+  }
+  if (bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) return "JPEG";
+  return null;
+}
+
 function truncatePdfLines(pdf, text, width, maxLines = 2) {
   const lines = pdf.splitTextToSize(pdfSafeText(text), width);
   if (lines.length <= maxLines) return lines;
@@ -587,10 +596,10 @@ function drawGridProductCard(pdf, product, image, user, includeLinks, x, y) {
 
   pdf.setFillColor(239, 244, 242);
   pdf.roundedRect(x + 4, y + 5, 30, 30, 1.2, 1.2, "F");
-  if (image) {
+  if (image?.bytes && image?.format) {
     pdf.addImage(
-      image,
-      "PNG",
+      image.bytes,
+      image.format,
       x + 4,
       y + 5,
       30,
@@ -923,8 +932,16 @@ export async function exportCatalogPdf({ products, user, includeLinks, filterLab
   const loadProductImage = (product) => {
     if (!product.image) return Promise.resolve(null);
     if (!imageCache.has(product.image)) {
-      const proxyUrl = `/api/catalog/image?url=${encodeURIComponent(product.image)}`;
-      imageCache.set(product.image, fetchPdfAsset(proxyUrl).catch(() => null));
+      const proxyUrl = `/api/catalog/image?url=${encodeURIComponent(product.image)}&v=png-binary-v2`;
+      imageCache.set(
+        product.image,
+        fetchPdfAsset(proxyUrl, { cache: "no-store" })
+          .then((bytes) => {
+            const format = detectPdfImageFormat(bytes);
+            return format ? { bytes, format } : null;
+          })
+          .catch(() => null)
+      );
     }
     return imageCache.get(product.image);
   };
