@@ -44,7 +44,7 @@ export default function Header({ onOpenLogin }) {
 
   return (
     <header className="theme-dark-zone sticky top-0 w-full bg-[#212121] border-b-2 border-[#268072] z-50 relative">
-      <div className="mx-auto flex min-h-16 w-full max-w-7xl items-center justify-between px-4 sm:min-h-20 sm:px-6 lg:min-h-[5.5rem] lg:px-8">
+      <div className="mx-auto flex min-h-[4.5rem] w-full max-w-7xl items-center justify-between px-4 sm:min-h-[5.5rem] sm:px-6 lg:min-h-24 lg:px-8">
         {/* Logotipo (Left) */}
         <Link className="group flex self-stretch shrink-0 items-center" href="/" onClick={handleHomeClick}>
           <Image
@@ -182,7 +182,7 @@ export default function Header({ onOpenLogin }) {
 
       {/* Mobile Drawer Navigation overlay */}
       {mobileMenuOpen && (
-        <nav id="mobile-navigation" aria-label="Mobile navigation" className="absolute top-[100%] left-0 z-40 flex max-h-[calc(100dvh-4rem)] w-full flex-col gap-5 overflow-y-auto border-b border-white/10 bg-[#212121] px-4 py-6 shadow-xl backdrop-blur-md animate-fade-in sm:px-6 lg:hidden">
+        <nav id="mobile-navigation" aria-label="Mobile navigation" className="absolute top-[100%] left-0 z-40 flex max-h-[calc(100dvh-4.5rem)] w-full flex-col gap-5 overflow-y-auto border-b border-white/10 bg-[#212121] px-4 py-6 shadow-xl backdrop-blur-md animate-fade-in sm:max-h-[calc(100dvh-5.5rem)] sm:px-6 lg:hidden">
           <Link
             className={`${pathname === '/' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/"

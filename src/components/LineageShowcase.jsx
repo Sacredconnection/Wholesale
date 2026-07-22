@@ -320,7 +320,8 @@ export default function LineageShowcase() {
         >
           <div 
             ref={dialogRef}
-            className="bg-[#1a1a1a] border border-white/15 rounded-lg max-w-2xl w-full max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain shadow-2xl relative animate-fade-in-up my-auto"
+            className="bg-[#1a1a1a] border rounded-lg max-w-2xl w-full max-h-[calc(100dvh-2rem)] overflow-y-auto overscroll-contain shadow-2xl relative animate-fade-in-up my-auto"
+            style={{ borderColor: getEthnicityColor(selectedTribe.id) }}
             onClick={(e) => e.stopPropagation()}
             role="dialog"
             aria-modal="true"
@@ -351,7 +352,7 @@ export default function LineageShowcase() {
                 <span className="text-xs font-bold tracking-widest text-[#82d6c5] uppercase bg-[#268072]/20 border border-[#268072]/30 px-3 py-1 rounded-full">
                   {selectedTribe.region}
                 </span>
-                <h3 id="tribe-dialog-title" className="font-headline-lg text-3xl font-black text-white mt-2">
+                <h3 id="tribe-dialog-title" className="lineage-modal-title font-headline-lg text-3xl font-black text-white mt-2">
                   {selectedTribe.name}
                 </h3>
               </div>

@@ -328,7 +328,7 @@ export default function CatalogPage() {
         )}
 
         {/* Marketplace Stores */}
-        <section aria-labelledby="marketplace-stores-title" className="overflow-hidden rounded-xl border border-white/10 bg-[#171717] shadow-xl">
+        <section aria-labelledby="marketplace-stores-title" className="marketplace-stores-panel overflow-hidden rounded-xl border border-white/10 bg-[#171717] shadow-xl">
           <div className="grid gap-6 border-b border-white/10 px-5 py-6 sm:px-7 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-8 lg:py-8">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#268072]/30 bg-[#268072]/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#82d6c5]">
@@ -345,7 +345,7 @@ export default function CatalogPage() {
           </div>
 
           <div className="grid gap-4 p-5 sm:p-7 md:grid-cols-2 lg:p-8">
-            <article className="group relative overflow-hidden rounded-lg border border-[#268072]/35 bg-gradient-to-br from-[#173d36] to-[#111817] p-5 sm:p-6">
+            <article className="marketplace-store-card marketplace-store-card--sacred group relative overflow-hidden rounded-lg border border-[#268072]/35 bg-gradient-to-br from-[#173d36] to-[#111817] p-5 sm:p-6">
               <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#268072]/20 blur-2xl" />
               <div className="relative flex h-full flex-col gap-5">
                 <div className="flex items-center justify-between gap-4">
@@ -369,7 +369,7 @@ export default function CatalogPage() {
               </div>
             </article>
 
-            <article className="group relative overflow-hidden rounded-lg border border-[#cc6632]/40 bg-gradient-to-br from-[#442817] to-[#17130e] p-5 sm:p-6">
+            <article className="marketplace-store-card marketplace-store-card--maya group relative overflow-hidden rounded-lg border border-[#cc6632]/40 bg-gradient-to-br from-[#442817] to-[#17130e] p-5 sm:p-6">
               <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#cc6632]/25 blur-2xl" />
               <div className="relative flex h-full flex-col gap-5">
                 <div className="flex items-center justify-between gap-4">
