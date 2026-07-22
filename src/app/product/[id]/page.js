@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Runtime product URLs require native image fallbacks. */
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import Header from "@/components/Header";
@@ -15,6 +15,8 @@ import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
 import { 
   ArrowLeft, 
+  ChevronLeft,
+  ChevronRight,
   ShoppingBag, 
   Minus, 
   Plus, 
@@ -86,7 +88,7 @@ export default function ProductDetailPage() {
       ...products.slice(0, currentIndex),
     ];
 
-    return orderedProducts.filter((item) => item.id !== product.id).slice(0, 4);
+    return orderedProducts.filter((item) => item.id !== product.id).slice(0, 12);
   }, [product, products]);
 
   // States
@@ -95,6 +97,30 @@ export default function ProductDetailPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const relatedCarouselRef = useRef(null);
+  const [relatedControls, setRelatedControls] = useState({ previous: false, next: false });
+
+  useEffect(() => {
+    const carousel = relatedCarouselRef.current;
+    if (!carousel) return undefined;
+
+    const updateControls = () => {
+      const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+      setRelatedControls({
+        previous: carousel.scrollLeft > 4,
+        next: carousel.scrollLeft < maxScroll - 4,
+      });
+    };
+
+    carousel.scrollTo({ left: 0 });
+    const frame = requestAnimationFrame(updateControls);
+    window.addEventListener("resize", updateControls);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      window.removeEventListener("resize", updateControls);
+    };
+  }, [isLoggedIn, relatedProducts.length, product?.id]);
 
   // Product pages are partner-only: block until authenticated
   if (authLoading || !isLoggedIn) {
@@ -153,6 +179,16 @@ export default function ProductDetailPage() {
     if (!product.optionsLoaded) return;
     addToCart(product, selectedOptIdx, quantity);
     setIsCartOpen(true);
+  };
+
+  const scrollRelatedProducts = (direction) => {
+    const carousel = relatedCarouselRef.current;
+    const firstCard = carousel?.querySelector("[data-related-product]");
+    if (!carousel || !firstCard) return;
+
+    const gap = Number.parseFloat(window.getComputedStyle(carousel).columnGap) || 0;
+    const distance = firstCard.getBoundingClientRect().width + gap;
+    carousel.scrollBy({ left: direction * distance, behavior: "smooth" });
   };
 
   return (
@@ -398,9 +434,43 @@ export default function ProductDetailPage() {
         {/* Related Products Section */}
         {relatedProducts.length > 0 && (
           <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5 sm:p-6 md:p-8 shadow-2xl">
-          <h2 className="text-white text-2xl font-bold font-headline-md mb-8">Related products</h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="mb-6 flex items-center justify-between gap-4 sm:mb-8">
+            <h2 className="text-white text-2xl font-bold font-headline-md">Related products</h2>
+            <div className="flex shrink-0 items-center gap-2" aria-label="Related product carousel controls">
+              <button
+                type="button"
+                onClick={() => scrollRelatedProducts(-1)}
+                disabled={!relatedControls.previous}
+                aria-label="Show previous related product"
+                className="related-carousel-button grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-[#131313] text-[#82d6c5] shadow-lg transition-colors hover:border-[#82d6c5] hover:text-[#9ef2e1] disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronLeft className="h-5 w-5" aria-hidden="true" />
+              </button>
+              <button
+                type="button"
+                onClick={() => scrollRelatedProducts(1)}
+                disabled={!relatedControls.next}
+                aria-label="Show next related product"
+                className="related-carousel-button grid h-11 w-11 place-items-center rounded-full border border-white/15 bg-[#131313] text-[#82d6c5] shadow-lg transition-colors hover:border-[#82d6c5] hover:text-[#9ef2e1] disabled:cursor-not-allowed disabled:opacity-30"
+              >
+                <ChevronRight className="h-5 w-5" aria-hidden="true" />
+              </button>
+            </div>
+          </div>
+
+          <div
+            ref={relatedCarouselRef}
+            onScroll={(event) => {
+              const carousel = event.currentTarget;
+              const maxScroll = carousel.scrollWidth - carousel.clientWidth;
+              setRelatedControls({
+                previous: carousel.scrollLeft > 4,
+                next: carousel.scrollLeft < maxScroll - 4,
+              });
+            }}
+            className="scrollbar-none flex snap-x snap-mandatory gap-4 overflow-x-auto overscroll-x-contain scroll-smooth pb-2 touch-pan-x sm:gap-5 lg:gap-6"
+            aria-label="Related products"
+          >
             {relatedProducts.map((p) => {
               // Find min and max price
               const prices = p.options.map(opt => optionPriceForUser(opt, user, p.category));
@@ -415,7 +485,11 @@ export default function ProductDetailPage() {
               }
 
               return (
-                <div key={p.id} className="bg-[#131313] border border-white/5 rounded-lg p-5 flex flex-col gap-4 hover:border-[#268072]/30 hover:shadow-lg hover:shadow-[#268072]/5 transition-all duration-300 group text-left">
+                <div
+                  key={p.id}
+                  data-related-product
+                  className="group flex min-w-[86%] snap-start flex-col gap-4 rounded-lg border border-white/5 bg-[#131313] p-5 text-left transition-all duration-300 hover:border-[#268072]/30 hover:shadow-lg hover:shadow-[#268072]/5 sm:min-w-[calc(50%_-_10px)] lg:min-w-[calc(25%_-_18px)]"
+                >
                   {/* Product Image */}
                   <Link href={`/product/${p.id}?fromPage=${fromPage}`} className="block aspect-square overflow-hidden rounded-lg bg-[#1a1a1a] border border-white/5 relative">
                     <img
