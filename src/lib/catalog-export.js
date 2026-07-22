@@ -768,7 +768,9 @@ function buildIndexRows(categoryGroups) {
     const ethnicityNames = [...new Set(group.products.map((product) => product.tribe || group.category))]
       .sort((a, b) => a.localeCompare(b));
     ethnicityNames.forEach((ethnicity) => {
-      rows.push({ type: "ethnicity", label: ethnicity, height: 9 });
+      if (normalizeEthnicity(ethnicity) !== normalizeEthnicity(group.category)) {
+        rows.push({ type: "ethnicity", label: ethnicity, height: 9 });
+      }
       group.products
         .filter((product) => (product.tribe || group.category) === ethnicity)
         .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")))
@@ -794,6 +796,8 @@ function paginateIndexRows(rows, ethnicityCount) {
   let page = [[], []];
   let column = 0;
   let usedHeight = 0;
+  let currentCategory = "";
+  let currentEthnicity = "";
 
   const advanceColumn = () => {
     if (column === 0) {
@@ -806,36 +810,51 @@ function paginateIndexRows(rows, ethnicityCount) {
     usedHeight = 0;
   };
 
-  rows.forEach((row, index) => {
-    const nextHeight = rows[index + 1]?.height || 0;
-    const keepWithNext = row.type !== "product" ? nextHeight : 0;
-    if (usedHeight + row.height + keepWithNext > columnHeight) advanceColumn();
+  const addRow = (row) => {
     page[column].push(row);
     usedHeight += row.height;
+  };
+
+  const continuationRows = (row) => {
+    if (!currentCategory || row.type === "category") return [];
+
+    const repeated = [
+      { type: "category", label: currentCategory, height: 10, continuation: true },
+    ];
+    if (
+      row.type === "product" &&
+      currentEthnicity &&
+      normalizeEthnicity(currentEthnicity) !== normalizeEthnicity(currentCategory)
+    ) {
+      repeated.push({
+        type: "ethnicity",
+        label: currentEthnicity,
+        height: 9,
+        continuation: true,
+      });
+    }
+    return repeated;
+  };
+
+  rows.forEach((row, index) => {
+    if (row.type === "category") {
+      currentCategory = row.label;
+      currentEthnicity = "";
+    } else if (row.type === "ethnicity") {
+      currentEthnicity = row.label;
+    } else if (row.type === "product") {
+      currentEthnicity = row.product.tribe || currentCategory;
+    }
+
+    const nextHeight = rows[index + 1]?.height || 0;
+    const keepWithNext = row.type !== "product" ? nextHeight : 0;
+    if (usedHeight + row.height + keepWithNext > columnHeight) {
+      advanceColumn();
+      continuationRows(row).forEach(addRow);
+    }
+    addRow(row);
   });
   if (page[0].length || page[1].length) pages.push(page);
-
-  const lastPage = pages[pages.length - 1];
-  if (lastPage?.[0].length && !lastPage[1].length) {
-    const totalHeight = lastPage[0].reduce((total, row) => total + row.height, 0);
-    const targetHeight = totalHeight / 2;
-    let runningHeight = 0;
-    let bestSplit = -1;
-    let bestDistance = Number.POSITIVE_INFINITY;
-    lastPage[0].forEach((row, index) => {
-      const previous = lastPage[0][index - 1];
-      const isGroupStart = row.type === "category" || (row.type === "ethnicity" && previous?.type !== "category");
-      if (index > 0 && isGroupStart) {
-        const distance = Math.abs(runningHeight - targetHeight);
-        if (distance < bestDistance) {
-          bestDistance = distance;
-          bestSplit = index;
-        }
-      }
-      runningHeight += row.height;
-    });
-    if (bestSplit > 0) lastPage[1] = lastPage[0].splice(bestSplit);
-  }
   return pages;
 }
 
@@ -910,7 +929,6 @@ function drawIndexPage(pdf, {
     const x = columnIndex === 0 ? 12 : 108;
     const width = 90;
     let y = indexRowsTop;
-    let productRow = 0;
     rows.forEach((row) => {
       if (row.type === "category") {
         pdf.setFillColor(20, 65, 57);
@@ -918,7 +936,15 @@ function drawIndexPage(pdf, {
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(8);
         pdf.setTextColor(255, 255, 255);
-        pdf.text(pdfSafeText(row.label).toUpperCase(), x + 3, y + 6);
+        pdf.text(
+          truncatePdfLines(pdf, pdfSafeText(row.label).toUpperCase(), row.continuation ? width - 24 : width - 6, 1),
+          x + 3,
+          y + 6
+        );
+        if (row.continuation) {
+          pdf.setFontSize(5.5);
+          pdf.text("CONT.", x + width - 3, y + 6, { align: "right" });
+        }
       } else if (row.type === "ethnicity") {
         const accent = ethnicityColor({ tribe: row.label });
         const destination = ethnicityLinks.find((item) => item.label === row.label)?.destination;
@@ -927,7 +953,15 @@ function drawIndexPage(pdf, {
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(7.3);
         pdf.setTextColor(...accent);
-        pdf.text(pdfSafeText(row.label).toUpperCase(), x + 3, y + 5.4);
+        pdf.text(
+          truncatePdfLines(pdf, pdfSafeText(row.label).toUpperCase(), row.continuation ? width - 24 : width - 6, 1),
+          x + 3,
+          y + 5.4
+        );
+        if (row.continuation) {
+          pdf.setFontSize(5.2);
+          pdf.text("CONT.", x + width - 3, y + 5.4, { align: "right" });
+        }
         if (destination) {
           pdf.link(x, y, width, 8, {
             pageNumber: destination.pageNumber,
@@ -937,10 +971,6 @@ function drawIndexPage(pdf, {
         }
       } else {
         const accent = ethnicityColor(row.product);
-        if (productRow % 2 === 0) {
-          pdf.setFillColor(...mixWithWhite(accent, 0.94));
-          pdf.rect(x, y, width, row.height, "F");
-        }
         pdf.setFillColor(...accent);
         pdf.rect(x, y, 1.8, row.height, "F");
         pdf.setFont("helvetica", "normal");
@@ -959,7 +989,6 @@ function drawIndexPage(pdf, {
             zoom: 1,
           });
         }
-        productRow += 1;
       }
       y += row.height;
     });

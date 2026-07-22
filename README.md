@@ -87,6 +87,7 @@ The catalog is aggregated from Sacred Connection and Maya Herbs. Configuration i
 | `WOOCOMMERCE_CONSUMER_KEY_MAYA` | Maya Herbs REST API key with Read/Write permission |
 | `WOOCOMMERCE_CONSUMER_SECRET_MAYA` | Maya Herbs REST API secret |
 | `WC_REVALIDATE_SECONDS` | Optional server-side catalog cache TTL (default `300`) |
+| `WC_WEBHOOK_SECRET` | Recommended shared secret for immediate product-cache invalidation from WooCommerce webhooks |
 | `SESSION_SECRET` | Required random secret (minimum 32 characters) used to sign authentication cookies |
 | `ORDER_PAYMENT_INSTRUCTIONS` | Server-only payment text appended to every created order |
 
@@ -94,6 +95,10 @@ The catalog is aggregated from Sacred Connection and Maya Herbs. Configuration i
 *   **Vercel:** add all variables for Production and Preview, then redeploy.
 
 **How it works:** [src/lib/commerce-stores.js](src/lib/commerce-stores.js) defines the two server-only backends. `/api/products` loads both catalogs and tags each product with its source. The cart preserves this source, and `/api/orders` validates the items against their respective stores before creating one WooCommerce order per represented backend. Authentication and the buyer profile remain authoritative in Sacred Connection. Order history merges orders from both stores.
+
+PDF exports always bypass the WooCommerce data cache, so every generated file uses the published products, current variations, prices, and stock returned at generation time. Normal catalog browsing keeps the short `WC_REVALIDATE_SECONDS` cache for performance.
+
+For immediate on-screen updates, create active WooCommerce webhooks for **Product created**, **Product updated**, **Product deleted**, and **Product restored**. Use `https://YOUR_DOMAIN/api/webhooks/woocommerce` as the delivery URL and the exact `WC_WEBHOOK_SECRET` value as the webhook secret. Valid product events immediately expire the tagged catalog cache; invalid signatures are rejected.
 
 > Product route IDs combine store ID and WooCommerce slug, so equal slugs and SKUs can coexist across the two catalogs. The secondary filter only uses real WooCommerce product attributes or subcategories.
 

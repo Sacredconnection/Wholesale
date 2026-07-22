@@ -13,25 +13,14 @@ export default function FilterSidebar({
   const update = (field, value) => onChange({ ...filters, [field]: value });
 
   return (
-    <aside className="h-fit rounded-sm border border-white/10 bg-[#1a1a1a] p-5 lg:sticky lg:top-28 lg:p-6">
-      <div className="mb-6 flex items-center justify-between gap-3 border-b border-white/10 pb-4">
-        <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-white">
-          <Filter className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
-          Filters
-        </div>
-        <button
-          type="button"
-          onClick={onClear}
-          disabled={disabled}
-          className="inline-flex items-center gap-1.5 border-0 bg-transparent text-[10px] font-bold uppercase tracking-wider text-white/45 transition-colors hover:text-[#82d6c5] disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          <RotateCcw className="h-3 w-3" aria-hidden="true" />
-          Clear
-        </button>
+    <aside className="rounded-sm border border-white/10 bg-[#1a1a1a] p-5 sm:p-6 lg:p-8">
+      <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-white sm:mb-6">
+        <Filter className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
+        Filter products
       </div>
 
-      <div className="space-y-6">
-        <div>
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-5 xl:grid-cols-[1.15fr_1fr_1fr_auto] xl:items-end xl:gap-6">
+        <div className="min-w-0">
           <label
             htmlFor="catalog-search"
             className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-white/55"
@@ -55,7 +44,7 @@ export default function FilterSidebar({
           </div>
         </div>
 
-        <div>
+        <div className="min-w-0">
           <label
             htmlFor="catalog-category"
             className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-white/55"
@@ -77,7 +66,7 @@ export default function FilterSidebar({
           </select>
         </div>
 
-        <fieldset>
+        <fieldset className="min-w-0 sm:col-span-2 xl:col-span-1">
           <legend className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/55">
             Price range (USD)
           </legend>
@@ -119,6 +108,15 @@ export default function FilterSidebar({
           </div>
         </fieldset>
 
+        <button
+          type="button"
+          onClick={onClear}
+          disabled={disabled}
+          className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-sm border border-white/10 bg-white/5 px-6 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:col-span-2 xl:col-span-1 xl:min-w-44"
+        >
+          <RotateCcw className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
+          Clear filters
+        </button>
       </div>
     </aside>
   );

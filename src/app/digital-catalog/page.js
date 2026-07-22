@@ -368,7 +368,7 @@ export default function CatalogPage() {
           </div>
         </header>
 
-        <div className="grid items-start gap-7 lg:grid-cols-[17rem_minmax(0,1fr)] lg:gap-9">
+        <div className="space-y-7">
           <FilterSidebar
             filters={filters}
             categories={categories}

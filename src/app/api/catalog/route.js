@@ -17,8 +17,10 @@ import {
 } from "@/lib/wc-mappers";
 import { optionPriceForUser } from "@/lib/pricing";
 import { getSession } from "@/lib/session";
+import { PRIMARY_STORE_ID } from "@/lib/commerce-stores";
 
 const PAGE_SIZE = 30;
+const VARIATION_FETCH_CONCURRENCY = 8;
 
 export const runtime = "nodejs";
 
@@ -42,6 +44,28 @@ const pageNumber = (value) => {
   const page = Number.parseInt(value || "1", 10);
   return Number.isFinite(page) && page > 0 ? page : 1;
 };
+
+async function mapWithConcurrency(items, concurrency, mapper) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    for (;;) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= items.length) return;
+      results[index] = await mapper(items[index], index);
+    }
+  }
+
+  await Promise.all(
+    Array.from(
+      { length: Math.min(concurrency, items.length) },
+      () => worker()
+    )
+  );
+  return results;
+}
 
 async function resolveCustomer() {
   const session = await getSession();
@@ -100,6 +124,7 @@ export async function GET(request) {
   const onlyInStock = searchParams.get("inStock") === "true";
   const exportAll = searchParams.get("export") === "true";
   const requestedPage = pageNumber(searchParams.get("page"));
+  const catalogFetchOptions = { revalidate: exportAll ? 0 : undefined };
 
   try {
     let customer = null;
@@ -110,18 +135,24 @@ export async function GET(request) {
       source = "woocommerce-rest";
       const [resolvedCustomer, wcProducts, categories] = await Promise.all([
         resolveCustomer(),
-        getAllProducts(),
-        getCategories(),
+        getAllProducts(PRIMARY_STORE_ID, catalogFetchOptions),
+        getCategories(PRIMARY_STORE_ID, catalogFetchOptions),
       ]);
       customer = resolvedCustomer;
       const categoryContext = buildCategoryContext(categories);
       const user = customer ? { role: customer.role } : null;
 
-      products = await Promise.all(
-        wcProducts.map(async (product) => {
+      products = await mapWithConcurrency(
+        wcProducts,
+        VARIATION_FETCH_CONCURRENCY,
+        async (product) => {
           const variations =
             product.type === "variable"
-              ? await getProductVariations(product.id)
+              ? await getProductVariations(
+                  product.id,
+                  PRIMARY_STORE_ID,
+                  catalogFetchOptions
+                )
               : [];
           const mapped = mapProductForRole(
             product,
@@ -139,11 +170,14 @@ export async function GET(request) {
             priceMax: prices.length ? Math.max(...prices) : 0,
             productUrl: `/product/${mapped.id}`,
           };
-        })
+        }
       );
     } else if (isWooCommerceStoreConfigured()) {
       source = "woocommerce-store";
-      const storeCatalog = await getPublicStoreCatalog();
+      const storeCatalog = await getPublicStoreCatalog(
+        PRIMARY_STORE_ID,
+        catalogFetchOptions
+      );
       const categoryContext = buildCategoryContext(storeCatalog.categories);
       const variationsByParent = new Map();
       storeCatalog.variations.forEach((variation) => {
@@ -247,6 +281,10 @@ export async function GET(request) {
         },
         viewer: {
           authenticated: Boolean(customer),
+        },
+        catalog: {
+          fresh: exportAll,
+          fetchedAt: new Date().toISOString(),
         },
       },
       { headers: { "Cache-Control": "private, no-store" } }

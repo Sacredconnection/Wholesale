@@ -13,6 +13,9 @@ if (typeof window !== "undefined") {
 const API_VERSION = "wc/v3";
 const STORE_API_VERSION = "wc/store/v1";
 
+export const getWooCommerceCatalogCacheTag = (storeId = PRIMARY_STORE_ID) =>
+  `woocommerce-catalog:${storeId}`;
+
 export function getWooCommerceBaseUrl(storeId = PRIMARY_STORE_ID) {
   return getCommerceStore(storeId).baseUrl;
 }
@@ -53,7 +56,11 @@ export class WooCommerceApiError extends Error {
  * Low-level fetch against the WooCommerce REST API (Basic auth over HTTPS).
  * GET responses are cached in the Next.js data cache for WC_REVALIDATE_SECONDS.
  */
-async function wcFetch(storeId, path, { params = {}, method = "GET", body, revalidate } = {}) {
+async function wcFetch(
+  storeId,
+  path,
+  { params = {}, method = "GET", body, revalidate, tags = [] } = {}
+) {
   if (!isWooCommerceConfigured(storeId)) {
     throw new WooCommerceApiError(
       `WooCommerce store ${storeId} is not configured.`,
@@ -70,6 +77,7 @@ async function wcFetch(storeId, path, { params = {}, method = "GET", body, reval
   const auth = Buffer.from(
     `${store.consumerKey}:${store.consumerSecret}`
   ).toString("base64");
+  const effectiveRevalidate = revalidate ?? revalidateSeconds();
 
   const res = await fetch(url, {
     method,
@@ -80,7 +88,9 @@ async function wcFetch(storeId, path, { params = {}, method = "GET", body, reval
     body: body ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(requestTimeoutMs()),
     ...(method === "GET"
-      ? { next: { revalidate: revalidate ?? revalidateSeconds() } }
+      ? effectiveRevalidate === 0
+        ? { cache: "no-store" }
+        : { next: { revalidate: effectiveRevalidate, tags } }
       : { cache: "no-store" }),
   });
 
@@ -101,7 +111,7 @@ async function wcFetch(storeId, path, { params = {}, method = "GET", body, reval
   return { data: await res.json(), headers: res.headers };
 }
 
-async function storeFetch(storeId, path, { params = {}, revalidate } = {}) {
+async function storeFetch(storeId, path, { params = {}, revalidate, tags = [] } = {}) {
   if (!isWooCommerceStoreConfigured(storeId)) {
     throw new WooCommerceApiError(`WooCommerce store ${storeId} URL is not configured.`, 0);
   }
@@ -113,10 +123,13 @@ async function storeFetch(storeId, path, { params = {}, revalidate } = {}) {
     if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
   });
 
+  const effectiveRevalidate = revalidate ?? revalidateSeconds();
   const res = await fetch(url, {
     headers: { Accept: "application/json" },
     signal: AbortSignal.timeout(requestTimeoutMs()),
-    next: { revalidate: revalidate ?? revalidateSeconds() },
+    ...(effectiveRevalidate === 0
+      ? { cache: "no-store" }
+      : { next: { revalidate: effectiveRevalidate, tags } }),
   });
 
   if (!res.ok) {
@@ -136,12 +149,15 @@ async function storeFetch(storeId, path, { params = {}, revalidate } = {}) {
   return { data: await res.json(), headers: res.headers };
 }
 
-async function getAllStoreProducts(storeId) {
+async function getAllStoreProducts(storeId, { revalidate } = {}) {
   const { catalogLanguage } = getCommerceStore(storeId);
+  const tags = [getWooCommerceCatalogCacheTag(storeId)];
   const products = [];
   let page = 1;
   for (;;) {
     const { data, headers } = await storeFetch(storeId, "products", {
+      revalidate,
+      tags,
       params: {
         per_page: 100,
         page,
@@ -156,19 +172,36 @@ async function getAllStoreProducts(storeId) {
   return products;
 }
 
-async function getStoreCategories(storeId) {
+async function getStoreCategories(storeId, { revalidate } = {}) {
   const { catalogLanguage } = getCommerceStore(storeId);
-  const { data } = await storeFetch(storeId, "products/categories", {
-    params: {
-      per_page: 100,
-      ...(catalogLanguage ? { lang: catalogLanguage } : {}),
-    },
-  });
-  return data;
+  const tags = [getWooCommerceCatalogCacheTag(storeId)];
+  const categories = [];
+  let page = 1;
+  for (;;) {
+    const { data, headers } = await storeFetch(
+      storeId,
+      "products/categories",
+      {
+        revalidate,
+        tags,
+        params: {
+          per_page: 100,
+          page,
+          ...(catalogLanguage ? { lang: catalogLanguage } : {}),
+        },
+      }
+    );
+    categories.push(...data);
+    const totalPages = Number(headers.get("x-wp-totalpages") || page);
+    if (page >= totalPages || data.length < 100) break;
+    page += 1;
+  }
+  return categories;
 }
 
-async function getStoreVariations(storeId, variationIds) {
+async function getStoreVariations(storeId, variationIds, { revalidate } = {}) {
   const uniqueIds = [...new Set(variationIds.filter(Boolean))];
+  const tags = [getWooCommerceCatalogCacheTag(storeId)];
   const batches = [];
   for (let start = 0; start < uniqueIds.length; start += 100) {
     batches.push(uniqueIds.slice(start, start + 100));
@@ -177,6 +210,8 @@ async function getStoreVariations(storeId, variationIds) {
   const responses = await Promise.all(
     batches.map((ids) =>
       storeFetch(storeId, "products", {
+        revalidate,
+        tags,
         params: {
           type: "variation",
           include: ids.join(","),
@@ -189,16 +224,20 @@ async function getStoreVariations(storeId, variationIds) {
   return responses.flatMap(({ data }) => data);
 }
 
-export async function getPublicStoreCatalog(storeId = PRIMARY_STORE_ID) {
+export async function getPublicStoreCatalog(storeId = PRIMARY_STORE_ID, { revalidate } = {}) {
   const [products, categories] = await Promise.all([
-    getAllStoreProducts(storeId),
-    getStoreCategories(storeId),
+    getAllStoreProducts(storeId, { revalidate }),
+    getStoreCategories(storeId, { revalidate }),
   ]);
   const variationReferences = products.flatMap((product) => product.variations || []);
   const referencesById = new Map(
     variationReferences.map((variation) => [variation.id, variation])
   );
-  const variations = await getStoreVariations(storeId, [...referencesById.keys()]);
+  const variations = await getStoreVariations(
+    storeId,
+    [...referencesById.keys()],
+    { revalidate }
+  );
 
   return {
     products,
@@ -215,30 +254,39 @@ export async function getPublicStoreCatalog(storeId = PRIMARY_STORE_ID) {
 
 // ── Catalog ─────────────────────────────────────────────────────────
 
-export async function getAllProducts(storeId = PRIMARY_STORE_ID) {
+export async function getAllProducts(storeId = PRIMARY_STORE_ID, { revalidate } = {}) {
   const { catalogLanguage } = getCommerceStore(storeId);
+  const tags = [getWooCommerceCatalogCacheTag(storeId)];
   const productParams = {
     per_page: 100,
     status: "publish",
     ...(catalogLanguage ? { lang: catalogLanguage } : {}),
-    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data",
+    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data,catalog_visibility,stock_status,stock_quantity",
   };
   const { data: firstPage, headers } = await wcFetch(storeId, "products", {
+    revalidate,
+    tags,
     params: { ...productParams, page: 1 },
   });
   const totalPages = Number(headers.get("x-wp-totalpages") || 1);
-  if (totalPages <= 1) return firstPage;
+  if (totalPages <= 1) {
+    return firstPage.filter((product) => product.catalog_visibility !== "hidden");
+  }
 
   const remainingPages = await Promise.all(
     Array.from({ length: totalPages - 1 }, (_, index) => index + 2).map(async (page) => {
       const { data } = await wcFetch(storeId, "products", {
+        revalidate,
+        tags,
         params: { ...productParams, page },
       });
       return data;
     })
   );
 
-  return [firstPage, ...remainingPages].flat();
+  return [firstPage, ...remainingPages]
+    .flat()
+    .filter((product) => product.catalog_visibility !== "hidden");
 }
 
 export async function getProductBySlug(slug, storeId = PRIMARY_STORE_ID) {
@@ -246,14 +294,45 @@ export async function getProductBySlug(slug, storeId = PRIMARY_STORE_ID) {
   return data[0] || null;
 }
 
-export async function getProductVariations(productId, storeId = PRIMARY_STORE_ID) {
-  const { data } = await wcFetch(storeId, `products/${productId}/variations`, {
-    params: {
-      per_page: 100,
-      _fields: "id,name,sku,price,weight,purchasable,attributes,meta_data",
-    },
-  });
-  return data;
+export async function getProductVariations(
+  productId,
+  storeId = PRIMARY_STORE_ID,
+  { revalidate } = {}
+) {
+  const tags = [getWooCommerceCatalogCacheTag(storeId)];
+  const variationParams = {
+    per_page: 100,
+    _fields: "id,name,sku,price,weight,purchasable,attributes,meta_data,stock_status,stock_quantity",
+  };
+  const { data: firstPage, headers } = await wcFetch(
+    storeId,
+    `products/${productId}/variations`,
+    {
+      revalidate,
+      tags,
+      params: { ...variationParams, page: 1 },
+    }
+  );
+  const totalPages = Number(headers.get("x-wp-totalpages") || 1);
+  if (totalPages <= 1) return firstPage;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => index + 2).map(
+      async (page) => {
+        const { data } = await wcFetch(
+          storeId,
+          `products/${productId}/variations`,
+          {
+            revalidate,
+            tags,
+            params: { ...variationParams, page },
+          }
+        );
+        return data;
+      }
+    )
+  );
+  return [firstPage, ...remainingPages].flat();
 }
 
 // SKU lookup matches both products and variations (variations come back with
@@ -275,17 +354,40 @@ export async function getVariationById(productId, variationId, storeId = PRIMARY
   return data;
 }
 
-export async function getCategories(storeId = PRIMARY_STORE_ID) {
+export async function getCategories(storeId = PRIMARY_STORE_ID, { revalidate } = {}) {
   const { catalogLanguage } = getCommerceStore(storeId);
-  const { data } = await wcFetch(storeId, "products/categories", {
-    params: {
-      per_page: 100,
-      hide_empty: true,
-      ...(catalogLanguage ? { lang: catalogLanguage } : {}),
-      _fields: "id,name,parent",
-    },
-  });
-  return data;
+  const tags = [getWooCommerceCatalogCacheTag(storeId)];
+  const categoryParams = {
+    per_page: 100,
+    hide_empty: true,
+    ...(catalogLanguage ? { lang: catalogLanguage } : {}),
+    _fields: "id,name,parent",
+  };
+  const { data: firstPage, headers } = await wcFetch(
+    storeId,
+    "products/categories",
+    {
+      revalidate,
+      tags,
+      params: { ...categoryParams, page: 1 },
+    }
+  );
+  const totalPages = Number(headers.get("x-wp-totalpages") || 1);
+  if (totalPages <= 1) return firstPage;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => index + 2).map(
+      async (page) => {
+        const { data } = await wcFetch(storeId, "products/categories", {
+          revalidate,
+          tags,
+          params: { ...categoryParams, page },
+        });
+        return data;
+      }
+    )
+  );
+  return [firstPage, ...remainingPages].flat();
 }
 
 // ── Customers ───────────────────────────────────────────────────────
