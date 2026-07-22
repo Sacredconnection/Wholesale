@@ -25,12 +25,14 @@ import {
   Filter,
   PackageOpen,
   Store,
-  Network
+  Network,
+  LoaderCircle,
 } from "lucide-react";
 
 import { useProducts } from "@/components/ProductsContext";
 import { optionPriceForUser } from "@/lib/pricing";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
+import { exportCatalogPdf } from "@/lib/catalog-export";
 
 // Normalize string for accent-insensitive comparison
 // Strips diacritics, lowercases and trims — used ONLY for comparison, never for display
@@ -60,6 +62,8 @@ export default function CatalogPage() {
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [optionsProduct, setOptionsProduct] = useState(null);
+  const [pdfExporting, setPdfExporting] = useState(false);
+  const [pdfExportError, setPdfExportError] = useState("");
 
   // Inline Option and Quantity States
   const [selectedOptions, setSelectedOptions] = useState({});
@@ -215,6 +219,39 @@ export default function CatalogPage() {
     setCurrentPage(1);
   };
 
+  const handlePublicCatalogPdf = async () => {
+    if (pdfExporting) return;
+    setPdfExporting(true);
+    setPdfExportError("");
+
+    try {
+      const response = await fetch("/api/catalog?export=true", {
+        cache: "no-store",
+        credentials: "omit",
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "The public catalog could not be prepared for export.");
+      }
+      if (!Array.isArray(data.products) || data.products.length === 0) {
+        throw new Error("There are no public products available for the PDF catalog.");
+      }
+
+      await exportCatalogPdf({
+        products: data.products,
+        user: null,
+        includeLinks: false,
+        filterLabel: "Complete catalog",
+      });
+    } catch (exportFailure) {
+      setPdfExportError(
+        exportFailure.message || "The PDF catalog could not be generated."
+      );
+    } finally {
+      setPdfExporting(false);
+    }
+  };
+
   // Catalog is partner-only: block until authenticated
   if (authLoading || !isLoggedIn) {
     return <AuthGate loading={authLoading} />;
@@ -226,6 +263,28 @@ export default function CatalogPage() {
       <Header 
         onOpenLogin={() => setIsLoginOpen(true)}
       />
+
+      {pdfExporting && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#102c27]/95 px-5 backdrop-blur-sm xl:hidden"
+          role="status"
+          aria-live="assertive"
+          aria-label="Generating your PDF catalog. Please wait and keep this page open."
+        >
+          <div className="w-full max-w-xl rounded-md border border-[#82d6c5]/45 bg-[#183b35] px-6 py-10 text-center shadow-2xl shadow-black/50 sm:px-10 sm:py-14">
+            <LoaderCircle
+              className="mx-auto h-14 w-14 animate-spin text-[#82d6c5] sm:h-16 sm:w-16"
+              aria-hidden="true"
+            />
+            <p className="mt-7 text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+              Generating your PDF catalog...
+            </p>
+            <p className="mx-auto mt-4 max-w-md text-base font-semibold leading-7 text-white/75 sm:text-lg">
+              This may take a moment. Please wait and keep this page open until the PDF is ready.
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Main Container */}
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
@@ -248,11 +307,16 @@ export default function CatalogPage() {
           <div className="flex w-full shrink-0 flex-col items-stretch gap-3 sm:w-auto sm:flex-row sm:items-center">
             {/* Download Catalog PDF Button */}
             <button 
-              onClick={() => alert("Downloading Wholesale Catalog & Pricing PDF...")}
-              className="flex w-full grow items-center justify-center gap-3 rounded-sm border-0 bg-[#EC2300] px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-[#EC2300]/15 transition-all duration-300 hover:bg-[#c51d00] sm:w-auto sm:grow-0"
+              onClick={handlePublicCatalogPdf}
+              disabled={pdfExporting}
+              className="flex w-full grow items-center justify-center gap-3 rounded-sm border-0 bg-[#EC2300] px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white shadow-lg shadow-[#EC2300]/15 transition-all duration-300 hover:bg-[#c51d00] disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:grow-0"
             >
-              <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
-              PDF Catalog
+              {pdfExporting ? (
+                <LoaderCircle className="h-4 w-4 animate-spin text-white" aria-hidden="true" />
+              ) : (
+                <svg className="w-4 h-4 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+              )}
+              {pdfExporting ? "Generating PDF" : "PDF Catalog"}
             </button>
 
             {/* Quick Cart Summary Button */}
@@ -270,6 +334,15 @@ export default function CatalogPage() {
             </button>
           </div>
         </div>
+
+        {pdfExportError && (
+          <div
+            className="rounded-sm border border-red-300/25 bg-red-950/45 px-4 py-3 text-sm font-semibold text-red-100"
+            role="alert"
+          >
+            {pdfExportError}
+          </div>
+        )}
 
         {/* Marketplace Stores */}
         <section aria-labelledby="marketplace-stores-title" className="overflow-hidden rounded-lg border border-white/10 bg-[#171717] shadow-xl">
@@ -313,8 +386,8 @@ export default function CatalogPage() {
               </div>
             </article>
 
-            <article className="group relative overflow-hidden rounded-md border border-[#b9965a]/35 bg-gradient-to-br from-[#332718] to-[#17130e] p-5 sm:p-6">
-              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#b9965a]/20 blur-2xl" />
+            <article className="group relative overflow-hidden rounded-md border border-[#cc6632] bg-[#cc6632] p-5 sm:p-6">
+              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-white/15 blur-2xl" />
               <div className="relative flex h-full flex-col gap-5">
                 <div className="flex items-center justify-between gap-4">
                   <div className="flex h-14 w-14 items-center justify-center rounded border border-[#d8b879]/25 bg-black/25 text-lg font-black tracking-tight text-[#e0c38b]">

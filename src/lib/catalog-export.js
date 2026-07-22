@@ -65,6 +65,18 @@ const money = new Intl.NumberFormat("en-US", {
 
 const safeFilenameDate = () => new Date().toISOString().slice(0, 10);
 
+const formatPdfGenerationTimestamp = (date) =>
+  new Intl.DateTimeFormat("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "2-digit",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hourCycle: "h23",
+    timeZoneName: "short",
+  }).format(date);
+
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");
@@ -467,7 +479,25 @@ function drawCoverContactInfo(pdf, contactIcons) {
   });
 }
 
-function drawPdfCover(pdf, logo, coverBackground, coverDecoration, contactIcons, products, filterLabel) {
+function drawGenerationStamp(pdf, generatedAtLabel, { darkBackground = false } = {}) {
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(5.2);
+  pdf.setTextColor(...(darkBackground ? [180, 211, 202] : [113, 128, 123]));
+  pdf.text(`Generated: ${pdfSafeText(generatedAtLabel)}`, 198, 293, {
+    align: "right",
+  });
+}
+
+function drawPdfCover(
+  pdf,
+  logo,
+  coverBackground,
+  coverDecoration,
+  contactIcons,
+  products,
+  filterLabel,
+  generatedAtLabel
+) {
   const categoryCount = new Set(products.map((product) => product.category).filter(Boolean)).size;
   const tribeCount = new Set(products.map((product) => product.tribe).filter(Boolean)).size;
   pdf.setFillColor(20, 65, 57);
@@ -535,10 +565,10 @@ function drawPdfCover(pdf, logo, coverBackground, coverDecoration, contactIcons,
   pdf.setFontSize(7.5);
   pdf.setTextColor(180, 211, 202);
   pdf.text(pdfSafeText(filterLabel || "Complete catalog"), 16, 250);
-  pdf.text(`Generated ${safeFilenameDate()}`, 16, 257);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(255, 255, 255);
   pdf.text("SACRED CONNECTION WHOLESALE", 16, 278);
+  drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
 }
 
 function drawGridHeader(pdf, logo, category, pageNumber, pageCount) {
@@ -565,7 +595,8 @@ function drawCategoryCover(
   products,
   categoryIndex,
   pageNumber,
-  pageCount
+  pageCount,
+  generatedAtLabel
 ) {
   const tribes = [...new Set(products.map((product) => product.tribe).filter(Boolean))];
   pdf.setFillColor(categoryIndex % 2 ? 26 : 20, categoryIndex % 2 ? 26 : 65, categoryIndex % 2 ? 26 : 57);
@@ -617,6 +648,7 @@ function drawCategoryCover(
   pdf.setFont("helvetica", "normal");
   pdf.setTextColor(180, 211, 202);
   pdf.text(`Page ${pageNumber} of ${pageCount}`, 16, 276);
+  drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
 }
 
 function pdfProductTarget(product, includeLinks) {
@@ -741,7 +773,7 @@ function drawGridProductCard(pdf, product, image, user, includeLinks, x, y) {
   pdf.link(x, y, width, height, { url: pdfProductTarget(product, includeLinks) });
 }
 
-function drawGridFooter(pdf, category, pageNumber, pageCount) {
+function drawGridFooter(pdf, category, pageNumber, pageCount, generatedAtLabel) {
   pdf.setDrawColor(220, 229, 226);
   pdf.line(12, 282, 198, 282);
   pdf.setFont("helvetica", "normal");
@@ -749,16 +781,27 @@ function drawGridFooter(pdf, category, pageNumber, pageCount) {
   pdf.setTextColor(113, 128, 123);
   pdf.text("Sacred Connection Wholesale", 12, 288);
   pdf.text(`${pdfSafeText(category)}  |  ${pageNumber}/${pageCount}`, 198, 288, { align: "right" });
+  drawGenerationStamp(pdf, generatedAtLabel);
 }
 
-function drawGridPage(pdf, { products, images, logo, user, includeLinks, category, pageNumber, pageCount }) {
+function drawGridPage(pdf, {
+  products,
+  images,
+  logo,
+  user,
+  includeLinks,
+  category,
+  pageNumber,
+  pageCount,
+  generatedAtLabel,
+}) {
   drawGridHeader(pdf, logo, category, pageNumber, pageCount);
   products.forEach((product, index) => {
     const column = index % 2;
     const row = Math.floor(index / 2);
     drawGridProductCard(pdf, product, images[index], user, includeLinks, 12 + column * 96, 39 + row * 117);
   });
-  drawGridFooter(pdf, category, pageNumber, pageCount);
+  drawGridFooter(pdf, category, pageNumber, pageCount, generatedAtLabel);
 }
 
 function buildIndexRows(categoryGroups) {
@@ -908,6 +951,7 @@ function drawIndexPage(pdf, {
   pageCount,
   indexPage,
   indexPageCount,
+  generatedAtLabel,
 }) {
   pdf.setFillColor(26, 26, 26);
   pdf.rect(0, 0, 210, 28, "F");
@@ -1001,6 +1045,7 @@ function drawIndexPage(pdf, {
   pdf.setTextColor(113, 128, 123);
   pdf.text("Sacred Connection Wholesale", 12, 288);
   pdf.text(`Index  |  ${pageNumber}/${pageCount}`, 198, 288, { align: "right" });
+  drawGenerationStamp(pdf, generatedAtLabel);
 }
 
 export async function exportCatalogPdf({
@@ -1131,7 +1176,19 @@ export async function exportCatalogPdf({
     productImages.push(...(await Promise.all(batch.map(loadProductImage))));
   }
   const imagesByProduct = new Map(products.map((product, index) => [product.id || product.sku, productImages[index]]));
-  drawPdfCover(pdf, logo, coverBackground, coverDecoration, contactIcons, products, filterLabel);
+  const generatedAt = new Date();
+  const generatedAtLabel = formatPdfGenerationTimestamp(generatedAt);
+  pdf.setCreationDate(generatedAt);
+  drawPdfCover(
+    pdf,
+    logo,
+    coverBackground,
+    coverDecoration,
+    contactIcons,
+    products,
+    filterLabel,
+    generatedAtLabel
+  );
   let currentPage = 1;
   indexPages.forEach((columns, indexPage) => {
     pdf.addPage("a4", "portrait");
@@ -1145,6 +1202,7 @@ export async function exportCatalogPdf({
       pageCount,
       indexPage: indexPage + 1,
       indexPageCount: indexPages.length,
+      generatedAtLabel,
     });
   });
   categoryGroups.forEach((group, categoryIndex) => {
@@ -1159,7 +1217,8 @@ export async function exportCatalogPdf({
       group.products,
       categoryIndex,
       currentPage,
-      pageCount
+      pageCount,
+      generatedAtLabel
     );
     for (let start = 0; start < group.products.length; start += 4) {
       const pageProducts = group.products.slice(start, start + 4);
@@ -1174,6 +1233,7 @@ export async function exportCatalogPdf({
         category: group.category,
         pageNumber: currentPage,
         pageCount,
+        generatedAtLabel,
       });
     }
   });
