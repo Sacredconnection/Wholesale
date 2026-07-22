@@ -627,6 +627,7 @@ function pdfProductTarget(product, includeLinks) {
   const productUrl = new URL(product.productUrl || "/catalog", productionOrigin);
   if (includeLinks) return productUrl.href;
   const loginUrl = new URL("/my-account", productionOrigin);
+  loginUrl.searchParams.set("login", "1");
   loginUrl.searchParams.set("redirect", productUrl.pathname + productUrl.search);
   return loginUrl.href;
 }
@@ -763,22 +764,32 @@ function drawGridPage(pdf, { products, images, logo, user, includeLinks, categor
 function buildIndexRows(categoryGroups) {
   const rows = [];
   categoryGroups.forEach((group) => {
-    rows.push({ type: "category", label: group.category, height: 9 });
+    rows.push({ type: "category", label: group.category, height: 10 });
     const ethnicityNames = [...new Set(group.products.map((product) => product.tribe || group.category))]
       .sort((a, b) => a.localeCompare(b));
     ethnicityNames.forEach((ethnicity) => {
-      rows.push({ type: "ethnicity", label: ethnicity, height: 7 });
+      rows.push({ type: "ethnicity", label: ethnicity, height: 9 });
       group.products
         .filter((product) => (product.tribe || group.category) === ethnicity)
         .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")))
-        .forEach((product) => rows.push({ type: "product", product, height: 5.2 }));
+        .forEach((product) => rows.push({ type: "product", product, height: 8.5 }));
     });
   });
   return rows;
 }
 
-function paginateIndexRows(rows) {
-  const columnHeight = 232;
+const INDEX_NAV_COLUMNS = 4;
+const INDEX_NAV_BUTTON_HEIGHT = 9;
+const INDEX_NAV_GAP = 2;
+
+function indexNavigationHeight(ethnicityCount) {
+  if (!ethnicityCount) return 0;
+  const buttonRows = Math.ceil(ethnicityCount / INDEX_NAV_COLUMNS);
+  return 7 + buttonRows * INDEX_NAV_BUTTON_HEIGHT + (buttonRows - 1) * INDEX_NAV_GAP + 5;
+}
+
+function paginateIndexRows(rows, ethnicityCount) {
+  const columnHeight = 232 - indexNavigationHeight(ethnicityCount);
   const pages = [];
   let page = [[], []];
   let column = 0;
@@ -828,7 +839,57 @@ function paginateIndexRows(rows) {
   return pages;
 }
 
-function drawIndexPage(pdf, { columns, logo, productDestinations, pageNumber, pageCount, indexPage, indexPageCount }) {
+function drawIndexEthnicityNavigation(pdf, ethnicityLinks) {
+  if (!ethnicityLinks.length) return 38;
+
+  const startX = 12;
+  const startY = 38;
+  const availableWidth = 186;
+  const buttonWidth =
+    (availableWidth - (INDEX_NAV_COLUMNS - 1) * INDEX_NAV_GAP) / INDEX_NAV_COLUMNS;
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(6.5);
+  pdf.setTextColor(83, 105, 98);
+  pdf.text("JUMP TO ETHNICITY", startX, startY - 3);
+
+  ethnicityLinks.forEach(({ label, destination }, index) => {
+    const column = index % INDEX_NAV_COLUMNS;
+    const row = Math.floor(index / INDEX_NAV_COLUMNS);
+    const x = startX + column * (buttonWidth + INDEX_NAV_GAP);
+    const y = startY + row * (INDEX_NAV_BUTTON_HEIGHT + INDEX_NAV_GAP);
+    const accent = ethnicityColor({ tribe: label });
+
+    pdf.setFillColor(...accent);
+    pdf.roundedRect(x, y, buttonWidth, INDEX_NAV_BUTTON_HEIGHT, 1.2, 1.2, "F");
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(6.2);
+    pdf.setTextColor(...buttonTextColor(accent));
+    pdf.text(truncatePdfLines(pdf, label, buttonWidth - 6, 1), x + buttonWidth / 2, y + 5.8, {
+      align: "center",
+    });
+    if (destination) {
+      pdf.link(x, y, buttonWidth, INDEX_NAV_BUTTON_HEIGHT, {
+        pageNumber: destination.pageNumber,
+        top: destination.top,
+        zoom: 1,
+      });
+    }
+  });
+
+  return startY + indexNavigationHeight(ethnicityLinks.length);
+}
+
+function drawIndexPage(pdf, {
+  columns,
+  ethnicityLinks,
+  logo,
+  productDestinations,
+  pageNumber,
+  pageCount,
+  indexPage,
+  indexPageCount,
+}) {
   pdf.setFillColor(26, 26, 26);
   pdf.rect(0, 0, 210, 28, "F");
   drawCatalogLogo(pdf, logo, 12, 6.5, 36);
@@ -840,43 +901,56 @@ function drawIndexPage(pdf, { columns, logo, productDestinations, pageNumber, pa
   pdf.setFontSize(6.5);
   pdf.setTextColor(190, 201, 198);
   pdf.text(`PRODUCT DIRECTORY  |  ${indexPage}/${indexPageCount}`, 198, 19, { align: "right" });
+  const indexRowsTop = drawIndexEthnicityNavigation(pdf, ethnicityLinks);
   pdf.setDrawColor(220, 229, 226);
   pdf.setLineWidth(0.25);
-  pdf.line(103, 38, 103, 274);
+  pdf.line(103, indexRowsTop, 103, 274);
 
   columns.forEach((rows, columnIndex) => {
     const x = columnIndex === 0 ? 12 : 108;
     const width = 90;
-    let y = 38;
+    let y = indexRowsTop;
     let productRow = 0;
     rows.forEach((row) => {
       if (row.type === "category") {
         pdf.setFillColor(20, 65, 57);
-        pdf.roundedRect(x, y, width, 7.5, 1, 1, "F");
+        pdf.roundedRect(x, y, width, 9, 1, 1, "F");
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(7);
+        pdf.setFontSize(8);
         pdf.setTextColor(255, 255, 255);
-        pdf.text(pdfSafeText(row.label).toUpperCase(), x + 3, y + 5);
+        pdf.text(pdfSafeText(row.label).toUpperCase(), x + 3, y + 6);
       } else if (row.type === "ethnicity") {
+        const accent = ethnicityColor({ tribe: row.label });
+        const destination = ethnicityLinks.find((item) => item.label === row.label)?.destination;
+        pdf.setFillColor(...mixWithWhite(accent, 0.86));
+        pdf.roundedRect(x, y, width, 8, 1, 1, "F");
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(6.5);
-        pdf.setTextColor(38, 128, 114);
-        pdf.text(pdfSafeText(row.label).toUpperCase(), x + 2, y + 4.8);
-        pdf.setDrawColor(220, 229, 226);
-        pdf.line(x + 2, y + 6.2, x + width - 2, y + 6.2);
+        pdf.setFontSize(7.3);
+        pdf.setTextColor(...accent);
+        pdf.text(pdfSafeText(row.label).toUpperCase(), x + 3, y + 5.4);
+        if (destination) {
+          pdf.link(x, y, width, 8, {
+            pageNumber: destination.pageNumber,
+            top: destination.top,
+            zoom: 1,
+          });
+        }
       } else {
+        const accent = ethnicityColor(row.product);
         if (productRow % 2 === 0) {
-          pdf.setFillColor(244, 248, 247);
+          pdf.setFillColor(...mixWithWhite(accent, 0.94));
           pdf.rect(x, y, width, row.height, "F");
         }
+        pdf.setFillColor(...accent);
+        pdf.rect(x, y, 1.8, row.height, "F");
         pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(6.2);
+        pdf.setFontSize(7.4);
         pdf.setTextColor(45, 62, 57);
-        pdf.text(truncatePdfLines(pdf, row.product.name, 65, 1), x + 2, y + 3.6);
+        pdf.text(truncatePdfLines(pdf, row.product.name, 63, 1), x + 4, y + 5.5);
         pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(5.7);
-        pdf.setTextColor(38, 128, 114);
-        pdf.text(pdfSafeText(row.product.sku || "-"), x + width - 2, y + 3.6, { align: "right" });
+        pdf.setFontSize(6.4);
+        pdf.setTextColor(...accent);
+        pdf.text(pdfSafeText(row.product.sku || "-"), x + width - 2, y + 5.5, { align: "right" });
         const destination = productDestinations.get(row.product);
         if (destination) {
           pdf.link(x, y, width, row.height, {
@@ -922,7 +996,22 @@ export async function exportCatalogPdf({
     category,
     products: products.filter((product) => (product.category || "Other") === category),
   }));
-  const indexPages = paginateIndexRows(buildIndexRows(categoryGroups));
+  const firstProductByEthnicity = new Map();
+  categoryGroups.forEach((group) => {
+    group.products.forEach((product) => {
+      const ethnicity = product.tribe || group.category;
+      if (!firstProductByEthnicity.has(ethnicity)) {
+        firstProductByEthnicity.set(ethnicity, product);
+      }
+    });
+  });
+  const indexEthnicityNames = [...firstProductByEthnicity.keys()].sort((a, b) =>
+    a.localeCompare(b)
+  );
+  const indexPages = paginateIndexRows(
+    buildIndexRows(categoryGroups),
+    indexEthnicityNames.length
+  );
   const pageCount = 1 + indexPages.length + categoryGroups.length + categoryGroups.reduce(
     (total, group) => total + Math.ceil(group.products.length / 4),
     0
@@ -941,6 +1030,10 @@ export async function exportCatalogPdf({
       });
     }
   });
+  const ethnicityLinks = indexEthnicityNames.map((label) => ({
+    label,
+    destination: productDestinations.get(firstProductByEthnicity.get(label)),
+  }));
   const pdf = new jsPDF({
     unit: "mm",
     format: "a4",
@@ -1016,6 +1109,7 @@ export async function exportCatalogPdf({
     currentPage += 1;
     drawIndexPage(pdf, {
       columns,
+      ethnicityLinks,
       logo,
       productDestinations,
       pageNumber: currentPage,

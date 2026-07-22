@@ -7,6 +7,21 @@ import { useAuth } from '@/components/AuthContext';
 import { Key, Eye, EyeOff, Loader2, ShieldAlert } from 'lucide-react';
 import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
+function loginRedirectTarget() {
+  const requestedPath = new URLSearchParams(window.location.search).get('redirect');
+  if (!requestedPath || !requestedPath.startsWith('/') || requestedPath.startsWith('//')) {
+    return '/catalog';
+  }
+
+  try {
+    const target = new URL(requestedPath, window.location.origin);
+    if (target.origin !== window.location.origin) return '/catalog';
+    return `${target.pathname}${target.search}${target.hash}`;
+  } catch {
+    return '/catalog';
+  }
+}
+
 export default function LoginModal({ isOpen, onClose }) {
   const { login } = useAuth();
   const router = useRouter();
@@ -42,7 +57,7 @@ export default function LoginModal({ isOpen, onClose }) {
     try {
       await login(normalizedEmail, password);
       onClose();
-      router.push('/catalog');
+      router.push(loginRedirectTarget());
     } catch (err) {
       setError(err.message || 'Invalid B2B Account credentials.');
     } finally {

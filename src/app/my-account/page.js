@@ -185,6 +185,15 @@ export default function MyAccountPage() {
     return () => window.clearTimeout(syncTimer);
   }, [user]);
 
+  useEffect(() => {
+    if (isLoggedIn) return;
+    const params = new URLSearchParams(window.location.search);
+    if (params.get("login") === "1" && params.get("redirect")) {
+      const openTimer = window.setTimeout(() => setIsLoginOpen(true), 0);
+      return () => window.clearTimeout(openTimer);
+    }
+  }, [isLoggedIn]);
+
   // Handle Loading State
   if (loading) {
     return (

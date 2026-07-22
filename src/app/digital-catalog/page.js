@@ -358,21 +358,21 @@ export default function CatalogPage() {
                 </button>
               </div>
             ) : loading ? (
-              <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+              <div className="space-y-5">
                 {Array.from({ length: 6 }, (_, index) => (
-                  <div key={index} className="overflow-hidden rounded-sm border border-white/10 bg-[#1a1a1a]">
-                    <div className="aspect-square animate-pulse bg-white/5" />
-                    <div className="space-y-3 p-5">
+                  <div key={index} className="grid grid-cols-1 items-stretch overflow-hidden rounded-sm border border-white/10 bg-[#1a1a1a] sm:grid-cols-[12rem_minmax(0,1fr)] lg:grid-cols-[14rem_minmax(0,1fr)]">
+                    <div className="h-56 animate-pulse bg-white/5 sm:h-full sm:min-h-56" />
+                    <div className="space-y-3 p-4 sm:p-5 lg:p-6">
                       <div className="h-3 w-1/3 animate-pulse rounded bg-white/10" />
                       <div className="h-6 w-4/5 animate-pulse rounded bg-white/10" />
-                      <div className="h-12 animate-pulse rounded bg-white/5" />
+                      <div className="h-20 animate-pulse rounded bg-white/5" />
                     </div>
                   </div>
                 ))}
               </div>
             ) : products.length > 0 ? (
               <>
-                <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="space-y-5">
                   {products.map((product) => (
                     <ProductCard
                       key={product.id}
