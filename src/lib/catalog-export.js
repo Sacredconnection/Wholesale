@@ -93,10 +93,42 @@ function usesMobilePdfPreview() {
   return userAgentDataMobile || mobileUserAgent || touchEnabledIpad;
 }
 
-function deliverPdf(pdf, filename) {
+async function preparePdfDelivery(filename) {
+  if (usesMobilePdfPreview()) {
+    return { mode: "preview" };
+  }
+
+  if (window.isSecureContext && typeof window.showSaveFilePicker === "function") {
+    try {
+      const fileHandle = await window.showSaveFilePicker({
+        suggestedName: filename,
+        types: [
+          {
+            description: "PDF document",
+            accept: { "application/pdf": [".pdf"] },
+          },
+        ],
+      });
+      return { mode: "file", fileHandle };
+    } catch (error) {
+      if (error?.name === "AbortError") return null;
+    }
+  }
+
+  return { mode: "download" };
+}
+
+async function deliverPdf(pdf, filename, delivery) {
   const blob = pdf.output("blob");
 
-  if (usesMobilePdfPreview()) {
+  if (delivery?.mode === "file") {
+    const writable = await delivery.fileHandle.createWritable();
+    await writable.write(blob);
+    await writable.close();
+    return;
+  }
+
+  if (delivery?.mode === "preview" || usesMobilePdfPreview()) {
     const url = URL.createObjectURL(blob);
     // Keep generation in the foreground on tablets. Opening a placeholder tab
     // before the async work finishes can suspend the source page on iPadOS.
@@ -1025,6 +1057,11 @@ export async function downloadDigitalCatalogPdf({
   tribe = "",
   filterLabel = "Complete catalog",
 } = {}) {
+  const generatedAt = new Date();
+  const filename = `sacred-connection-catalog-${safeFilenameTimestamp(generatedAt)}.pdf`;
+  const delivery = await preparePdfDelivery(filename);
+  if (!delivery) return;
+
   const params = new URLSearchParams({ export: "true" });
   if (search) params.set("q", search);
   if (category) params.set("category", category);
@@ -1046,6 +1083,9 @@ export async function downloadDigitalCatalogPdf({
     products: data.products,
     includeLinks: false,
     filterLabel,
+    generatedAt,
+    filename,
+    delivery,
   });
 }
 
@@ -1053,6 +1093,9 @@ async function renderDigitalCatalogPdf({
   products,
   includeLinks,
   filterLabel,
+  generatedAt,
+  filename,
+  delivery,
 }) {
   const { jsPDF } = await import("jspdf");
   const preferredCategories = ["Rapé Indigenous", "Sacred Connection"];
@@ -1176,7 +1219,6 @@ async function renderDigitalCatalogPdf({
     productImages.push(...(await Promise.all(batch.map(loadProductImage))));
   }
   const imagesByProduct = new Map(products.map((product, index) => [product.id || product.sku, productImages[index]]));
-  const generatedAt = new Date();
   const generatedAtLabel = formatPdfGenerationTimestamp(generatedAt);
   pdf.setCreationDate(generatedAt);
   drawPdfCover(
@@ -1237,8 +1279,5 @@ async function renderDigitalCatalogPdf({
     }
   });
 
-  deliverPdf(
-    pdf,
-    `sacred-connection-catalog-${safeFilenameTimestamp(generatedAt)}.pdf`
-  );
+  await deliverPdf(pdf, filename, delivery);
 }
