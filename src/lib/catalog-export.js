@@ -83,29 +83,15 @@ function usesMobilePdfPreview() {
   return userAgentDataMobile || mobileUserAgent || touchEnabledIpad;
 }
 
-export function prepareCatalogPdfDownload() {
-  if (!usesMobilePdfPreview()) return null;
-
-  // Mobile browsers can reject a download started after the catalog data and
-  // images have finished loading because the original tap is no longer active.
-  // Reserve a tab synchronously and navigate it to the finished PDF later.
-  const previewWindow = window.open("", "_blank");
-  if (previewWindow) {
-    previewWindow.document.title = "Preparing Sacred Connection catalog";
-    previewWindow.document.body.textContent = "Preparing your PDF catalog...";
-    previewWindow.document.body.style.cssText =
-      "margin:0;min-height:100vh;display:grid;place-items:center;background:#23403b;color:#fff;font:600 16px system-ui,sans-serif;text-align:center;padding:24px;box-sizing:border-box";
-  }
-  return previewWindow;
-}
-
-function deliverPdf(pdf, filename, previewWindow) {
+function deliverPdf(pdf, filename) {
   const blob = pdf.output("blob");
 
-  if (previewWindow && !previewWindow.closed) {
+  if (usesMobilePdfPreview()) {
     const url = URL.createObjectURL(blob);
-    previewWindow.location.replace(url);
-    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    // Keep generation in the foreground on tablets. Opening a placeholder tab
+    // before the async work finishes can suspend the source page on iPadOS.
+    // The native PDF viewer then provides Share / Save to Files.
+    window.location.assign(url);
     return;
   }
 
@@ -919,7 +905,6 @@ export async function exportCatalogPdf({
   user,
   includeLinks,
   filterLabel,
-  previewWindow = null,
 }) {
   const { jsPDF } = await import("jspdf");
   const preferredCategories = ["Rapé Indigenous", "Sacred Connection"];
@@ -1070,9 +1055,5 @@ export async function exportCatalogPdf({
     }
   });
 
-  deliverPdf(
-    pdf,
-    `sacred-connection-catalog-${safeFilenameDate()}.pdf`,
-    previewWindow
-  );
+  deliverPdf(pdf, `sacred-connection-catalog-${safeFilenameDate()}.pdf`);
 }

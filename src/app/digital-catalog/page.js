@@ -17,11 +17,7 @@ import FilterSidebar from "@/components/catalog/FilterSidebar";
 import ProductCard from "@/components/catalog/ProductCard";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
-import {
-  exportCatalogExcel,
-  exportCatalogPdf,
-  prepareCatalogPdfDownload,
-} from "@/lib/catalog-export";
+import { exportCatalogExcel, exportCatalogPdf } from "@/lib/catalog-export";
 
 const EMPTY_FILTERS = {
   search: "",
@@ -199,7 +195,6 @@ export default function CatalogPage() {
   };
 
   const handleExport = async (format) => {
-    const pdfPreviewWindow = format === "pdf" ? prepareCatalogPdfDownload() : null;
     setExporting(format);
     setExportError("");
     try {
@@ -216,11 +211,9 @@ export default function CatalogPage() {
           user,
           includeLinks: isLoggedIn,
           filterLabel: filterLabel(),
-          previewWindow: pdfPreviewWindow,
         });
       }
     } catch (exportFailure) {
-      if (pdfPreviewWindow && !pdfPreviewWindow.closed) pdfPreviewWindow.close();
       setExportError(exportFailure.message || "The export could not be generated.");
     } finally {
       setExporting("");
@@ -230,6 +223,28 @@ export default function CatalogPage() {
   return (
     <div id="top" className="site-background-page flex min-h-screen flex-col bg-[#23403B] text-[#e5e2e1] antialiased">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
+
+      {exporting === "pdf" && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#102c27]/95 px-5 backdrop-blur-sm xl:hidden"
+          role="status"
+          aria-live="assertive"
+          aria-label="Generating your PDF catalog. Please wait and keep this page open."
+        >
+          <div className="w-full max-w-xl rounded-md border border-[#82d6c5]/45 bg-[#183b35] px-6 py-10 text-center shadow-2xl shadow-black/50 sm:px-10 sm:py-14">
+            <LoaderCircle
+              className="mx-auto h-14 w-14 animate-spin text-[#82d6c5] sm:h-16 sm:w-16"
+              aria-hidden="true"
+            />
+            <p className="mt-7 text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
+              Generating your PDF catalog...
+            </p>
+            <p className="mx-auto mt-4 max-w-md text-base font-semibold leading-7 text-white/75 sm:text-lg">
+              This may take a moment. Please wait and keep this page open until the PDF is ready.
+            </p>
+          </div>
+        </div>
+      )}
 
       <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
         <header className="mb-9 flex flex-col gap-6 border-b border-white/10 pb-8 md:flex-row md:items-end md:justify-between">
