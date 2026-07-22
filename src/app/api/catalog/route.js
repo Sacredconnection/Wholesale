@@ -200,6 +200,7 @@ export async function GET(request) {
           !normalizedSearch ||
           normalize(product.name).includes(normalizedSearch) ||
           normalize(product.sku).includes(normalizedSearch) ||
+          normalize(product.tribe).includes(normalizedSearch) ||
           product.options.some((option) =>
             normalize(option.sku).includes(normalizedSearch)
           );

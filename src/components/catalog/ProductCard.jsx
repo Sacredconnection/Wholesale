@@ -63,35 +63,41 @@ export default function ProductCard({
   );
 
   return (
-    <article className="group grid min-w-0 grid-cols-1 items-stretch overflow-hidden rounded-sm border border-white/10 bg-[#1a1a1a] transition-all duration-300 hover:border-[#268072]/60 hover:shadow-xl hover:shadow-black/20 sm:grid-cols-[12rem_minmax(0,1fr)] lg:grid-cols-[14rem_minmax(0,1fr)]">
+    <article
+      className={`group grid min-w-0 grid-cols-1 items-stretch overflow-hidden rounded-sm border-2 border-white/15 bg-[#1a1a1a] transition-all duration-300 hover:border-[#268072]/70 hover:shadow-xl hover:shadow-black/20 sm:grid-cols-[13rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1fr)] ${
+        isDescriptionExpanded
+          ? "min-h-[41rem] sm:min-h-[22rem] xl:min-h-[15.25rem]"
+          : "h-[41rem] sm:h-[22rem] xl:h-[15.25rem]"
+      }`}
+    >
       {isLoggedIn ? (
         <Link
           href={product.productUrl}
           aria-label={`View ${product.name}`}
-          className="relative block h-56 overflow-hidden border-b border-white/10 bg-white sm:h-full sm:min-h-56 sm:border-b-0 sm:border-r"
+          className="relative m-2 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:h-56 xl:self-start"
         >
           {media}
         </Link>
       ) : (
-        <div className="relative block h-56 overflow-hidden border-b border-white/10 bg-white sm:h-full sm:min-h-56 sm:border-b-0 sm:border-r">
+        <div className="relative m-2 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:h-56 xl:self-start">
           {media}
         </div>
       )}
 
-      <div className="flex min-w-0 flex-col p-4 sm:p-5 lg:p-6">
-        <div className="mb-3 flex min-w-0 items-start justify-between gap-3">
+      <div className="flex min-w-0 flex-col p-4 sm:p-5 xl:p-4">
+        <div className="mb-3 flex min-h-[4.25rem] min-w-0 items-start justify-between gap-3 xl:min-h-0">
           <div className="min-w-0">
             <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#82d6c5]">
               {product.category}
             </p>
             {isLoggedIn ? (
               <Link href={product.productUrl} className="block no-underline">
-                <h2 className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-[#82d6c5] sm:text-xl">
+                <h2 title={product.name} className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-[#82d6c5] sm:text-xl xl:truncate">
                   {product.name}
                 </h2>
               </Link>
             ) : (
-              <h2 className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-[#82d6c5] sm:text-xl">
+              <h2 title={product.name} className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-[#82d6c5] sm:text-xl xl:truncate">
                 {product.name}
               </h2>
             )}
@@ -99,27 +105,35 @@ export default function ProductCard({
           <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-white/25 transition-colors group-hover:text-[#82d6c5]" aria-hidden="true" />
         </div>
 
-        <p
-          id={descriptionId}
-          className={`whitespace-pre-line text-sm leading-6 text-white/55 sm:text-[15px] sm:leading-7 ${
-            hasLongDescription && !isDescriptionExpanded ? "line-clamp-4" : ""
-          }`}
-        >
-          {description}
-        </p>
-        {hasLongDescription && (
-          <button
-            type="button"
-            aria-expanded={isDescriptionExpanded}
-            aria-controls={descriptionId}
-            onClick={() => setIsDescriptionExpanded((expanded) => !expanded)}
-            className="mt-2 self-start text-xs font-black uppercase tracking-[0.1em] text-[#82d6c5] transition-colors hover:text-white"
+        <div className={isDescriptionExpanded ? "" : "min-h-28 sm:min-h-28 xl:min-h-[4.5rem]"}>
+          <p
+            id={descriptionId}
+            className={`whitespace-pre-line text-sm leading-6 text-white/55 sm:text-[15px] sm:leading-7 ${
+              hasLongDescription && !isDescriptionExpanded
+                ? "line-clamp-3 xl:line-clamp-2"
+                : ""
+            }`}
           >
-            {isDescriptionExpanded ? "Show less" : "Read more"}
-          </button>
-        )}
+            {description}
+          </p>
+          {hasLongDescription ? (
+            <button
+              type="button"
+              aria-expanded={isDescriptionExpanded}
+              aria-controls={descriptionId}
+              onClick={() => setIsDescriptionExpanded((expanded) => !expanded)}
+              className="mt-2 self-start text-xs font-black uppercase tracking-[0.1em] text-[#82d6c5] transition-colors hover:text-white"
+            >
+              {isDescriptionExpanded ? "Show less" : "Read more"}
+            </button>
+          ) : (
+            <span className="invisible mt-2 block text-xs font-black uppercase" aria-hidden="true">
+              Read more
+            </span>
+          )}
+        </div>
 
-        <div className="mt-5 grid gap-4 border-t border-white/10 pt-4 sm:grid-cols-2 xl:grid-cols-[minmax(10rem,1fr)_minmax(12rem,16rem)_auto] xl:items-end">
+        <div className="mt-auto grid gap-4 border-t border-white/10 pt-4 sm:grid-cols-2 xl:grid-cols-[minmax(8rem,1fr)_minmax(11rem,16rem)_auto] xl:items-end xl:gap-3 xl:pt-3">
           <div className="flex items-end justify-between gap-6 sm:col-span-2 sm:justify-start xl:col-span-1 xl:min-w-40">
             <div className="min-w-0">
               <span className="block text-[10px] font-bold uppercase tracking-wider text-white/35">

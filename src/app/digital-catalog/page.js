@@ -6,6 +6,7 @@ import {
   ChevronRight,
   FileSpreadsheet,
   FileText,
+  Info,
   LoaderCircle,
   PackageOpen,
   ShoppingBag,
@@ -148,6 +149,12 @@ export default function CatalogPage() {
     () => pageList(pagination.page, pagination.totalPages),
     [pagination.page, pagination.totalPages]
   );
+  const hasActiveExportFilters = Boolean(
+    debouncedSearch ||
+    filters.category ||
+    filters.minPrice !== "" ||
+    filters.maxPrice !== ""
+  );
 
   const handleFiltersChange = (nextFilters) => {
     setFilters(nextFilters);
@@ -247,7 +254,7 @@ export default function CatalogPage() {
       )}
 
       <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
-        <header className="mb-9 flex flex-col gap-6 border-b border-white/10 pb-8 md:flex-row md:items-end md:justify-between">
+        <header className="mb-9 flex flex-col gap-6 border-b border-white/10 pb-8">
           <div className="max-w-3xl">
             <span className="mb-3 inline-flex rounded-full border border-[#268072]/40 bg-[#268072]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#82d6c5]">
               Interactive digital catalog
@@ -260,7 +267,48 @@ export default function CatalogPage() {
             </p>
           </div>
 
-          <div className="flex w-full flex-col items-stretch gap-3 md:w-auto md:items-end">
+          <div className="flex w-full flex-col items-stretch gap-4">
+            <section
+              className="rounded-sm border border-[#82d6c5]/25 bg-[#102c27]/70 px-4 py-4 shadow-lg shadow-black/10 sm:px-5"
+              aria-labelledby="pdf-export-tip-title"
+            >
+              <div className="flex min-w-0 gap-3">
+                <Info className="mt-0.5 h-5 w-5 shrink-0 text-[#82d6c5]" aria-hidden="true" />
+                <div className="min-w-0">
+                  <h2 id="pdf-export-tip-title" className="text-sm font-black text-white">
+                    Customize your PDF catalog
+                  </h2>
+                  <p className="mt-1 text-sm leading-6 text-white/65">
+                    To include every product, leave the search field empty and clear all category and price filters. To create a personalized catalog, search for an ethnicity or a single rapé, or combine any filters before selecting Generate PDF.
+                  </p>
+                  <div className="mt-3 flex flex-wrap items-center gap-3">
+                    <span
+                      className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${
+                        hasActiveExportFilters
+                          ? "bg-[#d99a1b]/15 text-[#ffd27a]"
+                          : "bg-[#268072]/25 text-[#82d6c5]"
+                      }`}
+                      aria-live="polite"
+                    >
+                      {hasActiveExportFilters
+                        ? `${pagination.totalItems} filtered products`
+                        : `Complete catalog: ${pagination.totalItems} products`}
+                    </span>
+                    {hasActiveExportFilters && (
+                      <button
+                        type="button"
+                        onClick={clearFilters}
+                        disabled={loading}
+                        className="text-xs font-bold text-[#82d6c5] transition-colors hover:text-white disabled:cursor-wait disabled:opacity-50"
+                      >
+                        Clear filters for full catalog
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </section>
+
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
               <button
                 type="button"
@@ -360,8 +408,8 @@ export default function CatalogPage() {
             ) : loading ? (
               <div className="space-y-5">
                 {Array.from({ length: 6 }, (_, index) => (
-                  <div key={index} className="grid grid-cols-1 items-stretch overflow-hidden rounded-sm border border-white/10 bg-[#1a1a1a] sm:grid-cols-[12rem_minmax(0,1fr)] lg:grid-cols-[14rem_minmax(0,1fr)]">
-                    <div className="h-56 animate-pulse bg-white/5 sm:h-full sm:min-h-56" />
+                  <div key={index} className="grid h-[41rem] grid-cols-1 items-stretch overflow-hidden rounded-sm border-2 border-white/15 bg-[#1a1a1a] sm:h-[22rem] sm:grid-cols-[13rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1fr)] xl:h-[15.25rem]">
+                    <div className="m-2 h-56 animate-pulse rounded-sm border-2 border-white/10 bg-white/5 sm:h-auto xl:h-56 xl:self-start" />
                     <div className="space-y-3 p-4 sm:p-5 lg:p-6">
                       <div className="h-3 w-1/3 animate-pulse rounded bg-white/10" />
                       <div className="h-6 w-4/5 animate-pulse rounded bg-white/10" />

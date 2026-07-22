@@ -36,7 +36,7 @@ export default function FilterSidebar({
             htmlFor="catalog-search"
             className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-white/55"
           >
-            Name or SKU
+            Product, SKU or ethnicity
           </label>
           <div className="relative">
             <Search
@@ -48,7 +48,7 @@ export default function FilterSidebar({
               type="search"
               value={filters.search}
               onChange={(event) => update("search", event.target.value)}
-              placeholder="Search products..."
+              placeholder="Search product or ethnicity..."
               autoComplete="off"
               className="w-full rounded-sm border border-white/10 bg-[#131313] py-3.5 pl-10 pr-3 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#268072]"
             />
