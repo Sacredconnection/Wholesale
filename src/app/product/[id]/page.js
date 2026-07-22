@@ -78,17 +78,10 @@ export default function ProductDetailPage() {
     };
   }, [catalogProduct]);
 
-  // Keep related products deterministic and derived from the shared catalog.
-  const relatedProducts = useMemo(() => {
+  const relatedProductPool = useMemo(() => {
     if (!product) return [];
 
-    const currentIndex = products.findIndex((item) => item.id === product.id);
-    const orderedProducts = [
-      ...products.slice(currentIndex + 1),
-      ...products.slice(0, currentIndex),
-    ];
-
-    return orderedProducts.filter((item) => item.id !== product.id).slice(0, 12);
+    return products.filter((item) => item.id !== product.id);
   }, [product, products]);
 
   // States
@@ -97,8 +90,27 @@ export default function ProductDetailPage() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
   const relatedCarouselRef = useRef(null);
   const [relatedControls, setRelatedControls] = useState({ previous: false, next: false });
+
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      const shuffledProducts = [...relatedProductPool];
+
+      for (let index = shuffledProducts.length - 1; index > 0; index -= 1) {
+        const randomIndex = Math.floor(Math.random() * (index + 1));
+        [shuffledProducts[index], shuffledProducts[randomIndex]] = [
+          shuffledProducts[randomIndex],
+          shuffledProducts[index],
+        ];
+      }
+
+      setRelatedProducts(shuffledProducts.slice(0, 12));
+    });
+
+    return () => cancelAnimationFrame(frame);
+  }, [relatedProductPool]);
 
   useEffect(() => {
     const carousel = relatedCarouselRef.current;
