@@ -32,7 +32,7 @@ import {
 import { useProducts } from "@/components/ProductsContext";
 import { optionPriceForUser } from "@/lib/pricing";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
-import { exportCatalogPdf } from "@/lib/catalog-export";
+import { downloadDigitalCatalogPdf } from "@/lib/catalog-export";
 
 // Normalize string for accent-insensitive comparison
 // Strips diacritics, lowercases and trims — used ONLY for comparison, never for display
@@ -225,24 +225,7 @@ export default function CatalogPage() {
     setPdfExportError("");
 
     try {
-      const response = await fetch("/api/catalog?export=true", {
-        cache: "no-store",
-        credentials: "omit",
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "The public catalog could not be prepared for export.");
-      }
-      if (!Array.isArray(data.products) || data.products.length === 0) {
-        throw new Error("There are no public products available for the PDF catalog.");
-      }
-
-      await exportCatalogPdf({
-        products: data.products,
-        user: null,
-        includeLinks: false,
-        filterLabel: "Complete catalog",
-      });
+      await downloadDigitalCatalogPdf();
     } catch (exportFailure) {
       setPdfExportError(
         exportFailure.message || "The PDF catalog could not be generated."

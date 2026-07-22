@@ -18,13 +18,15 @@ import FilterSidebar from "@/components/catalog/FilterSidebar";
 import ProductCard from "@/components/catalog/ProductCard";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
-import { exportCatalogExcel, exportCatalogPdf } from "@/lib/catalog-export";
+import {
+  downloadDigitalCatalogPdf,
+  exportCatalogExcel,
+} from "@/lib/catalog-export";
 
 const EMPTY_FILTERS = {
   search: "",
   category: "",
-  minPrice: "",
-  maxPrice: "",
+  tribe: "",
 };
 
 const EMPTY_PAGINATION = {
@@ -60,7 +62,7 @@ export default function CatalogPage() {
   const [page, setPage] = useState(1);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [priceBounds, setPriceBounds] = useState({ min: 0, max: 0 });
+  const [tribes, setTribes] = useState([]);
   const [pagination, setPagination] = useState(EMPTY_PAGINATION);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -87,8 +89,7 @@ export default function CatalogPage() {
       const params = new URLSearchParams({ page: String(page) });
       if (debouncedSearch) params.set("q", debouncedSearch);
       if (filters.category) params.set("category", filters.category);
-      if (filters.minPrice !== "") params.set("minPrice", filters.minPrice);
-      if (filters.maxPrice !== "") params.set("maxPrice", filters.maxPrice);
+      if (filters.tribe) params.set("tribe", filters.tribe);
       try {
         const response = await fetch(`/api/catalog?${params.toString()}`, {
           credentials: "same-origin",
@@ -102,7 +103,7 @@ export default function CatalogPage() {
 
         setProducts(Array.isArray(data.products) ? data.products : []);
         setCategories(data.filters?.categories || []);
-        setPriceBounds(data.filters?.priceBounds || { min: 0, max: 0 });
+        setTribes(data.filters?.tribes || []);
         setPagination(data.pagination || EMPTY_PAGINATION);
         if (data.pagination?.page && data.pagination.page !== page) {
           setPage(data.pagination.page);
@@ -128,8 +129,7 @@ export default function CatalogPage() {
     page,
     debouncedSearch,
     filters.category,
-    filters.minPrice,
-    filters.maxPrice,
+    filters.tribe,
     isLoggedIn,
     reloadKey,
   ]);
@@ -138,8 +138,7 @@ export default function CatalogPage() {
     const params = new URLSearchParams();
     if (debouncedSearch) params.set("q", debouncedSearch);
     if (filters.category) params.set("category", filters.category);
-    if (filters.minPrice !== "") params.set("minPrice", filters.minPrice);
-    if (filters.maxPrice !== "") params.set("maxPrice", filters.maxPrice);
+    if (filters.tribe) params.set("tribe", filters.tribe);
     if (page > 1) params.set("page", String(page));
     const query = params.toString();
     window.history.replaceState(null, "", query ? `/digital-catalog?${query}` : "/digital-catalog");
@@ -152,8 +151,7 @@ export default function CatalogPage() {
   const hasActiveExportFilters = Boolean(
     debouncedSearch ||
     filters.category ||
-    filters.minPrice !== "" ||
-    filters.maxPrice !== ""
+    filters.tribe
   );
 
   const handleFiltersChange = (nextFilters) => {
@@ -176,8 +174,7 @@ export default function CatalogPage() {
     const params = new URLSearchParams({ export: "true" });
     if (debouncedSearch) params.set("q", debouncedSearch);
     if (filters.category) params.set("category", filters.category);
-    if (filters.minPrice !== "") params.set("minPrice", filters.minPrice);
-    if (filters.maxPrice !== "") params.set("maxPrice", filters.maxPrice);
+    if (filters.tribe) params.set("tribe", filters.tribe);
     const response = await fetch(`/api/catalog?${params.toString()}`, {
       credentials: "same-origin",
       cache: "no-store",
@@ -196,8 +193,7 @@ export default function CatalogPage() {
     const labels = [];
     if (debouncedSearch) labels.push(`Search: ${debouncedSearch}`);
     if (filters.category) labels.push(`Category: ${filters.category}`);
-    if (filters.minPrice !== "") labels.push(`Min: $${filters.minPrice}`);
-    if (filters.maxPrice !== "") labels.push(`Max: $${filters.maxPrice}`);
+    if (filters.tribe) labels.push(`Ethnicity: ${filters.tribe}`);
     return labels.length ? labels.join(" | ") : "Complete catalog";
   };
 
@@ -205,18 +201,18 @@ export default function CatalogPage() {
     setExporting(format);
     setExportError("");
     try {
-      const exportProducts = await loadExportProducts();
       if (format === "excel") {
+        const exportProducts = await loadExportProducts();
         await exportCatalogExcel({
           products: exportProducts,
           user,
           includeLinks: isLoggedIn,
         });
       } else {
-        await exportCatalogPdf({
-          products: exportProducts,
-          user,
-          includeLinks: isLoggedIn,
+        await downloadDigitalCatalogPdf({
+          search: debouncedSearch,
+          category: filters.category,
+          tribe: filters.tribe,
           filterLabel: filterLabel(),
         });
       }
@@ -260,16 +256,16 @@ export default function CatalogPage() {
               Interactive digital catalog
             </span>
             <h1 className="text-4xl font-black tracking-tight text-white sm:text-5xl lg:text-6xl">
-              Wholesale Catalog
+              Wholesale Digital Catalog
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-              Explore our complete collection, search by product or SKU, and refine the catalog by category, price, and availability.
+              Explore our complete collection, search by product or SKU, and refine the catalog by category.
             </p>
           </div>
 
           <div className="flex w-full flex-col items-stretch gap-4">
             <section
-              className="rounded-sm border border-[#82d6c5]/25 bg-[#102c27]/70 px-4 py-4 shadow-lg shadow-black/10 sm:px-5"
+              className="catalog-export-tip rounded-sm border border-[#82d6c5]/25 bg-[#102c27]/70 px-4 py-4 shadow-lg shadow-black/10 sm:px-5"
               aria-labelledby="pdf-export-tip-title"
             >
               <div className="flex min-w-0 gap-3">
@@ -279,7 +275,7 @@ export default function CatalogPage() {
                     Customize your PDF catalog
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-white/65">
-                    To include every product, leave the search field empty and clear all category and price filters. To create a personalized catalog, search for an ethnicity or a single rapé, or combine any filters before selecting Generate PDF.
+                    To include every product, leave the search field empty and clear the category filter. To create a personalized catalog, search for an ethnicity or a single rapé, or combine the available filters before selecting Generate PDF.
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span
@@ -372,7 +368,7 @@ export default function CatalogPage() {
           <FilterSidebar
             filters={filters}
             categories={categories}
-            priceBounds={priceBounds}
+            tribes={tribes}
             onChange={handleFiltersChange}
             onClear={clearFilters}
             disabled={loading}

@@ -345,6 +345,18 @@ html[data-theme="light"] [class~="text-[#82d6c5]"] {
   color: #006b5e !important;
 }
 
+html[data-theme="light"] .catalog-export-tip {
+  background-color: rgb(255 255 255 / 0.88) !important;
+  border-color: rgb(23 32 30 / 0.14) !important;
+  box-shadow: 0 12px 30px rgb(23 32 30 / 0.08) !important;
+}
+
+html[data-theme="light"] .catalog-format-tag {
+  background-color: #ffffff !important;
+  border-color: rgb(23 32 30 / 0.16) !important;
+  color: #27322f !important;
+}
+
 /* Catalog rows are cards below the desktop breakpoint. Keep their light-theme
    surface and primary product information neutral for clear mobile contrast. */
 @media (max-width: 1023px) {

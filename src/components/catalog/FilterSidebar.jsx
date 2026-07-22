@@ -5,12 +5,14 @@ import { Filter, RotateCcw, Search } from "lucide-react";
 export default function FilterSidebar({
   filters,
   categories,
-  priceBounds,
+  tribes,
   onChange,
   onClear,
   disabled = false,
 }) {
   const update = (field, value) => onChange({ ...filters, [field]: value });
+  const updateCategory = (value) =>
+    onChange({ ...filters, category: value, tribe: "" });
 
   return (
     <aside className="rounded-sm border border-white/10 bg-[#1a1a1a] p-5 sm:p-6 lg:p-8">
@@ -54,7 +56,7 @@ export default function FilterSidebar({
           <select
             id="catalog-category"
             value={filters.category}
-            onChange={(event) => update("category", event.target.value)}
+            onChange={(event) => updateCategory(event.target.value)}
             className="w-full rounded-sm border border-white/10 bg-[#131313] px-3 py-3.5 text-sm text-white outline-none transition-colors focus:border-[#268072]"
           >
             <option value="">All categories</option>
@@ -66,53 +68,40 @@ export default function FilterSidebar({
           </select>
         </div>
 
-        <fieldset className="min-w-0 sm:col-span-2 xl:col-span-1">
-          <legend className="mb-2 text-[11px] font-bold uppercase tracking-wider text-white/55">
-            Price range (USD)
-          </legend>
-          <div className="grid grid-cols-2 gap-3">
-            <div>
-              <label htmlFor="catalog-min-price" className="sr-only">
-                Minimum price
-              </label>
-              <input
-                id="catalog-min-price"
-                type="number"
-                min={0}
-                max={priceBounds.max || undefined}
-                step="0.01"
-                inputMode="decimal"
-                value={filters.minPrice}
-                onChange={(event) => update("minPrice", event.target.value)}
-                placeholder={`Min ${priceBounds.min || 0}`}
-                className="w-full rounded-sm border border-white/10 bg-[#131313] px-3 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#268072]"
-              />
-            </div>
-            <div>
-              <label htmlFor="catalog-max-price" className="sr-only">
-                Maximum price
-              </label>
-              <input
-                id="catalog-max-price"
-                type="number"
-                min={0}
-                max={priceBounds.max || undefined}
-                step="0.01"
-                inputMode="decimal"
-                value={filters.maxPrice}
-                onChange={(event) => update("maxPrice", event.target.value)}
-                placeholder={`Max ${priceBounds.max || 0}`}
-                className="w-full rounded-sm border border-white/10 bg-[#131313] px-3 py-3.5 text-sm text-white outline-none transition-colors placeholder:text-white/30 focus:border-[#268072]"
-              />
-            </div>
-          </div>
-        </fieldset>
+        <div className="min-w-0">
+          <label
+            htmlFor="catalog-tribe"
+            className="mb-2 block text-[11px] font-bold uppercase tracking-wider text-white/55"
+          >
+            Ethnicity / tribe
+          </label>
+          <select
+            id="catalog-tribe"
+            value={filters.tribe}
+            onChange={(event) => update("tribe", event.target.value)}
+            disabled={!filters.category || tribes.length === 0}
+            className="w-full rounded-sm border border-white/10 bg-[#131313] px-3 py-3.5 text-sm text-white outline-none transition-colors focus:border-[#268072] disabled:cursor-not-allowed disabled:opacity-45"
+          >
+            <option value="">
+              {!filters.category
+                ? "Select a category first"
+                : tribes.length === 0
+                  ? "No additional filter"
+                  : "All ethnicities / tribes"}
+            </option>
+            {tribes.map((tribe) => (
+              <option key={tribe} value={tribe}>
+                {tribe}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <button
           type="button"
           onClick={onClear}
           disabled={disabled}
-          className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-sm border border-white/10 bg-white/5 px-6 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 sm:col-span-2 xl:col-span-1 xl:min-w-44"
+          className="inline-flex min-h-[50px] w-full items-center justify-center gap-2 rounded-sm border border-white/10 bg-white/5 px-6 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40 xl:min-w-44"
         >
           <RotateCcw className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
           Clear filters

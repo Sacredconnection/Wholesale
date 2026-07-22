@@ -119,6 +119,7 @@ export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const search = queryText(searchParams, "q");
   const category = queryText(searchParams, "category");
+  const tribe = queryText(searchParams, "tribe");
   const minPrice = positiveNumber(searchParams.get("minPrice"));
   const maxPrice = positiveNumber(searchParams.get("maxPrice"));
   const onlyInStock = searchParams.get("inStock") === "true";
@@ -228,6 +229,22 @@ export async function GET(request) {
 
     const normalizedSearch = normalize(search);
     const normalizedCategory = normalize(category);
+    const availableTribes = normalizedCategory
+      ? Array.from(
+          new Set(
+            products
+              .filter(
+                (product) => normalize(product.category) === normalizedCategory
+              )
+              .map((product) => product.tribe)
+              .filter(
+                (productTribe) =>
+                  productTribe && normalize(productTribe) !== normalizedCategory
+              )
+          )
+        ).sort((a, b) => normalize(a).localeCompare(normalize(b)))
+      : [];
+    const normalizedTribe = normalize(tribe);
     const filtered = products
       .filter((product) => {
         const matchesSearch =
@@ -241,6 +258,8 @@ export async function GET(request) {
         const matchesCategory =
           !normalizedCategory ||
           normalize(product.category) === normalizedCategory;
+        const matchesTribe =
+          !normalizedTribe || normalize(product.tribe) === normalizedTribe;
         const matchesMin =
           minPrice == null || product.priceMax >= minPrice;
         const matchesMax =
@@ -250,6 +269,7 @@ export async function GET(request) {
         return (
           matchesSearch &&
           matchesCategory &&
+          matchesTribe &&
           matchesMin &&
           matchesMax &&
           matchesStock
@@ -277,6 +297,7 @@ export async function GET(request) {
         },
         filters: {
           categories: availableCategories,
+          tribes: availableTribes,
           priceBounds,
         },
         viewer: {

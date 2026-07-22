@@ -58,12 +58,10 @@ function buttonTextColor(background) {
   return whiteContrast >= darkContrast ? [255, 255, 255] : [26, 26, 26];
 }
 
-const money = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
-
 const safeFilenameDate = () => new Date().toISOString().slice(0, 10);
+
+const safeFilenameTimestamp = (date) =>
+  date.toISOString().replace(/\..+$/, "").replace(/[:T]/g, "-");
 
 const formatPdfGenerationTimestamp = (date) =>
   new Intl.DateTimeFormat("en-US", {
@@ -301,23 +299,6 @@ export async function exportCatalogExcel({ products, user, includeLinks }) {
   );
 }
 
-function productPrice(product) {
-  const min = Number(product.priceMin) || 0;
-  const max = Number(product.priceMax) || min;
-  return min === max ? money.format(min) : `${money.format(min)} - ${money.format(max)}`;
-}
-
-function productPriceForUser(product, user) {
-  const prices = (product.options || [])
-    .map((option) => optionPriceForUser(option, user, product.category))
-    .map(Number)
-    .filter((price) => Number.isFinite(price));
-  if (!prices.length) return productPrice(product);
-  const min = Math.min(...prices);
-  const max = Math.max(...prices);
-  return min === max ? money.format(min) : `${money.format(min)} - ${money.format(max)}`;
-}
-
 const pdfSafeText = (value) => {
   const normalized = String(value ?? "")
     .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
@@ -528,7 +509,7 @@ function drawPdfCover(
   pdf.text(
     truncatePdfLines(
       pdf,
-      "A curated guide to Sacred Connection blends, indigenous traditions, formats, SKUs, and wholesale prices.",
+      "A curated guide to Sacred Connection blends, indigenous traditions, formats, SKUs, and product details.",
       130,
       4
     ),
@@ -664,7 +645,7 @@ function pdfProductTarget(product, includeLinks) {
   return loginUrl.href;
 }
 
-function drawGridProductCard(pdf, product, image, user, includeLinks, x, y) {
+function drawGridProductCard(pdf, product, image, includeLinks, x, y) {
   const width = 90;
   const height = 108;
   const accent = ethnicityColor(product);
@@ -708,10 +689,6 @@ function drawGridProductCard(pdf, product, image, user, includeLinks, x, y) {
   pdf.setFontSize(5.8);
   pdf.setTextColor(113, 128, 123);
   pdf.text(`SKU ${pdfSafeText(product.sku || "-")}`, identityX, y + 30.5);
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(7.8);
-  pdf.setTextColor(...accent);
-  pdf.text(productPriceForUser(product, user), identityX, y + 36);
 
   pdf.setDrawColor(220, 229, 226);
   pdf.line(x + 4, y + 41, x + width - 4, y + 41);
@@ -728,11 +705,11 @@ function drawGridProductCard(pdf, product, image, user, includeLinks, x, y) {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(5.8);
   pdf.setTextColor(...accent);
-  pdf.text("WEIGHT / PRICE", x + 4, y + 77.5);
+  pdf.text("AVAILABLE FORMATS", x + 4, y + 77.5);
 
   const tableOptions = product.options?.length
     ? product.options
-    : [{ name: "Default", price: product.priceMin || 0 }];
+    : [{ name: "Default" }];
   const tableX = x + 4;
   const tableY = y + 80.5;
   const columnCount = 5;
@@ -748,19 +725,14 @@ function drawGridProductCard(pdf, product, image, user, includeLinks, x, y) {
     const weightLabel = option.weightGrams
       ? `${option.weightGrams}g`
       : pdfSafeText(option.name || "Default");
-    const optionPrice = money.format(optionPriceForUser(option, user, product.category));
-
     pdf.setFillColor(...accentSoft);
     pdf.setDrawColor(...accentBorder);
     pdf.setLineWidth(0.2);
     pdf.roundedRect(cellX, cellY, cellWidth, cellHeight, 0.7, 0.7, "FD");
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(3.9);
+    pdf.setFontSize(4.5);
     pdf.setTextColor(...accent);
-    pdf.text(weightLabel, cellX + cellWidth / 2, cellY + 2.45, { align: "center" });
-    pdf.setFontSize(4.2);
-    pdf.setTextColor(35, 62, 55);
-    pdf.text(optionPrice, cellX + cellWidth / 2, cellY + 5.05, { align: "center" });
+    pdf.text(weightLabel, cellX + cellWidth / 2, cellY + 4.05, { align: "center" });
   });
 
   pdf.setFillColor(...accent);
@@ -788,7 +760,6 @@ function drawGridPage(pdf, {
   products,
   images,
   logo,
-  user,
   includeLinks,
   category,
   pageNumber,
@@ -799,7 +770,7 @@ function drawGridPage(pdf, {
   products.forEach((product, index) => {
     const column = index % 2;
     const row = Math.floor(index / 2);
-    drawGridProductCard(pdf, product, images[index], user, includeLinks, 12 + column * 96, 39 + row * 117);
+    drawGridProductCard(pdf, product, images[index], includeLinks, 12 + column * 96, 39 + row * 117);
   });
   drawGridFooter(pdf, category, pageNumber, pageCount, generatedAtLabel);
 }
@@ -1048,9 +1019,38 @@ function drawIndexPage(pdf, {
   drawGenerationStamp(pdf, generatedAtLabel);
 }
 
-export async function exportCatalogPdf({
+export async function downloadDigitalCatalogPdf({
+  search = "",
+  category = "",
+  tribe = "",
+  filterLabel = "Complete catalog",
+} = {}) {
+  const params = new URLSearchParams({ export: "true" });
+  if (search) params.set("q", search);
+  if (category) params.set("category", category);
+  if (tribe) params.set("tribe", tribe);
+
+  const response = await fetch(`/api/catalog?${params.toString()}`, {
+    cache: "no-store",
+    credentials: "omit",
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || "The digital catalog could not be prepared for export.");
+  }
+  if (!Array.isArray(data.products) || data.products.length === 0) {
+    throw new Error("There are no digital catalog products matching the selected filters.");
+  }
+
+  await renderDigitalCatalogPdf({
+    products: data.products,
+    includeLinks: false,
+    filterLabel,
+  });
+}
+
+async function renderDigitalCatalogPdf({
   products,
-  user,
   includeLinks,
   filterLabel,
 }) {
@@ -1228,7 +1228,6 @@ export async function exportCatalogPdf({
         products: pageProducts,
         images: pageProducts.map((product) => imagesByProduct.get(product.id || product.sku) || null),
         logo,
-        user,
         includeLinks,
         category: group.category,
         pageNumber: currentPage,
@@ -1238,5 +1237,8 @@ export async function exportCatalogPdf({
     }
   });
 
-  deliverPdf(pdf, `sacred-connection-catalog-${safeFilenameDate()}.pdf`);
+  deliverPdf(
+    pdf,
+    `sacred-connection-catalog-${safeFilenameTimestamp(generatedAt)}.pdf`
+  );
 }

@@ -2,36 +2,23 @@
 
 /* eslint-disable @next/next/no-img-element -- Product images are remote WooCommerce media. */
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, LockKeyhole, ShoppingBag } from "lucide-react";
-import { optionPriceForUser } from "@/lib/pricing";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
-
-const currency = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
-});
 
 export default function ProductCard({
   product,
-  user,
   isLoggedIn,
   onAddToCart,
   onRequireLogin,
 }) {
-  const [optionIndex, setOptionIndex] = useState(0);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
-  const selectedOption = product.options[optionIndex] || product.options[0];
+  const selectedOption = product.options[0];
   const description =
     product.description || "Wholesale product from the Sacred Connection collection.";
   const hasLongDescription = description.length > 180;
   const descriptionId = `product-description-${product.id}`;
-  const price = useMemo(
-    () => optionPriceForUser(selectedOption, user, product.category),
-    [selectedOption, user, product.category]
-  );
-
   const media = (
     <>
       {product.image ? (
@@ -66,20 +53,20 @@ export default function ProductCard({
     <article
       className={`group grid min-w-0 grid-cols-1 items-stretch overflow-hidden rounded-sm border-2 border-white/15 bg-[#1a1a1a] transition-all duration-300 hover:border-[#268072]/70 hover:shadow-xl hover:shadow-black/20 sm:grid-cols-[13.5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)] ${
         isDescriptionExpanded
-          ? "min-h-[41.5rem] sm:min-h-[22rem] xl:min-h-[15.75rem]"
-          : "h-[41.5rem] sm:h-[22rem] xl:h-[15.75rem]"
+          ? "min-h-[41.5rem] sm:min-h-[22rem] xl:min-h-[18rem]"
+          : "h-[41.5rem] sm:h-[22rem] xl:h-[18rem]"
       }`}
     >
       {isLoggedIn ? (
         <Link
           href={product.productUrl}
           aria-label={`View ${product.name}`}
-          className="relative m-3 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:h-56 xl:self-start"
+          className="relative m-3 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:self-stretch"
         >
           {media}
         </Link>
       ) : (
-        <div className="relative m-3 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:h-56 xl:self-start">
+        <div className="relative m-3 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:self-stretch">
           {media}
         </div>
       )}
@@ -133,8 +120,8 @@ export default function ProductCard({
           )}
         </div>
 
-        <div className="mt-auto grid gap-4 border-t border-white/10 pt-4 sm:grid-cols-2 xl:grid-cols-[minmax(8rem,1fr)_minmax(11rem,16rem)_auto] xl:items-end xl:gap-3 xl:pt-3">
-          <div className="flex items-end justify-between gap-6 sm:col-span-2 sm:justify-start xl:col-span-1 xl:min-w-40">
+        <div className="mt-auto grid gap-4 border-t border-white/10 pt-4 sm:grid-cols-2 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end xl:gap-5 xl:pt-3">
+          <div className="min-w-0 sm:col-span-2 xl:col-span-1">
             <div className="min-w-0">
               <span className="block text-[10px] font-bold uppercase tracking-wider text-white/35">
                 SKU
@@ -143,41 +130,37 @@ export default function ProductCard({
                 {selectedOption?.sku || product.sku}
               </span>
             </div>
-            <div className="shrink-0 md:text-left">
-              <span className="block text-[10px] font-bold uppercase tracking-wider text-white/35">
-                From
-              </span>
-              <span className="text-lg font-black text-[#82d6c5]">
-                {currency.format(price)}
-              </span>
-            </div>
-          </div>
 
-          {product.options.length > 1 && (
-            <label className="block min-w-0">
-              <span className="sr-only">Choose product option</span>
-              <select
-                value={optionIndex}
-                onChange={(event) => setOptionIndex(Number(event.target.value))}
-                className="w-full rounded-sm border border-white/10 bg-[#131313] px-3 py-3 text-xs text-white outline-none transition-colors focus:border-[#268072]"
-              >
-                {product.options.map((option, index) => (
-                  <option key={`${option.sku}-${index}`} value={index}>
-                    {option.name} - {currency.format(optionPriceForUser(option, user, product.category))}
-                  </option>
-                ))}
-              </select>
-            </label>
-          )}
+            {product.options.length > 0 && (
+              <fieldset className="mt-2 min-w-0">
+                <legend className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-white/35">
+                  Available formats
+                </legend>
+                <div className="flex flex-wrap gap-1.5 xl:flex-nowrap">
+                  {product.options.map((option, index) => {
+                    const label = option.weightGrams
+                      ? `${option.weightGrams}g`
+                      : option.name;
+                    return (
+                      <span
+                        key={`${option.sku}-${index}`}
+                        className="catalog-format-tag inline-flex min-h-8 shrink-0 items-center rounded-sm border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-white/75"
+                      >
+                        {label}
+                      </span>
+                    );
+                  })}
+                </div>
+              </fieldset>
+            )}
+          </div>
 
           {isLoggedIn ? (
             <button
               type="button"
               disabled={product.inStock === false || selectedOption?.inStock === false}
-              onClick={() => onAddToCart(product, optionIndex)}
-              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-0 bg-[#EC2300] px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#c51d00] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35 xl:min-w-48 ${
-                product.options.length > 1 ? "" : "sm:col-span-2 xl:col-span-1"
-              }`}
+              onClick={() => onAddToCart(product, 0)}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-0 bg-[#EC2300] px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#c51d00] disabled:cursor-not-allowed disabled:bg-white/10 disabled:text-white/35 sm:col-span-2 xl:col-span-1 xl:min-w-48"
             >
               <ShoppingBag className="h-4 w-4" aria-hidden="true" />
               Add to order
@@ -186,9 +169,7 @@ export default function ProductCard({
             <button
               type="button"
               onClick={onRequireLogin}
-              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:border-[#268072]/60 hover:bg-white/10 xl:min-w-48 ${
-                product.options.length > 1 ? "" : "sm:col-span-2 xl:col-span-1"
-              }`}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border border-white/10 bg-white/5 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:border-[#268072]/60 hover:bg-white/10 sm:col-span-2 xl:col-span-1 xl:min-w-48"
             >
               <LockKeyhole className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
               Sign in to order
