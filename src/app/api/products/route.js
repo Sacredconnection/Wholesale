@@ -7,6 +7,7 @@ import {
 } from "@/lib/woocommerce";
 import {
   getRequiredCommerceStores,
+  MAYA_HERBS_STORE_ID,
   isCommerceStoreConfigured,
 } from "@/lib/commerce-stores";
 import { buildCategoryContext, isApprovedWholesaleCustomer, mapProductForRole } from "@/lib/wc-mappers";
@@ -17,6 +18,25 @@ const catalogCacheSeconds = (() => {
   const value = Number(process.env.WC_REVALIDATE_SECONDS);
   return Number.isFinite(value) && value >= 30 ? value : 300;
 })();
+const normalizeCategoryName = (value) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+function belongsToExcludedMayaRapeCategory(product, categoryContext) {
+  const { parentById = {}, nameById = {} } = categoryContext;
+
+  return (product.categories || []).some((category) => {
+    let categoryId = category.id;
+    for (let depth = 0; depth < 10 && parentById[categoryId]; depth += 1) {
+      categoryId = parentById[categoryId];
+    }
+    const parentName = nameById[categoryId] || category.name;
+    return normalizeCategoryName(parentName) === "rape";
+  });
+}
 
 async function loadStoreCatalog(storeId, storeName, role) {
   const [wcProducts, categories] = await Promise.all([
@@ -26,14 +46,21 @@ async function loadStoreCatalog(storeId, storeName, role) {
   const categoryContext = buildCategoryContext(categories);
   const store = { id: storeId, name: storeName };
 
-  return wcProducts.map((product) =>
+  const visibleProducts =
+    storeId === MAYA_HERBS_STORE_ID
+      ? wcProducts.filter(
+          (product) => !belongsToExcludedMayaRapeCategory(product, categoryContext)
+        )
+      : wcProducts;
+
+  return visibleProducts.map((product) =>
     mapProductForRole(product, [], categoryContext, role, store)
   );
 }
 
 const getCachedStoreCatalog = unstable_cache(
   loadStoreCatalog,
-  ["multi-store-catalog-v4-english-maya"],
+  ["multi-store-catalog-v5-hide-maya-rape"],
   { revalidate: catalogCacheSeconds, tags: ["woocommerce-catalog"] }
 );
 

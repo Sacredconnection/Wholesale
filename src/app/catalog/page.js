@@ -23,7 +23,9 @@ import {
   ChevronRight, 
   ArrowRight,
   Filter,
-  PackageOpen
+  PackageOpen,
+  Store,
+  Network
 } from "lucide-react";
 
 import { useProducts } from "@/components/ProductsContext";
@@ -268,6 +270,74 @@ export default function CatalogPage() {
             </button>
           </div>
         </div>
+
+        {/* Marketplace Stores */}
+        <section aria-labelledby="marketplace-stores-title" className="overflow-hidden rounded-lg border border-white/10 bg-[#171717] shadow-xl">
+          <div className="grid gap-6 border-b border-white/10 px-5 py-6 sm:px-7 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-8 lg:py-8">
+            <div>
+              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#268072]/30 bg-[#268072]/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#82d6c5]">
+                <Network className="h-3.5 w-3.5" />
+                Integrated marketplace
+              </div>
+              <h2 id="marketplace-stores-title" className="font-headline-md text-2xl font-black text-white sm:text-3xl">
+                Multiple trusted stores, one wholesale catalog
+              </h2>
+            </div>
+            <p className="text-sm leading-6 text-white/60">
+              Sacred Connection Wholesale is a marketplace that brings products from integrated partner stores into one ordering experience. Browse everything together; when an order is submitted, each store receives the items that belong to its own catalog.
+            </p>
+          </div>
+
+          <div className="grid gap-4 p-5 sm:p-7 md:grid-cols-2 lg:p-8">
+            <article className="group relative overflow-hidden rounded-md border border-[#268072]/35 bg-gradient-to-br from-[#173d36] to-[#111817] p-5 sm:p-6">
+              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#268072]/20 blur-2xl" />
+              <div className="relative flex h-full flex-col gap-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex h-14 w-32 items-center justify-center rounded border border-white/10 bg-black/30 px-3">
+                    <img src="/logo.svg" alt="Sacred Connection" className="max-h-10 w-full object-contain" />
+                  </div>
+                  <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-200">
+                    Integrated
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Sacred Connection</h3>
+                  <p className="mt-1 text-sm leading-5 text-white/55">
+                    The original wholesale catalog, focused on traditional botanical products and direct community relationships.
+                  </p>
+                </div>
+                <div className="mt-auto flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#82d6c5]">
+                  <Store className="h-3.5 w-3.5" />
+                  Marketplace store
+                </div>
+              </div>
+            </article>
+
+            <article className="group relative overflow-hidden rounded-md border border-[#b9965a]/35 bg-gradient-to-br from-[#332718] to-[#17130e] p-5 sm:p-6">
+              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#b9965a]/20 blur-2xl" />
+              <div className="relative flex h-full flex-col gap-5">
+                <div className="flex items-center justify-between gap-4">
+                  <div className="flex h-14 w-14 items-center justify-center rounded border border-[#d8b879]/25 bg-black/25 text-lg font-black tracking-tight text-[#e0c38b]">
+                    MH
+                  </div>
+                  <span className="rounded-full border border-amber-200/20 bg-amber-200/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-amber-100">
+                    Integrated
+                  </span>
+                </div>
+                <div>
+                  <h3 className="text-lg font-bold text-white">Maya Herbs</h3>
+                  <p className="mt-1 text-sm leading-5 text-white/55">
+                    An integrated partner store expanding the marketplace with its English-language wholesale selection.
+                  </p>
+                </div>
+                <div className="mt-auto flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#e0c38b]">
+                  <Store className="h-3.5 w-3.5" />
+                  Partner store
+                </div>
+              </div>
+            </article>
+          </div>
+        </section>
 
         {/* Filters Panel */}
         <div className="bg-[#1a1a1a] border border-white/5 rounded-sm p-5 sm:p-6 lg:p-8 flex flex-col gap-5 sm:gap-6">
