@@ -76,6 +76,42 @@ function downloadBlob(blob, filename) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
+function usesMobilePdfPreview() {
+  const userAgentDataMobile = navigator.userAgentData?.mobile === true;
+  const mobileUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  const touchEnabledIpad = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
+  return userAgentDataMobile || mobileUserAgent || touchEnabledIpad;
+}
+
+export function prepareCatalogPdfDownload() {
+  if (!usesMobilePdfPreview()) return null;
+
+  // Mobile browsers can reject a download started after the catalog data and
+  // images have finished loading because the original tap is no longer active.
+  // Reserve a tab synchronously and navigate it to the finished PDF later.
+  const previewWindow = window.open("", "_blank");
+  if (previewWindow) {
+    previewWindow.document.title = "Preparing Sacred Connection catalog";
+    previewWindow.document.body.textContent = "Preparing your PDF catalog...";
+    previewWindow.document.body.style.cssText =
+      "margin:0;min-height:100vh;display:grid;place-items:center;background:#23403b;color:#fff;font:600 16px system-ui,sans-serif;text-align:center;padding:24px;box-sizing:border-box";
+  }
+  return previewWindow;
+}
+
+function deliverPdf(pdf, filename, previewWindow) {
+  const blob = pdf.output("blob");
+
+  if (previewWindow && !previewWindow.closed) {
+    const url = URL.createObjectURL(blob);
+    previewWindow.location.replace(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    return;
+  }
+
+  downloadBlob(blob, filename);
+}
+
 function catalogRows(products, user) {
   return products.flatMap((product) => {
     const options = product.options?.length ? product.options : [{}];
@@ -878,7 +914,13 @@ function drawIndexPage(pdf, { columns, logo, productDestinations, pageNumber, pa
   pdf.text(`Index  |  ${pageNumber}/${pageCount}`, 198, 288, { align: "right" });
 }
 
-export async function exportCatalogPdf({ products, user, includeLinks, filterLabel }) {
+export async function exportCatalogPdf({
+  products,
+  user,
+  includeLinks,
+  filterLabel,
+  previewWindow = null,
+}) {
   const { jsPDF } = await import("jspdf");
   const preferredCategories = ["Rapé Indigenous", "Sacred Connection"];
   const categories = [...new Set(products.map((product) => product.category || "Other"))].sort(
@@ -1028,5 +1070,9 @@ export async function exportCatalogPdf({ products, user, includeLinks, filterLab
     }
   });
 
-  pdf.save(`sacred-connection-catalog-${safeFilenameDate()}.pdf`);
+  deliverPdf(
+    pdf,
+    `sacred-connection-catalog-${safeFilenameDate()}.pdf`,
+    previewWindow
+  );
 }

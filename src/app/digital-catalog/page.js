@@ -17,7 +17,11 @@ import FilterSidebar from "@/components/catalog/FilterSidebar";
 import ProductCard from "@/components/catalog/ProductCard";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
-import { exportCatalogExcel, exportCatalogPdf } from "@/lib/catalog-export";
+import {
+  exportCatalogExcel,
+  exportCatalogPdf,
+  prepareCatalogPdfDownload,
+} from "@/lib/catalog-export";
 
 const EMPTY_FILTERS = {
   search: "",
@@ -195,6 +199,7 @@ export default function CatalogPage() {
   };
 
   const handleExport = async (format) => {
+    const pdfPreviewWindow = format === "pdf" ? prepareCatalogPdfDownload() : null;
     setExporting(format);
     setExportError("");
     try {
@@ -211,9 +216,11 @@ export default function CatalogPage() {
           user,
           includeLinks: isLoggedIn,
           filterLabel: filterLabel(),
+          previewWindow: pdfPreviewWindow,
         });
       }
     } catch (exportFailure) {
+      if (pdfPreviewWindow && !pdfPreviewWindow.closed) pdfPreviewWindow.close();
       setExportError(exportFailure.message || "The export could not be generated.");
     } finally {
       setExporting("");
