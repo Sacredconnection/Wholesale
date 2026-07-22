@@ -386,12 +386,16 @@ export default function CatalogPage() {
               </div>
             </article>
 
-            <article className="group relative overflow-hidden rounded-md border border-[#cc6632] bg-[#cc6632] p-5 sm:p-6">
-              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-white/15 blur-2xl" />
+            <article className="group relative overflow-hidden rounded-md border border-[#b9965a]/35 bg-gradient-to-br from-[#332718] to-[#17130e] p-5 sm:p-6">
+              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#b9965a]/20 blur-2xl" />
               <div className="relative flex h-full flex-col gap-5">
                 <div className="flex items-center justify-between gap-4">
-                  <div className="flex h-14 w-14 items-center justify-center rounded border border-[#d8b879]/25 bg-black/25 text-lg font-black tracking-tight text-[#e0c38b]">
-                    MH
+                  <div className="flex h-14 w-32 items-center justify-center rounded border border-[#d8b879]/25 bg-black/25 px-3">
+                    <img
+                      src="/marketplace/logos/logo-maya-herbs-01.svg"
+                      alt="Maya Herbs"
+                      className="max-h-10 w-full object-contain"
+                    />
                   </div>
                   <span className="rounded-full border border-amber-200/20 bg-amber-200/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-amber-100">
                     Integrated
