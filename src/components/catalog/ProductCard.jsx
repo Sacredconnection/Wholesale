@@ -64,22 +64,22 @@ export default function ProductCard({
 
   return (
     <article
-      className={`group grid min-w-0 grid-cols-1 items-stretch overflow-hidden rounded-sm border-2 border-white/15 bg-[#1a1a1a] transition-all duration-300 hover:border-[#268072]/70 hover:shadow-xl hover:shadow-black/20 sm:grid-cols-[13rem_minmax(0,1fr)] lg:grid-cols-[15rem_minmax(0,1fr)] ${
+      className={`group grid min-w-0 grid-cols-1 items-stretch overflow-hidden rounded-sm border-2 border-white/15 bg-[#1a1a1a] transition-all duration-300 hover:border-[#268072]/70 hover:shadow-xl hover:shadow-black/20 sm:grid-cols-[13.5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)] ${
         isDescriptionExpanded
-          ? "min-h-[41rem] sm:min-h-[22rem] xl:min-h-[15.25rem]"
-          : "h-[41rem] sm:h-[22rem] xl:h-[15.25rem]"
+          ? "min-h-[41.5rem] sm:min-h-[22rem] xl:min-h-[15.75rem]"
+          : "h-[41.5rem] sm:h-[22rem] xl:h-[15.75rem]"
       }`}
     >
       {isLoggedIn ? (
         <Link
           href={product.productUrl}
           aria-label={`View ${product.name}`}
-          className="relative m-2 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:h-56 xl:self-start"
+          className="relative m-3 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:h-56 xl:self-start"
         >
           {media}
         </Link>
       ) : (
-        <div className="relative m-2 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:h-56 xl:self-start">
+        <div className="relative m-3 block h-56 overflow-hidden rounded-sm border-2 border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:h-56 xl:self-start">
           {media}
         </div>
       )}
