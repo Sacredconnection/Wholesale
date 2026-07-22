@@ -71,7 +71,7 @@ export default function NGOSection() {
       <section
         ref={sectionRef}
         id="ngo-partnership"
-        className="ngo-section-card bg-[#1a1a1a] border border-white/35 rounded-2xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-white/60 transition-colors duration-500"
+        className="ngo-section-card bg-[#1a1a1a] border border-white/35 rounded-xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-white/60 transition-colors duration-500"
       >
         {/* Ambient background glow */}
         <div className="absolute -top-36 -left-36 w-[500px] h-[500px] bg-[#268072] opacity-[0.09] blur-[130px] pointer-events-none rounded-full" />
@@ -198,7 +198,7 @@ export default function NGOSection() {
           >
             {/* Centerpiece Image (Large) */}
             <div
-                className={`ngo-photo-reveal rounded-xl overflow-hidden border border-white/10 shadow-xl aspect-[16/10] group cursor-pointer relative transition-[border-color,box-shadow] duration-500 hover:border-[#82d6c5]/45 hover:shadow-2xl hover:shadow-[#82d6c5]/10 ${visible ? 'animate' : ''}`}
+              className={`ngo-photo-reveal rounded-lg overflow-hidden border border-white/10 shadow-xl aspect-[16/10] group cursor-pointer relative transition-[border-color,box-shadow] duration-500 hover:border-[#82d6c5]/45 hover:shadow-2xl hover:shadow-[#82d6c5]/10 ${visible ? 'animate' : ''}`}
               style={visible ? { animationDelay: '0.45s' } : {}}
             >
               <Image

@@ -69,7 +69,7 @@ export default function AboutPage() {
         </p>
         <div className="mt-7 grid gap-4 md:grid-cols-3">
           {values.map(({ icon: ValueIcon, title, text }) => (
-            <div key={title} className="editorial-value-card rounded-sm border border-white/10 bg-[#131313] p-5">
+            <div key={title} className="editorial-value-card rounded-lg border border-white/10 bg-[#131313] p-5">
               <ValueIcon className="mb-5 h-5 w-5 text-[#82d6c5]" aria-hidden="true" />
               <h3 className="mb-3 font-headline text-lg font-semibold leading-snug text-white">{title}</h3>
               <p className="text-sm leading-7 text-white/55">{text}</p>

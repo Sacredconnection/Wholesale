@@ -15,7 +15,7 @@ function OrderReceivedContent() {
   const total = searchParams.get("total");
 
   return (
-    <main className="flex-grow w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16 lg:py-20 flex flex-col items-center text-center gap-8 sm:gap-10 lg:gap-12">
+    <main className="flex-grow w-full max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 flex flex-col items-center text-center gap-10 sm:gap-12">
       <div className="w-20 h-20 rounded-full bg-[#268072]/20 border border-[#268072]/45 flex items-center justify-center animate-fade-in">
         <Check className="w-10 h-10 text-[#82d6c5]" />
       </div>
@@ -40,7 +40,7 @@ function OrderReceivedContent() {
         )}
       </div>
 
-      <div className="bg-[#1a1a1a] border border-[#268072]/25 rounded-md p-8 flex flex-col gap-4 max-w-xl">
+      <div className="bg-[#1a1a1a] border border-[#268072]/25 rounded-xl p-8 flex flex-col gap-4 max-w-xl">
         <div className="flex items-center justify-center gap-3 text-[#82d6c5]">
           <PhoneCall className="w-5 h-5" />
           <span className="text-xs font-bold uppercase tracking-widest font-label-sm">

@@ -70,62 +70,60 @@ export default function B2BFAQ() {
   return (
     <section
       aria-labelledby="b2b-faq-title"
-      className="b2b-faq-card relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#1a1a1a] px-5 py-8 shadow-[0_24px_70px_rgba(0,0,0,0.14)] transition-all duration-500 sm:px-7 sm:py-10 lg:px-10 lg:py-12"
+      className="b2b-faq-card relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#1a1a1a] px-5 py-6 shadow-[0_18px_50px_rgba(0,0,0,0.12)] transition-all duration-500 sm:px-7 sm:py-7 lg:px-8"
     >
-      <div className="pointer-events-none absolute -left-20 -top-24 h-56 w-56 rounded-full bg-[#268072]/12 blur-3xl" />
+      <div className="pointer-events-none absolute -left-20 -top-24 h-48 w-48 rounded-full bg-[#268072]/10 blur-3xl" />
 
-      <div className="relative">
-        <div className="max-w-3xl">
-          <p className="mb-3 font-label-sm text-[10px] font-bold uppercase tracking-[0.2em] text-[#82d6c5] sm:text-xs">
+      <div className="relative grid gap-6 md:grid-cols-2 md:gap-7 xl:grid-cols-[0.78fr_repeat(3,minmax(0,1fr))] xl:gap-7">
+        <div className="md:col-span-2 xl:col-span-1">
+          <p className="mb-2 font-label-sm text-[10px] font-bold uppercase tracking-[0.2em] text-[#82d6c5]">
             Wholesale Support
           </p>
           <h2
             id="b2b-faq-title"
-            className="font-headline-lg text-3xl font-black tracking-tighter text-white sm:text-4xl"
+            className="font-headline-lg text-2xl font-black tracking-tighter text-white sm:text-3xl"
           >
             B2B Operational Clarity
           </h2>
-          <p className="mt-4 font-body-md text-sm leading-relaxed text-white/60 sm:text-base">
+          <p className="mt-3 max-w-xl font-body-md text-sm leading-6 text-white/60">
             Clear terms for planning your first order, managing inventory, and scaling your wholesale partnership.
           </p>
         </div>
 
-        <div className="mt-8 grid gap-5 lg:grid-cols-3 lg:gap-6">
-          {FAQ_GROUPS.map(({ id, title, items }) => (
-            <section key={id} aria-labelledby={`faq-group-${id}`}>
-              <h3
-                id={`faq-group-${id}`}
-                className="mb-3 font-label-sm text-[10px] font-bold uppercase tracking-[0.18em] text-[#82d6c5] sm:text-xs"
-              >
-                {title}
-              </h3>
-              <div className="flex flex-col border-t border-white/10">
-                {items.map(({ question, answer }) => (
-                  <details
-                    key={question}
-                    name="b2b-operational-faq"
-                    className="b2b-faq-item group relative border-b border-white/10"
-                  >
-                    <span className="absolute inset-y-3 left-0 w-px origin-top scale-y-0 bg-[#82d6c5] shadow-[0_0_10px_rgba(130,214,197,0.45)] transition-transform duration-300 ease-out group-open:scale-y-100" aria-hidden="true" />
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 py-4 pl-3 text-left [&::-webkit-details-marker]:hidden sm:py-5">
-                      <h4 className="b2b-faq-question font-headline-md text-sm font-bold leading-snug text-white transition-colors duration-300 group-hover:text-[#82d6c5] group-open:text-[#82d6c5] sm:text-base">
-                        {question}
-                      </h4>
-                      <span className="b2b-faq-toggle flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#131313]/55 text-[#82d6c5] transition-all duration-300 group-open:rotate-180 group-open:border-[#82d6c5]/35 group-open:bg-[#268072]/15">
-                        <ChevronDown className="h-4 w-4" aria-hidden="true" />
-                      </span>
-                    </summary>
-                    <div className="pb-5 pl-3 pr-10">
-                      <p className="font-body-md text-sm leading-relaxed text-white/60">
-                        {answer}
-                      </p>
-                    </div>
-                  </details>
-                ))}
-              </div>
-            </section>
-          ))}
-        </div>
+        {FAQ_GROUPS.map(({ id, title, items }) => (
+          <section key={id} aria-labelledby={`faq-group-${id}`}>
+            <h3
+              id={`faq-group-${id}`}
+              className="mb-2 font-label-sm text-[10px] font-bold uppercase tracking-[0.16em] text-[#82d6c5]"
+            >
+              {title}
+            </h3>
+            <div className="flex flex-col border-t border-white/10">
+              {items.map(({ question, answer }) => (
+                <details
+                  key={question}
+                  name="b2b-operational-faq"
+                  className="b2b-faq-item group relative border-b border-white/10"
+                >
+                  <span className="absolute inset-y-2.5 left-0 w-px origin-top scale-y-0 bg-[#82d6c5] shadow-[0_0_10px_rgba(130,214,197,0.45)] transition-transform duration-300 ease-out group-open:scale-y-100" aria-hidden="true" />
+                  <summary className="flex min-h-12 cursor-pointer list-none items-center justify-between gap-2.5 py-3 pl-2.5 text-left [&::-webkit-details-marker]:hidden">
+                    <h4 className="b2b-faq-question font-headline-md text-sm font-bold leading-snug text-white transition-colors duration-300 group-hover:text-[#82d6c5] group-open:text-[#82d6c5]">
+                      {question}
+                    </h4>
+                    <span className="b2b-faq-toggle flex h-7 w-7 shrink-0 items-center justify-center rounded-full border border-white/10 bg-[#131313]/55 text-[#82d6c5] transition-all duration-300 group-open:rotate-180 group-open:border-[#82d6c5]/35 group-open:bg-[#268072]/15">
+                      <ChevronDown className="h-3.5 w-3.5" aria-hidden="true" />
+                    </span>
+                  </summary>
+                  <div className="pb-4 pl-2.5 pr-8">
+                    <p className="font-body-md text-[13px] leading-5 text-white/60">
+                      {answer}
+                    </p>
+                  </div>
+                </details>
+              ))}
+            </div>
+          </section>
+        ))}
       </div>
     </section>
   );

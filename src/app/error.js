@@ -11,7 +11,7 @@ export default function ErrorPage({ error, reset }) {
 
   return (
     <main className="flex min-h-screen items-center justify-center bg-[#23403B] px-6 py-16 text-white">
-      <section className="w-full max-w-2xl rounded-sm border border-white/10 bg-[#121615] px-6 py-14 text-center shadow-2xl sm:px-12">
+      <section className="w-full max-w-2xl rounded-xl border border-white/10 bg-[#121615] px-6 py-14 text-center shadow-2xl sm:px-12">
         <AlertTriangle aria-hidden="true" className="mx-auto mb-6 h-10 w-10 text-[#82d6c5]" />
         <p className="mb-3 text-xs font-bold uppercase tracking-[0.24em] text-[#82d6c5]">
           Temporary issue

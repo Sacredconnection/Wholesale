@@ -29,7 +29,7 @@ export default function WholesaleFormats() {
   return (
     <section
       aria-labelledby="wholesale-formats-title"
-      className="flex w-full flex-col gap-8 py-2 sm:gap-10 sm:py-4"
+      className="flex w-full flex-col gap-8 sm:gap-10"
     >
       <div className="max-w-3xl">
         <span className="mb-3 block font-label-sm text-[10px] font-bold uppercase tracking-[0.2em] text-[#82d6c5] sm:text-xs">
@@ -55,7 +55,7 @@ export default function WholesaleFormats() {
         {FORMATS.map(({ title, category, description, image, imageAlt, sizes }) => (
           <article
             key={title}
-            className="wholesale-format-card group relative flex flex-col justify-between overflow-hidden rounded-2xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-md transition-all duration-500 ease-out hover:-translate-y-1 hover:border-[#82d6c5]/50 hover:shadow-[0_26px_65px_rgba(0,0,0,0.24)] sm:p-7 lg:p-8"
+            className="wholesale-format-card group relative flex flex-col justify-between overflow-hidden rounded-xl border border-white/10 bg-white/[0.03] p-5 backdrop-blur-md transition-all duration-500 ease-out hover:-translate-y-1 hover:border-[#82d6c5]/50 hover:shadow-[0_26px_65px_rgba(0,0,0,0.24)] sm:p-7 lg:p-8"
           >
             <div className="relative z-10 mb-8 flex h-56 items-center justify-center sm:h-64 lg:h-72">
               <Image

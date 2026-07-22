@@ -15,7 +15,7 @@ export default function FilterSidebar({
     onChange({ ...filters, category: value, tribe: "" });
 
   return (
-    <aside className="rounded-sm border border-white/10 bg-[#1a1a1a] p-5 sm:p-6 lg:p-8">
+    <aside className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5 sm:p-6 lg:p-8">
       <div className="mb-5 flex items-center gap-2 text-xs font-bold uppercase tracking-[0.16em] text-white sm:mb-6">
         <Filter className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
         Filter products

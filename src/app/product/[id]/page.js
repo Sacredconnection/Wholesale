@@ -160,7 +160,7 @@ export default function ProductDetailPage() {
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
       {/* Main Container */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 flex flex-col gap-10 sm:gap-12">
         
         {/* Breadcrumbs / Back button */}
         <div className="flex min-w-0 flex-wrap items-center gap-2 text-xs text-white/50 font-mono">
@@ -183,7 +183,7 @@ export default function ProductDetailPage() {
         </div>
 
         {/* Product Details Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start bg-[#1a1a1a] border border-white/10 rounded-lg p-5 sm:p-6 md:p-8 shadow-2xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-10 items-start bg-[#1a1a1a] border border-white/10 rounded-xl p-5 sm:p-6 md:p-8 shadow-2xl">
           
           {/* Product image */}
           <div className="lg:col-span-6 w-full">
@@ -250,7 +250,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Price display */}
-            <div className="flex flex-col items-start justify-between gap-3 rounded-md border border-white/5 bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
+            <div className="flex flex-col items-start justify-between gap-3 rounded-lg border border-white/5 bg-white/[0.02] p-4 sm:flex-row sm:items-center sm:gap-4 sm:p-5">
               <div>
                 <span className="text-[10px] font-mono text-white/45 uppercase block">Est. B2B Unit Cost</span>
                 <div className="flex items-baseline gap-2 mt-1">
@@ -397,7 +397,7 @@ export default function ProductDetailPage() {
 
         {/* Related Products Section */}
         {relatedProducts.length > 0 && (
-          <div className="bg-[#1a1a1a] border border-white/5 rounded-sm p-5 sm:p-6 md:p-8 shadow-2xl">
+          <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5 sm:p-6 md:p-8 shadow-2xl">
           <h2 className="text-white text-2xl font-bold font-headline-md mb-8">Related products</h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -415,9 +415,9 @@ export default function ProductDetailPage() {
               }
 
               return (
-                <div key={p.id} className="bg-[#131313] border border-white/5 rounded-sm p-5 flex flex-col gap-4 hover:border-[#268072]/30 hover:shadow-lg hover:shadow-[#268072]/5 transition-all duration-300 group text-left">
+                <div key={p.id} className="bg-[#131313] border border-white/5 rounded-lg p-5 flex flex-col gap-4 hover:border-[#268072]/30 hover:shadow-lg hover:shadow-[#268072]/5 transition-all duration-300 group text-left">
                   {/* Product Image */}
-                  <Link href={`/product/${p.id}?fromPage=${fromPage}`} className="block aspect-square overflow-hidden rounded-sm bg-[#1a1a1a] border border-white/5 relative">
+                  <Link href={`/product/${p.id}?fromPage=${fromPage}`} className="block aspect-square overflow-hidden rounded-lg bg-[#1a1a1a] border border-white/5 relative">
                     <img
                       src={p.image || `/products/${p.photoFolder}/${p.photo}.jpg`}
                       alt={p.name}

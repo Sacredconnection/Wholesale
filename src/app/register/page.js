@@ -136,7 +136,7 @@ export default function RegisterPage() {
             <form
               onSubmit={handleSubmit}
               aria-busy={submitting}
-              className="bg-[#1a1a1a] border border-white/10 rounded-sm p-5 sm:p-8 shadow-2xl flex flex-col gap-5 sm:gap-6"
+              className="bg-[#1a1a1a] border border-white/10 rounded-xl p-5 sm:p-8 shadow-2xl flex flex-col gap-5 sm:gap-6"
             >
               
               <div>
@@ -359,7 +359,7 @@ export default function RegisterPage() {
             </form>
           ) : (
             /* Success Screen */
-            <div role="status" className="bg-[#1a1a1a] border border-white/10 rounded-sm p-6 sm:p-10 flex flex-col items-center text-center gap-5 sm:gap-6 shadow-2xl animate-fade-in">
+            <div role="status" className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 sm:p-10 flex flex-col items-center text-center gap-5 sm:gap-6 shadow-2xl animate-fade-in">
               <div className="w-16 h-16 rounded-full bg-[#268072]/10 border border-[#268072]/20 flex items-center justify-center text-[#82d6c5]">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
@@ -378,7 +378,7 @@ export default function RegisterPage() {
                 </p>
               </div>
 
-              <div className="bg-[#131313] border border-white/5 rounded-sm p-4 w-full flex flex-col gap-2 font-mono text-left max-w-sm">
+              <div className="bg-[#131313] border border-white/5 rounded-lg p-4 w-full flex flex-col gap-2 font-mono text-left max-w-sm">
                 <div className="flex flex-col gap-1 text-xs sm:flex-row sm:justify-between">
                   <span className="text-white/40">USERNAME:</span>
                   <span className="break-all text-[#82d6c5] font-bold sm:text-right">{form.username}</span>

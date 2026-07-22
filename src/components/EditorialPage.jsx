@@ -4,7 +4,7 @@ import PublicPageShell from '@/components/PublicPageShell';
 
 export function EditorialSection({ id, number, title, children }) {
   return (
-    <section id={id} className="editorial-section scroll-mt-28 border-t border-white/10 py-9 first:border-t-0 first:pt-0 sm:py-11">
+    <section id={id} className="editorial-section scroll-mt-28 border-t border-white/10 py-10 first:border-t-0 first:pt-0 sm:py-12">
       <div className="mb-5 flex items-start gap-4">
         <span className="editorial-section-number mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#82d6c5]/30 bg-[#268072]/10 font-label-sm text-[11px] font-bold text-[#82d6c5]">
           {number}
@@ -31,7 +31,7 @@ export function EditorialNotice({ title, children }) {
 
 export function EditorialContact({ children }) {
   return (
-    <div className="editorial-contact mt-8 rounded-sm border border-[#82d6c5]/25 bg-[#1a1a1a] p-6 sm:p-8">
+    <div className="editorial-contact mt-8 rounded-lg border border-[#82d6c5]/25 bg-[#1a1a1a] p-6 sm:p-8">
       <div className="mb-3 flex items-center gap-2 font-label-sm text-xs font-bold uppercase tracking-[0.16em] text-[#82d6c5]">
         Contact our team
         <ArrowUpRight className="h-4 w-4" aria-hidden="true" />
@@ -99,13 +99,13 @@ export default function EditorialPage({
         </header>
 
         <div className="editorial-content">
-          <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-14 sm:px-6 sm:py-20 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-16 lg:px-8 lg:py-24">
-            <article className="editorial-card min-w-0 rounded-sm border border-white/10 bg-[#1a1a1a] p-6 sm:p-10 lg:p-12">
+          <div className="mx-auto grid w-full max-w-7xl gap-10 px-4 py-10 sm:gap-12 sm:px-6 sm:py-12 lg:grid-cols-[minmax(0,1fr)_18rem] lg:px-8">
+            <article className="editorial-card min-w-0 rounded-xl border border-white/10 bg-[#1a1a1a] p-6 sm:p-10 lg:p-12">
               {children}
             </article>
 
             <aside className="order-first lg:order-last">
-              <nav aria-label="On this page" className="editorial-toc rounded-sm border border-white/10 bg-[#1a1a1a] p-6 lg:sticky lg:top-28">
+              <nav aria-label="On this page" className="editorial-toc rounded-xl border border-white/10 bg-[#1a1a1a] p-6 lg:sticky lg:top-28">
                 <p className="mb-5 font-label-sm text-xs font-bold uppercase tracking-[0.18em] text-white/40">On this page</p>
                 <ol className="space-y-3">
                   {navigation.map((item, index) => (

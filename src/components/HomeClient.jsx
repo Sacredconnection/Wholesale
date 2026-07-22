@@ -31,7 +31,7 @@ export default function HomeClient() {
 
       {/* Main Page Area */}
       <main className="flex-grow w-full bg-[#23403B] pb-12 sm:pb-14 lg:pb-16">
-        <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 pb-12 pt-10 sm:gap-12 sm:px-6 sm:pb-14 sm:pt-12 lg:gap-12 lg:px-8 lg:pb-16 lg:pt-12">
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 pb-10 pt-10 sm:gap-12 sm:px-6 sm:pb-12 sm:pt-12 lg:px-8">
           {/* B2B Onboarding Steps */}
           <Onboarding />
 
@@ -44,17 +44,17 @@ export default function HomeClient() {
           {/* B2B operational FAQ */}
           <B2BFAQ />
 
-          {/* B2B catalog lead magnet */}
-          <LeadMagnet />
-
           {/* Retail Partner Testimonial */}
           <TestimonialSection />
+
+          {/* Wholesale newsletter signup */}
+          <LeadMagnet />
         </div>
 
         {/* Secondary path for individual retail customers */}
         <RetailRedirectSection />
 
-        <div className="mx-auto w-full max-w-7xl px-4 pt-12 sm:px-6 sm:pt-14 lg:px-8 lg:pt-16">
+        <div className="mx-auto w-full max-w-7xl px-4 pt-10 sm:px-6 sm:pt-12 lg:px-8">
           {/* NGO Partnership Details */}
           <NGOSection />
         </div>

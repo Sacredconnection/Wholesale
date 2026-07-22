@@ -93,7 +93,7 @@ export default function TestimonialSection() {
             {testimonials.map((testimonial) => (
               <figure
                 key={`${testimonial.name}-${testimonial.store}`}
-                className="relative flex min-w-[calc(100%-2.5rem)] snap-center flex-col overflow-hidden rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-lg lg:min-w-0 lg:p-6"
+                className="relative flex min-w-[calc(100%-2.5rem)] snap-center flex-col overflow-hidden rounded-lg border border-white/10 bg-[#1a1a1a] p-5 shadow-lg lg:min-w-0 lg:p-6"
               >
                 <div className="absolute inset-y-0 left-0 w-1 bg-gradient-to-b from-[#82d6c5] to-[#268072]" />
 

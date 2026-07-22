@@ -644,21 +644,6 @@ html[data-theme="light"] .theme-dark-zone .lineage-card::after {
   }
 }
 
-@keyframes compendium-download-drift {
-  0%, 100% {
-    transform: translateY(-2px);
-    filter: drop-shadow(0 0 0 rgb(130 214 197 / 0));
-  }
-  50% {
-    transform: translateY(4px);
-    filter: drop-shadow(0 4px 5px rgb(130 214 197 / 0.45));
-  }
-}
-
-.compendium-download-icon {
-  animation: compendium-download-drift 1.8s ease-in-out infinite;
-}
-
 .compendium-email-box {
   transition: border-color 300ms ease, box-shadow 300ms ease;
 }
@@ -1049,7 +1034,4 @@ html[data-theme="light"] .editorial-contact a:hover {
     animation: none;
   }
 
-  .compendium-download-icon {
-    animation: none;
-  }
 }

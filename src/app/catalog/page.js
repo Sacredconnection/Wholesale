@@ -254,7 +254,7 @@ export default function CatalogPage() {
           aria-live="assertive"
           aria-label="Generating your PDF catalog. Please wait and keep this page open."
         >
-          <div className="w-full max-w-xl rounded-md border border-[#82d6c5]/45 bg-[#183b35] px-6 py-10 text-center shadow-2xl shadow-black/50 sm:px-10 sm:py-14">
+          <div className="w-full max-w-xl rounded-xl border border-[#82d6c5]/45 bg-[#183b35] px-6 py-10 text-center shadow-2xl shadow-black/50 sm:px-10 sm:py-14">
             <LoaderCircle
               className="mx-auto h-14 w-14 animate-spin text-[#82d6c5] sm:h-16 sm:w-16"
               aria-hidden="true"
@@ -270,7 +270,7 @@ export default function CatalogPage() {
       )}
 
       {/* Main Container */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 flex flex-col gap-8 sm:gap-10 lg:gap-12">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 flex flex-col gap-10 sm:gap-12">
         
         {/* Page Title Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-end border-b border-white/10 pb-6 sm:pb-8 gap-4 sm:gap-6">
@@ -328,7 +328,7 @@ export default function CatalogPage() {
         )}
 
         {/* Marketplace Stores */}
-        <section aria-labelledby="marketplace-stores-title" className="overflow-hidden rounded-lg border border-white/10 bg-[#171717] shadow-xl">
+        <section aria-labelledby="marketplace-stores-title" className="overflow-hidden rounded-xl border border-white/10 bg-[#171717] shadow-xl">
           <div className="grid gap-6 border-b border-white/10 px-5 py-6 sm:px-7 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-8 lg:py-8">
             <div>
               <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#268072]/30 bg-[#268072]/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#82d6c5]">
@@ -345,7 +345,7 @@ export default function CatalogPage() {
           </div>
 
           <div className="grid gap-4 p-5 sm:p-7 md:grid-cols-2 lg:p-8">
-            <article className="group relative overflow-hidden rounded-md border border-[#268072]/35 bg-gradient-to-br from-[#173d36] to-[#111817] p-5 sm:p-6">
+            <article className="group relative overflow-hidden rounded-lg border border-[#268072]/35 bg-gradient-to-br from-[#173d36] to-[#111817] p-5 sm:p-6">
               <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#268072]/20 blur-2xl" />
               <div className="relative flex h-full flex-col gap-5">
                 <div className="flex items-center justify-between gap-4">
@@ -369,7 +369,7 @@ export default function CatalogPage() {
               </div>
             </article>
 
-            <article className="group relative overflow-hidden rounded-md border border-[#cc6632]/40 bg-gradient-to-br from-[#442817] to-[#17130e] p-5 sm:p-6">
+            <article className="group relative overflow-hidden rounded-lg border border-[#cc6632]/40 bg-gradient-to-br from-[#442817] to-[#17130e] p-5 sm:p-6">
               <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#cc6632]/25 blur-2xl" />
               <div className="relative flex h-full flex-col gap-5">
                 <div className="flex items-center justify-between gap-4">
@@ -400,7 +400,7 @@ export default function CatalogPage() {
         </section>
 
         {/* Filters Panel */}
-        <div className="bg-[#1a1a1a] border border-white/5 rounded-sm p-5 sm:p-6 lg:p-8 flex flex-col gap-5 sm:gap-6">
+        <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5 sm:p-6 lg:p-8 flex flex-col gap-5 sm:gap-6">
           <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider font-label-sm">
             <Filter className="w-4 h-4 text-[#82d6c5]" />
             Filter Products
@@ -505,7 +505,7 @@ export default function CatalogPage() {
         )}
 
         {/* Product Table Grid */}
-        <div ref={productListRef} className="border border-white/10 rounded-sm overflow-hidden bg-[#1a1a1a]">
+        <div ref={productListRef} className="border border-white/10 rounded-xl overflow-hidden bg-[#1a1a1a]">
           {/* Header Row */}
           <div className="hidden lg:grid grid-cols-12 gap-4 px-8 py-3 bg-[#131313] border-b border-white/10 text-[10px] font-mono text-white/40 uppercase tracking-widest font-bold">
             <div className="col-span-1">Image</div>
@@ -543,7 +543,7 @@ export default function CatalogPage() {
                 return (
                   <div 
                     key={product.id}
-                    className="catalog-product-row grid grid-cols-1 items-center gap-4 rounded-sm border border-white/10 bg-[#171717] px-4 py-6 shadow-sm shadow-black/20 transition-colors hover:bg-white/[0.01] sm:px-6 sm:py-6 lg:grid-cols-12 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-8 lg:shadow-none"
+                    className="catalog-product-row grid grid-cols-1 items-center gap-4 rounded-lg border border-white/10 bg-[#171717] px-4 py-6 shadow-sm shadow-black/20 transition-colors hover:bg-white/[0.01] sm:px-6 sm:py-6 lg:grid-cols-12 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-8 lg:shadow-none"
                   >
                     {/* Image Column — product thumbnail, tribe-letter fallback */}
                     <div className="col-span-1 lg:col-span-1 flex items-center">

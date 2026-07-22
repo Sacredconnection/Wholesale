@@ -234,7 +234,7 @@ export default function CatalogPage() {
           aria-live="assertive"
           aria-label="Generating your PDF catalog. Please wait and keep this page open."
         >
-          <div className="w-full max-w-xl rounded-md border border-[#82d6c5]/45 bg-[#183b35] px-6 py-10 text-center shadow-2xl shadow-black/50 sm:px-10 sm:py-14">
+          <div className="w-full max-w-xl rounded-xl border border-[#82d6c5]/45 bg-[#183b35] px-6 py-10 text-center shadow-2xl shadow-black/50 sm:px-10 sm:py-14">
             <LoaderCircle
               className="mx-auto h-14 w-14 animate-spin text-[#82d6c5] sm:h-16 sm:w-16"
               aria-hidden="true"
@@ -249,8 +249,8 @@ export default function CatalogPage() {
         </div>
       )}
 
-      <main className="mx-auto w-full max-w-7xl flex-grow px-4 py-10 sm:px-6 sm:py-14 lg:px-8 lg:py-16">
-        <header className="mb-9 flex flex-col gap-6 border-b border-white/10 pb-8">
+      <main className="mx-auto flex w-full max-w-7xl flex-grow flex-col gap-10 px-4 py-10 sm:gap-12 sm:px-6 sm:py-12 lg:px-8">
+        <header className="flex flex-col gap-6 border-b border-white/10 pb-8">
           <div className="max-w-3xl">
             <span className="mb-3 inline-flex rounded-full border border-[#268072]/40 bg-[#268072]/15 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#82d6c5]">
               Interactive digital catalog
@@ -265,7 +265,7 @@ export default function CatalogPage() {
 
           <div className="flex w-full flex-col items-stretch gap-4">
             <section
-              className="catalog-export-tip rounded-sm border border-[#82d6c5]/25 bg-[#102c27]/70 px-4 py-4 shadow-lg shadow-black/10 sm:px-5"
+              className="catalog-export-tip rounded-lg border border-[#82d6c5]/25 bg-[#102c27]/70 px-4 py-4 shadow-lg shadow-black/10 sm:px-5"
               aria-labelledby="pdf-export-tip-title"
             >
               <div className="flex min-w-0 gap-3">
@@ -364,7 +364,7 @@ export default function CatalogPage() {
           </div>
         </header>
 
-        <div className="space-y-7">
+        <div className="space-y-10 sm:space-y-12">
           <FilterSidebar
             filters={filters}
             categories={categories}
@@ -389,7 +389,7 @@ export default function CatalogPage() {
             </div>
 
             {error ? (
-              <div className="flex min-h-80 flex-col items-center justify-center rounded-sm border border-white/10 bg-[#1a1a1a] px-6 text-center">
+              <div className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-white/10 bg-[#1a1a1a] px-6 text-center">
                 <PackageOpen className="mb-4 h-14 w-14 text-white/20" aria-hidden="true" />
                 <h2 className="text-lg font-bold text-white">Catalog unavailable</h2>
                 <p className="mt-2 max-w-md text-sm leading-6 text-white/45">{error}</p>
@@ -404,8 +404,8 @@ export default function CatalogPage() {
             ) : loading ? (
               <div className="space-y-5">
                 {Array.from({ length: 6 }, (_, index) => (
-                  <div key={index} className="grid h-[41.5rem] grid-cols-1 items-stretch overflow-hidden rounded-sm border-2 border-white/15 bg-[#1a1a1a] sm:h-[22rem] sm:grid-cols-[13.5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)] xl:h-[15.75rem]">
-                    <div className="m-3 h-56 animate-pulse rounded-sm border-2 border-white/10 bg-white/5 sm:h-auto xl:h-56 xl:self-start" />
+                  <div key={index} className="grid h-[41.5rem] grid-cols-1 items-stretch overflow-hidden rounded-lg border-2 border-white/15 bg-[#1a1a1a] sm:h-[22rem] sm:grid-cols-[13.5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)] xl:h-[15.75rem]">
+                    <div className="m-3 h-56 animate-pulse rounded-lg border-2 border-white/10 bg-white/5 sm:h-auto xl:h-56 xl:self-start" />
                     <div className="space-y-3 p-4 sm:p-5 lg:p-6">
                       <div className="h-3 w-1/3 animate-pulse rounded bg-white/10" />
                       <div className="h-6 w-4/5 animate-pulse rounded bg-white/10" />
@@ -477,7 +477,7 @@ export default function CatalogPage() {
                 )}
               </>
             ) : (
-              <div className="flex min-h-80 flex-col items-center justify-center rounded-sm border border-white/10 bg-[#1a1a1a] px-6 text-center">
+              <div className="flex min-h-80 flex-col items-center justify-center rounded-lg border border-white/10 bg-[#1a1a1a] px-6 text-center">
                 <PackageOpen className="mb-4 h-14 w-14 text-white/20" aria-hidden="true" />
                 <h2 className="text-lg font-bold text-white">No products found</h2>
                 <p className="mt-2 text-sm text-white/45">Try adjusting or clearing the current filters.</p>

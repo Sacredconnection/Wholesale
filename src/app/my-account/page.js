@@ -218,7 +218,7 @@ export default function MyAccountPage() {
         <Header onOpenLogin={() => setIsLoginOpen(true)} />
         
         <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-20 lg:py-24 flex items-center justify-center">
-          <div className="bg-[#1a1a1a] border border-white/10 rounded-lg p-6 sm:p-8 lg:p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl">
+          <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 sm:p-8 lg:p-12 max-w-lg w-full text-center relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 right-0 w-32 h-32 bg-[#268072]/10 blur-xl pointer-events-none rounded-full"></div>
             
             <div className="w-16 h-16 rounded-full bg-[#93000a]/10 border border-[#93000a]/30 flex items-center justify-center text-3xl mx-auto mb-6">
@@ -367,7 +367,7 @@ export default function MyAccountPage() {
           aria-live="assertive"
           aria-label="Generating your PDF catalog. Please wait and keep this page open."
         >
-          <div className="w-full max-w-xl rounded-md border border-[#82d6c5]/45 bg-[#183b35] px-6 py-10 text-center shadow-2xl shadow-black/50 sm:px-10 sm:py-14">
+          <div className="w-full max-w-xl rounded-xl border border-[#82d6c5]/45 bg-[#183b35] px-6 py-10 text-center shadow-2xl shadow-black/50 sm:px-10 sm:py-14">
             <LoaderCircle
               className="mx-auto h-14 w-14 animate-spin text-[#82d6c5] sm:h-16 sm:w-16"
               aria-hidden="true"
@@ -430,11 +430,11 @@ export default function MyAccountPage() {
       </section>
 
       {/* Main Account Portal Area */}
-      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 lg:gap-8 items-start">
+      <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12">
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-10 sm:gap-12 items-start">
           
           {/* Tabs Sidebar */}
-          <aside className="bg-[#1a1a1a] border border-white/10 rounded-md p-3 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible shrink-0 scrollbar-none">
+          <aside className="bg-[#1a1a1a] border border-white/10 rounded-xl p-3 flex flex-row lg:flex-col gap-1 overflow-x-auto lg:overflow-x-visible shrink-0 scrollbar-none">
             {[
               { id: "dashboard", label: "Dashboard", icon: User },
               { id: "orders", label: "Orders", icon: ShoppingBag },
@@ -473,12 +473,12 @@ export default function MyAccountPage() {
           </aside>
 
           {/* Tab Panel Content Area */}
-          <div className="lg:col-span-3 flex flex-col gap-6">
+          <div className="lg:col-span-3 flex flex-col gap-10 sm:gap-12">
             
             {/* 1. DASHBOARD TAB */}
             {activeTab === "dashboard" && (
-              <div className="flex flex-col gap-6 animate-fade-in">
-                <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 relative overflow-hidden shadow-xl">
+              <div className="flex flex-col gap-10 sm:gap-12 animate-fade-in">
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 md:p-8 relative overflow-hidden shadow-xl">
                   <div className="absolute top-0 right-0 w-48 h-48 bg-[#268072]/5 blur-2xl pointer-events-none rounded-full"></div>
                   
                   <h2 className="font-headline-md text-2xl font-bold text-white mb-4">
@@ -504,19 +504,19 @@ export default function MyAccountPage() {
                   <div className="h-px bg-white/10 my-6"></div>
 
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="bg-[#131313] border border-white/5 p-4 rounded flex flex-col gap-1">
+                    <div className="bg-[#131313] border border-white/5 p-4 rounded-lg flex flex-col gap-1">
                       <span className="text-[10px] font-mono text-white/40 uppercase">Credit Limit</span>
                       <span className="text-xl font-bold text-white">${user.creditLimit.toLocaleString()} USD</span>
                       <span className="text-[10px] text-[#82d6c5] font-mono mt-0.5">Flexible net-30 terms</span>
                     </div>
 
-                    <div className="bg-[#131313] border border-white/5 p-4 rounded flex flex-col gap-1">
+                    <div className="bg-[#131313] border border-white/5 p-4 rounded-lg flex flex-col gap-1">
                       <span className="text-[10px] font-mono text-white/40 uppercase">Partner Discount</span>
                       <span className="text-xl font-bold text-[#82d6c5]">{user.discountRate}% Off Base</span>
                       <span className="text-[10px] text-white/40 font-mono mt-0.5">Applied at wholesale checkout</span>
                     </div>
 
-                    <div className="bg-[#131313] border border-white/5 p-4 rounded flex flex-col gap-1">
+                    <div className="bg-[#131313] border border-white/5 p-4 rounded-lg flex flex-col gap-1">
                       <span className="text-[10px] font-mono text-white/40 uppercase">Company Status</span>
                       <span className="text-xl font-bold text-emerald-400 flex items-center gap-1.5">
                         <Check className="w-5 h-5 shrink-0" />
@@ -528,13 +528,13 @@ export default function MyAccountPage() {
                 </div>
 
                 {/* Active Order Mini-Card */}
-                <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl flex flex-col gap-4">
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 shadow-xl flex flex-col gap-4">
                   <h3 className="font-headline-md text-sm font-bold uppercase tracking-wider text-white/80 flex items-center gap-2">
                     <Truck className="w-4 h-4 text-[#82d6c5]" />
                     Active Orders
                   </h3>
                   {activeOrder ? (
-                    <div className="bg-[#131313] border border-white/5 rounded-md p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div className="bg-[#131313] border border-white/5 rounded-lg p-4 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                       <div className="flex-grow">
                         <div className="flex flex-wrap items-center gap-2 mb-1">
                           <span className="break-all text-sm font-bold text-white">Order #{activeOrder.number}</span>
@@ -569,16 +569,16 @@ export default function MyAccountPage() {
 
             {/* 2. ORDERS TAB */}
             {activeTab === "orders" && (
-              <div className="flex flex-col gap-6 animate-fade-in">
+              <div className="flex flex-col gap-10 sm:gap-12 animate-fade-in">
                 {/* Active Order Tracker Detail */}
                 {activeOrder && (
-                  <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl">
+                  <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 shadow-xl">
                     <h3 className="font-headline-md text-lg font-bold text-white mb-6 flex items-center gap-2.5">
                       <ClipboardList className="w-5 h-5 text-[#82d6c5]" />
                       Active Order Tracking
                     </h3>
 
-                    <div className="border border-white/5 bg-[#131313] rounded p-6 flex flex-col gap-6">
+                    <div className="border border-white/5 bg-[#131313] rounded-lg p-6 flex flex-col gap-6">
                       <div className="flex flex-col md:flex-row justify-between gap-4 border-b border-white/5 pb-4">
                         <div>
                           <span className="text-[10px] font-mono text-white/50">Order Reference</span>
@@ -623,7 +623,7 @@ export default function MyAccountPage() {
                 )}
 
                 {/* Orders List Table */}
-                <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl">
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 shadow-xl">
                   <h3 className="font-headline-md text-lg font-bold text-white mb-4">
                     Order History
                   </h3>
@@ -718,7 +718,7 @@ export default function MyAccountPage() {
 
             {/* 3. DOWNLOADS TAB */}
             {activeTab === "downloads" && (
-              <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl animate-fade-in">
+              <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 md:p-8 shadow-xl animate-fade-in">
                 <h3 className="font-headline-md text-lg font-bold text-white mb-2 flex items-center gap-2">
                   <Award className="w-5 h-5 text-[#82d6c5]" />
                   Downloadable Partner Vault
@@ -734,7 +734,7 @@ export default function MyAccountPage() {
                     { title: "Amazon Rainforest Fair Trade Agreement", desc: "Indigenous alliance certification.", size: "PDF - 1.8 MB" },
                     { title: "Rapeh Administration Guidelines", desc: "Dosages, warnings and best practices.", size: "PDF - 920 KB" }
                   ].map((doc, idx) => (
-                    <div key={idx} className="bg-[#131313] border border-white/5 rounded-md p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
+                    <div key={idx} className="bg-[#131313] border border-white/5 rounded-lg p-5 flex flex-col justify-between hover:border-white/10 transition-colors">
                       <div className="mb-4">
                         <FileText className="w-8 h-8 text-[#82d6c5] mb-2" />
                         <h4 className="text-sm font-bold text-white mb-1">{doc.title}</h4>
@@ -777,10 +777,10 @@ export default function MyAccountPage() {
                   The following addresses will be used on the checkout order drafts by default.
                 </p>
                 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="grid grid-cols-1 gap-10 sm:gap-12 md:grid-cols-2">
                   
                   {/* Shipping Address */}
-                  <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl">
+                  <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 shadow-xl">
                     <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
                       <h3 className="font-headline-md text-sm font-bold uppercase tracking-wider text-white">
                         Shipping Address
@@ -905,7 +905,7 @@ export default function MyAccountPage() {
                   </div>
 
                   {/* Billing Address */}
-                  <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 shadow-xl">
+                  <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 shadow-xl">
                     <div className="flex justify-between items-center border-b border-white/5 pb-3 mb-4">
                       <h3 className="font-headline-md text-sm font-bold uppercase tracking-wider text-white">
                         Billing Address
@@ -1034,10 +1034,10 @@ export default function MyAccountPage() {
 
             {/* 5. ACCOUNT DETAILS TAB */}
             {activeTab === "details" && (
-              <div className="flex flex-col gap-6 animate-fade-in">
+              <div className="flex flex-col gap-10 sm:gap-12 animate-fade-in">
 
                 {/* Profile Photo Card */}
-                <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl">
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 md:p-8 shadow-xl">
                   <h3 className="font-headline-md text-sm font-bold uppercase tracking-wider text-white/80 flex items-center gap-2 mb-6">
                     <Camera className="w-4 h-4 text-[#82d6c5]" />
                     Profile Photo
@@ -1091,7 +1091,7 @@ export default function MyAccountPage() {
                 </div>
 
                 {/* Account Details Form */}
-                <div className="bg-[#1a1a1a] border border-white/10 rounded-md p-6 md:p-8 shadow-xl">
+                <div className="bg-[#1a1a1a] border border-white/10 rounded-xl p-6 md:p-8 shadow-xl">
                 <h3 className="font-headline-md text-lg font-bold text-white mb-6">
                   Account Details
                 </h3>
