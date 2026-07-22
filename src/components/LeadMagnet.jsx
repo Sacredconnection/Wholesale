@@ -4,10 +4,8 @@ export default function LeadMagnet() {
   return (
     <section
       aria-labelledby="newsletter-title"
-      className="compendium-section relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#1a1a1a] px-5 py-8 shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-12 lg:py-12"
+      className="compendium-section home-green-outline relative isolate w-full overflow-hidden rounded-xl border bg-[#1a1a1a] px-5 py-8 shadow-[0_24px_70px_rgba(0,0,0,0.18)] sm:px-8 sm:py-10 lg:px-12 lg:py-12"
     >
-      <div className="pointer-events-none absolute -right-24 -top-28 h-72 w-72 rounded-full bg-[#268072]/10 blur-3xl" />
-
       <div className="relative grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(360px,0.72fr)] lg:gap-12">
         <div className="max-w-2xl">
           <div className="compendium-icon-shell mb-5 flex h-11 w-11 items-center justify-center rounded-full border border-white/15 bg-white/[0.07] text-[#82d6c5] backdrop-blur-sm">

@@ -88,7 +88,7 @@ export default function Onboarding() {
       <section
         ref={sectionRef}
         id="onboarding"
-        className="relative mx-auto flex w-full max-w-6xl scroll-mt-24 flex-col items-center gap-6 rounded-xl border border-white/15 bg-[#1a1a1a] px-4 py-7 shadow-[0_24px_70px_rgba(0,0,0,0.18)] transition-colors duration-500 hover:border-[#82d6c5]/60 sm:gap-7 sm:px-6 sm:py-8 lg:gap-8 lg:px-10 lg:py-10"
+        className="home-green-outline relative mx-auto flex w-full max-w-6xl scroll-mt-24 flex-col items-center gap-6 rounded-xl border bg-[#1a1a1a] px-4 py-7 shadow-[0_24px_70px_rgba(0,0,0,0.18)] transition-colors duration-300 sm:gap-7 sm:px-6 sm:py-8 lg:gap-8 lg:px-10 lg:py-10"
       >
         {/* Header */}
         <div

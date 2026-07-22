@@ -70,10 +70,8 @@ export default function B2BFAQ() {
   return (
     <section
       aria-labelledby="b2b-faq-title"
-      className="b2b-faq-card relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#1a1a1a] px-5 py-6 shadow-[0_18px_50px_rgba(0,0,0,0.12)] transition-all duration-500 sm:px-7 sm:py-7 lg:px-8"
+      className="b2b-faq-card home-green-outline relative isolate w-full overflow-hidden rounded-xl border bg-[#1a1a1a] px-5 py-6 shadow-[0_18px_50px_rgba(0,0,0,0.12)] transition-all duration-300 sm:px-7 sm:py-7 lg:px-8"
     >
-      <div className="pointer-events-none absolute -left-20 -top-24 h-48 w-48 rounded-full bg-[#268072]/10 blur-3xl" />
-
       <div className="relative grid gap-6 md:grid-cols-2 md:gap-7 xl:grid-cols-[0.78fr_repeat(3,minmax(0,1fr))] xl:gap-7">
         <div className="md:col-span-2 xl:col-span-1">
           <p className="mb-2 font-label-sm text-[10px] font-bold uppercase tracking-[0.2em] text-[#82d6c5]">

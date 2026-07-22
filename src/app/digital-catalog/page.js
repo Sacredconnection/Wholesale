@@ -404,8 +404,8 @@ export default function CatalogPage() {
             ) : loading ? (
               <div className="space-y-5">
                 {Array.from({ length: 6 }, (_, index) => (
-                  <div key={index} className="grid h-[41.5rem] grid-cols-1 items-stretch overflow-hidden rounded-lg border-2 border-white/15 bg-[#1a1a1a] sm:h-[22rem] sm:grid-cols-[13.5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)] xl:h-[15.75rem]">
-                    <div className="m-3 h-56 animate-pulse rounded-lg border-2 border-white/10 bg-white/5 sm:h-auto xl:h-56 xl:self-start" />
+                  <div key={index} className="grid h-[41.5rem] grid-cols-1 items-stretch overflow-hidden rounded-lg border border-white/15 bg-[#1a1a1a] sm:h-[22rem] sm:grid-cols-[13.5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)] xl:h-[15.75rem]">
+                    <div className="m-3 h-56 animate-pulse rounded-lg border border-white/10 bg-white/5 sm:h-auto xl:h-56 xl:self-start" />
                     <div className="space-y-3 p-4 sm:p-5 lg:p-6">
                       <div className="h-3 w-1/3 animate-pulse rounded bg-white/10" />
                       <div className="h-6 w-4/5 animate-pulse rounded bg-white/10" />

@@ -70,10 +70,8 @@ export default function TestimonialSection() {
   return (
     <section
       aria-labelledby="testimonial-heading"
-      className="relative isolate w-full overflow-hidden rounded-xl border border-white/15 bg-[#131313] px-4 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.14)] transition-colors duration-500 hover:border-[#82d6c5]/60 sm:px-6 sm:py-7 lg:px-8 lg:py-8"
+      className="home-green-outline relative isolate w-full overflow-hidden rounded-xl border bg-[#131313] px-4 py-6 shadow-[0_24px_70px_rgba(0,0,0,0.14)] transition-colors duration-300 sm:px-6 sm:py-7 lg:px-8 lg:py-8"
     >
-      <div className="pointer-events-none absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#268072]/15 blur-3xl" />
-
       <div className="relative mx-auto max-w-6xl">
         <div className="mb-5 text-center sm:mb-6">
           <p className="mb-1.5 font-label-sm text-xs font-bold uppercase tracking-[0.2em] text-[#82d6c5]">
@@ -127,7 +125,7 @@ export default function TestimonialSection() {
           <button
             type="button"
             onClick={() => goToTestimonial(activeIndex - 1)}
-            className="testimonial-nav-button absolute left-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] lg:hidden"
+            className="testimonial-nav-button absolute left-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-[#82d6c5] shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#9ef2e1] lg:hidden"
             aria-label="Show previous testimonial"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -135,7 +133,7 @@ export default function TestimonialSection() {
           <button
             type="button"
             onClick={() => goToTestimonial(activeIndex + 1)}
-            className="testimonial-nav-button absolute right-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-white shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#82d6c5] lg:hidden"
+            className="testimonial-nav-button absolute right-0 top-1/2 z-10 grid h-10 w-10 -translate-y-1/2 place-items-center rounded-full border border-white/15 bg-[#131313]/90 text-[#82d6c5] shadow-lg backdrop-blur-sm transition-colors hover:border-[#82d6c5] hover:text-[#9ef2e1] lg:hidden"
             aria-label="Show next testimonial"
           >
             <ChevronRight className="h-4 w-4" aria-hidden="true" />

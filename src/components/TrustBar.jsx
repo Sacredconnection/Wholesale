@@ -61,10 +61,10 @@ export default function TrustBar() {
   return (
     <div className="w-full bg-[#131313]">
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-10 lg:py-12 w-full animate-fade-in" style={{ animationDelay: '0.4s' }}>
-        <div className="trust-bar-grid relative grid grid-cols-1 overflow-hidden rounded-sm border border-white/10 bg-[#23403B] md:grid-cols-2 lg:grid-cols-3">
+        <div className="trust-bar-grid relative grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3">
           
           {/* Card 1: B2B Program */}
-          <div className="group relative flex flex-col items-start gap-4 overflow-hidden border-b border-white/10 p-4 transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] motion-reduce:transition-none sm:p-5 md:border-r lg:border-b-0 lg:p-7">
+          <div className="home-green-outline group relative flex flex-col items-start gap-4 overflow-hidden rounded-lg border bg-[#23403B] p-4 transition-[background-color,border-color,box-shadow] duration-300 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] motion-reduce:transition-none sm:p-5 lg:p-7">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-[#82d6c5]/10 border border-[#82d6c5]/20 flex items-center justify-center text-[#82d6c5] transition-colors duration-500 group-hover:bg-[#82d6c5]/15 group-hover:border-[#82d6c5]/30">
                 <BriefcaseBusiness className="w-4 h-4" aria-hidden="true" />
@@ -84,7 +84,7 @@ export default function TrustBar() {
           </div>
 
           {/* Card 2: Sustainability */}
-          <div className="group relative flex flex-col items-start gap-4 overflow-hidden border-b border-white/10 p-4 transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] motion-reduce:transition-none sm:p-5 lg:border-b-0 lg:border-r lg:p-7">
+          <div className="home-green-outline group relative flex flex-col items-start gap-4 overflow-hidden rounded-lg border bg-[#23403B] p-4 transition-[background-color,border-color,box-shadow] duration-300 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] motion-reduce:transition-none sm:p-5 lg:p-7">
             <div className="flex items-center gap-2.5">
               <div className="w-9 h-9 rounded-full bg-[#82d6c5]/10 border border-[#82d6c5]/20 flex items-center justify-center text-[#82d6c5] transition-colors duration-500 group-hover:bg-[#82d6c5]/15 group-hover:border-[#82d6c5]/30">
                 <Leaf className="w-4 h-4 transition-transform duration-500 group-hover:-rotate-3 motion-reduce:transform-none" aria-hidden="true" />
@@ -106,7 +106,7 @@ export default function TrustBar() {
           </div>
 
           {/* Card 3: Metrics */}
-          <div className="group relative col-span-1 flex flex-col gap-4 overflow-hidden p-4 transition-[background-color,box-shadow] duration-500 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] motion-reduce:transition-none sm:p-5 md:col-span-2 lg:col-span-1 lg:p-7">
+          <div className="home-green-outline group relative col-span-1 flex flex-col gap-4 overflow-hidden rounded-lg border bg-[#23403B] p-4 transition-[background-color,border-color,box-shadow] duration-300 ease-out hover:bg-[#294a43] hover:shadow-[0_12px_30px_rgba(0,0,0,0.16)] motion-reduce:transition-none sm:p-5 md:col-span-2 lg:col-span-1 lg:p-7">
             <div className="flex items-center gap-2.5">
               <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#82d6c5]/20 bg-[#82d6c5]/10 text-[#82d6c5] transition-colors duration-500 group-hover:border-[#82d6c5]/30 group-hover:bg-[#82d6c5]/15">
                 <TrendingUp className="h-4 w-4 transition-transform duration-500 group-hover:-translate-y-0.5 group-hover:translate-x-0.5 motion-reduce:transform-none" aria-hidden="true" />

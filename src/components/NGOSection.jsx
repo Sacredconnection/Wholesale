@@ -71,12 +71,8 @@ export default function NGOSection() {
       <section
         ref={sectionRef}
         id="ngo-partnership"
-        className="ngo-section-card bg-[#1a1a1a] border border-white/35 rounded-xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl shadow-[#284e32]/20 hover:border-white/60 transition-colors duration-500"
+        className="ngo-section-card bg-[#1a1a1a] border border-white/35 rounded-xl p-6 sm:p-8 lg:p-12 xl:p-16 relative overflow-hidden scroll-mt-24 w-full shadow-2xl hover:border-white/60 transition-colors duration-500"
       >
-        {/* Ambient background glow */}
-        <div className="absolute -top-36 -left-36 w-[500px] h-[500px] bg-[#268072] opacity-[0.09] blur-[130px] pointer-events-none rounded-full" />
-        <div className="absolute -bottom-36 -right-36 w-[500px] h-[500px] bg-[#82d6c5] opacity-[0.07] blur-[130px] pointer-events-none rounded-full" />
-
         {/* NGO Symbol Watermark in Bottom-Right */}
         <Image
           src="/ngo/simbolo-conexao-ancestral.svg"
