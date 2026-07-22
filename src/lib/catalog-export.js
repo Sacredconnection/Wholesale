@@ -93,38 +93,50 @@ function usesMobilePdfPreview() {
   return userAgentDataMobile || mobileUserAgent || touchEnabledIpad;
 }
 
-async function preparePdfDelivery(filename) {
+function preparePdfDelivery() {
   if (usesMobilePdfPreview()) {
     return { mode: "preview" };
   }
 
-  if (window.isSecureContext && typeof window.showSaveFilePicker === "function") {
-    try {
-      const fileHandle = await window.showSaveFilePicker({
-        suggestedName: filename,
-        types: [
-          {
-            description: "PDF document",
-            accept: { "application/pdf": [".pdf"] },
-          },
-        ],
-      });
-      return { mode: "file", fileHandle };
-    } catch (error) {
-      if (error?.name === "AbortError") return null;
-    }
+  const previewWindow = window.open("", "_blank");
+  if (!previewWindow) {
+    return { mode: "preview" };
   }
 
-  return { mode: "download" };
+  previewWindow.document.title = "Generating PDF catalog";
+  previewWindow.document.body.innerHTML = `
+    <main style="box-sizing:border-box;min-height:100vh;display:grid;place-items:center;margin:0;padding:32px;background:#102c27;color:#fff;font-family:Arial,sans-serif;text-align:center">
+      <div>
+        <div style="width:44px;height:44px;margin:0 auto 24px;border:4px solid rgba(130,214,197,.25);border-top-color:#82d6c5;border-radius:50%;animation:catalog-spin .8s linear infinite"></div>
+        <h1 style="margin:0;font-size:24px">Generating your PDF catalog...</h1>
+        <p style="margin:14px 0 0;color:rgba(255,255,255,.72);font-size:16px;line-height:1.6">Please keep this tab open. The document will appear here when it is ready.</p>
+      </div>
+      <style>@keyframes catalog-spin{to{transform:rotate(360deg)}}</style>
+    </main>`;
+
+  return { mode: "window", previewWindow };
+}
+
+function showPdfDeliveryError(delivery) {
+  if (delivery?.mode !== "window" || delivery.previewWindow.closed) return;
+
+  delivery.previewWindow.document.title = "PDF generation failed";
+  delivery.previewWindow.document.body.innerHTML = `
+    <main style="box-sizing:border-box;min-height:100vh;display:grid;place-items:center;margin:0;padding:32px;background:#102c27;color:#fff;font-family:Arial,sans-serif;text-align:center">
+      <div>
+        <h1 style="margin:0;font-size:24px">The PDF could not be generated</h1>
+        <p style="margin:14px 0 0;color:rgba(255,255,255,.72);font-size:16px;line-height:1.6">Please close this tab and try again from the digital catalog.</p>
+      </div>
+    </main>`;
 }
 
 async function deliverPdf(pdf, filename, delivery) {
   const blob = pdf.output("blob");
 
-  if (delivery?.mode === "file") {
-    const writable = await delivery.fileHandle.createWritable();
-    await writable.write(blob);
-    await writable.close();
+  if (delivery?.mode === "window" && !delivery.previewWindow.closed) {
+    const url = URL.createObjectURL(blob);
+    delivery.previewWindow.location.replace(url);
+    window.setTimeout(() => URL.revokeObjectURL(url), 300000);
     return;
   }
 
@@ -1059,34 +1071,38 @@ export async function downloadDigitalCatalogPdf({
 } = {}) {
   const generatedAt = new Date();
   const filename = `sacred-connection-catalog-${safeFilenameTimestamp(generatedAt)}.pdf`;
-  const delivery = await preparePdfDelivery(filename);
-  if (!delivery) return;
+  const delivery = preparePdfDelivery();
 
-  const params = new URLSearchParams({ export: "true" });
-  if (search) params.set("q", search);
-  if (category) params.set("category", category);
-  if (tribe) params.set("tribe", tribe);
+  try {
+    const params = new URLSearchParams({ export: "true" });
+    if (search) params.set("q", search);
+    if (category) params.set("category", category);
+    if (tribe) params.set("tribe", tribe);
 
-  const response = await fetch(`/api/catalog?${params.toString()}`, {
-    cache: "no-store",
-    credentials: "omit",
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error || "The digital catalog could not be prepared for export.");
+    const response = await fetch(`/api/catalog?${params.toString()}`, {
+      cache: "no-store",
+      credentials: "omit",
+    });
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data.error || "The digital catalog could not be prepared for export.");
+    }
+    if (!Array.isArray(data.products) || data.products.length === 0) {
+      throw new Error("There are no digital catalog products matching the selected filters.");
+    }
+
+    await renderDigitalCatalogPdf({
+      products: data.products,
+      includeLinks: false,
+      filterLabel,
+      generatedAt,
+      filename,
+      delivery,
+    });
+  } catch (error) {
+    showPdfDeliveryError(delivery);
+    throw error;
   }
-  if (!Array.isArray(data.products) || data.products.length === 0) {
-    throw new Error("There are no digital catalog products matching the selected filters.");
-  }
-
-  await renderDigitalCatalogPdf({
-    products: data.products,
-    includeLinks: false,
-    filterLabel,
-    generatedAt,
-    filename,
-    delivery,
-  });
 }
 
 async function renderDigitalCatalogPdf({
