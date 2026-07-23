@@ -1,4 +1,4 @@
-import { getWooCommerceBaseUrl } from "@/lib/woocommerce";
+import { getCommerceStoreOrigins } from "@/lib/commerce-stores";
 import sharp from "sharp";
 
 export const runtime = "nodejs";
@@ -7,14 +7,18 @@ const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
 export async function GET(request) {
   try {
-    const source = new URL(request.url).searchParams.get("url");
+    const { searchParams } = new URL(request.url);
+    const source = searchParams.get("url");
+    const wantsImageResponse = searchParams.get("format") === "image";
     if (!source) return new Response("Missing image URL.", { status: 400 });
 
     const target = new URL(source);
-    const catalogHost = new URL(getWooCommerceBaseUrl()).hostname;
+    const catalogHosts = new Set(
+      getCommerceStoreOrigins().map((origin) => new URL(origin).hostname)
+    );
     const allowed =
       target.protocol === "https:" &&
-      target.hostname === catalogHost &&
+      catalogHosts.has(target.hostname) &&
       target.pathname.startsWith("/wp-content/uploads/");
     if (!allowed) return new Response("Image URL is not allowed.", { status: 403 });
 
@@ -40,15 +44,27 @@ export async function GET(request) {
       .png({ compressionLevel: 9, adaptiveFiltering: true })
       .toBuffer();
 
-    return Response.json({
-      format: "PNG",
-      base64: optimized.toString("base64"),
-    }, {
-      headers: {
-        "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
-        "X-Content-Type-Options": "nosniff",
+    const cacheHeaders = {
+      "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
+      "X-Content-Type-Options": "nosniff",
+    };
+
+    if (wantsImageResponse) {
+      return new Response(optimized, {
+        headers: {
+          ...cacheHeaders,
+          "Content-Type": "image/png",
+        },
+      });
+    }
+
+    return Response.json(
+      {
+        format: "PNG",
+        base64: optimized.toString("base64"),
       },
-    });
+      { headers: cacheHeaders }
+    );
   } catch (error) {
     console.error("GET /api/catalog/image failed:", error);
     return new Response("Image unavailable.", { status: 502 });

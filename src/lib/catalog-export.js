@@ -8,6 +8,10 @@ const BRAND_MINT = "FF82D6C5";
 const BRAND_RED = "FFEC2300";
 
 const DEFAULT_ETHNICITY_COLOR = [38, 128, 114];
+const SACRED_PRIMARY = [20, 65, 57];
+const SACRED_SECONDARY = [130, 214, 197];
+const MAYA_PRIMARY = [204, 102, 51];
+const MAYA_SECONDARY = [153, 153, 51];
 const ETHNICITY_COLORS = {
   apurina: [74, 115, 13],
   "apurina\u00a3": [74, 115, 13],
@@ -374,6 +378,26 @@ async function fetchPdfAsset(url, { cache = "force-cache" } = {}) {
   return new Uint8Array(await response.arrayBuffer());
 }
 
+async function rasterizePdfSvg(url, width = 800, height = 288) {
+  const image = new Image();
+  image.decoding = "async";
+  const loaded = new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = () => reject(new Error("PDF SVG asset could not be loaded."));
+  });
+  image.src = url;
+  await loaded;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = width;
+  canvas.height = height;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("PDF SVG asset could not be rasterized.");
+  context.clearRect(0, 0, width, height);
+  context.drawImage(image, 0, 0, width, height);
+  return canvas.toDataURL("image/png");
+}
+
 async function fetchPdfProductImage(url) {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new Error(`PDF product image failed with status ${response.status}.`);
@@ -405,6 +429,78 @@ function drawCatalogLogo(pdf, logo, x, y, width = 45) {
     pdf.setTextColor(255, 255, 255);
     pdf.text("Sacred Connection", x, y + width * 0.22);
   }
+}
+
+function storePdfTheme(storeId) {
+  const isMaya = storeId === "maya-herbs";
+  return {
+    isMaya,
+    primary: isMaya ? MAYA_PRIMARY : SACRED_PRIMARY,
+    secondary: isMaya ? MAYA_SECONDARY : SACRED_SECONDARY,
+    secondarySoft: isMaya ? [235, 226, 188] : [218, 235, 230],
+    muted: isMaya ? [238, 214, 199] : [180, 211, 202],
+    headerMuted: isMaya ? [102, 91, 82] : [190, 201, 198],
+  };
+}
+
+function drawStoreBrand(
+  pdf,
+  logo,
+  mayaLogo,
+  storeId,
+  storeName,
+  x,
+  y,
+  width = 45
+) {
+  if (storeId !== "maya-herbs") {
+    drawCatalogLogo(pdf, logo, x, y, width);
+    return;
+  }
+
+  if (mayaLogo) {
+    pdf.addImage(
+      mayaLogo,
+      "PNG",
+      x,
+      y,
+      width,
+      width * 0.36,
+      "maya-catalog-logo",
+      "FAST"
+    );
+    return;
+  }
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(width / 4.4);
+  pdf.setTextColor(...MAYA_PRIMARY);
+  pdf.text(pdfSafeText(storeName || "Maya Herbs").toUpperCase(), x, y + width * 0.22);
+}
+
+function drawSharedCatalogBrand(pdf, logo, mayaLogo, x, y) {
+  const logoWidth = 36;
+  const logoGap = 7;
+  drawStoreBrand(
+    pdf,
+    logo,
+    mayaLogo,
+    "sacred-connection",
+    "Sacred Connection",
+    x,
+    y,
+    logoWidth
+  );
+  drawStoreBrand(
+    pdf,
+    logo,
+    mayaLogo,
+    "maya-herbs",
+    "Maya Herbs",
+    x + logoWidth + logoGap,
+    y,
+    logoWidth
+  );
 }
 
 function drawGreenCoverBackground(pdf, background) {
@@ -516,6 +612,7 @@ function drawGenerationStamp(pdf, generatedAtLabel, { darkBackground = false } =
 function drawPdfCover(
   pdf,
   logo,
+  mayaLogo,
   coverBackground,
   coverDecoration,
   contactIcons,
@@ -524,14 +621,14 @@ function drawPdfCover(
   generatedAtLabel
 ) {
   const categoryCount = new Set(products.map((product) => product.category).filter(Boolean)).size;
-  const tribeCount = new Set(products.map((product) => product.tribe).filter(Boolean)).size;
+  const storeCount = new Set(products.map((product) => product.storeId).filter(Boolean)).size;
   pdf.setFillColor(20, 65, 57);
   pdf.rect(0, 0, 210, 297, "F");
   drawGreenCoverBackground(pdf, coverBackground);
   pdf.setFillColor(26, 26, 26);
   pdf.rect(0, 0, 210, 42, "F");
   drawCoverDecoration(pdf, coverDecoration);
-  drawCatalogLogo(pdf, logo, 16, 12, 52);
+  drawSharedCatalogBrand(pdf, logo, mayaLogo, 16, 13);
 
   pdf.setDrawColor(130, 214, 197);
   pdf.setLineWidth(0.6);
@@ -545,7 +642,7 @@ function drawPdfCover(
   pdf.setFontSize(31);
   pdf.setTextColor(255, 255, 255);
   pdf.text("Wholesale", 16, 101);
-  pdf.text("Rapé Catalog", 16, 116);
+  pdf.text("Product Catalog", 16, 116);
 
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(10.5);
@@ -553,7 +650,7 @@ function drawPdfCover(
   pdf.text(
     truncatePdfLines(
       pdf,
-      "A curated guide to Sacred Connection blends, indigenous traditions, formats, SKUs, and product details.",
+      "A curated guide to Sacred Connection and Maya Herbs products, organized by store, collection, and product details.",
       130,
       4
     ),
@@ -565,9 +662,9 @@ function drawPdfCover(
   pdf.setFillColor(255, 255, 255);
   pdf.roundedRect(16, 180, 178, 48, 2.5, 2.5, "F");
   const stats = [
-    [String(products.length), "RAPÉS"],
-    [String(categoryCount), "COLLECTIONS"],
-    [String(tribeCount), "TRIBES"],
+    [String(storeCount), "STORES"],
+    [String(products.length), "PRODUCTS"],
+    [String(categoryCount), "CATEGORIES"],
   ];
   stats.forEach(([value, label], index) => {
     const x = 45 + index * 59;
@@ -592,30 +689,144 @@ function drawPdfCover(
   pdf.text(pdfSafeText(filterLabel || "Complete catalog"), 16, 250);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(255, 255, 255);
-  pdf.text("SACRED CONNECTION WHOLESALE", 16, 278);
+  pdf.text("SACRED CONNECTION + MAYA HERBS", 16, 278);
   drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
 }
 
-function drawGridHeader(pdf, logo, category, pageNumber, pageCount) {
-  pdf.setFillColor(26, 26, 26);
-  pdf.rect(0, 0, 210, 28, "F");
-  drawCatalogLogo(pdf, logo, 12, 6.5, 36);
+function drawStoreCover(
+  pdf,
+  logo,
+  mayaLogo,
+  coverBackground,
+  coverDecoration,
+  store,
+  storeIndex,
+  pageNumber,
+  pageCount,
+  generatedAtLabel
+) {
+  const theme = storePdfTheme(store.storeId);
+  const storeHeadingColor = theme.isMaya
+    ? [255, 255, 255]
+    : theme.secondary;
+  pdf.setFillColor(...theme.primary);
+  pdf.rect(0, 0, 210, 297, "F");
+  if (!theme.isMaya) drawGreenCoverBackground(pdf, coverBackground);
+  if (theme.isMaya) {
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(0, 0, 210, 42, "F");
+  } else {
+    drawCoverDecoration(pdf, coverDecoration);
+  }
+  drawStoreBrand(
+    pdf,
+    logo,
+    mayaLogo,
+    store.storeId,
+    store.storeName,
+    16,
+    14,
+    50
+  );
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(8);
+  pdf.setTextColor(...storeHeadingColor);
+  pdf.text(`STORE ${String(storeIndex + 1).padStart(2, "0")}`, 16, 76);
+  pdf.setDrawColor(...storeHeadingColor);
+  pdf.setLineWidth(0.7);
+  pdf.line(16, 82, 54, 82);
+  pdf.setFontSize(29);
+  pdf.setTextColor(255, 255, 255);
+  pdf.text(truncatePdfLines(pdf, store.storeName, 168, 3), 16, 108, {
+    lineHeightFactor: 1.08,
+  });
+
+  pdf.setFont("helvetica", "normal");
+  pdf.setFontSize(10);
+  pdf.setTextColor(...theme.secondarySoft);
+  const storeDescription =
+    store.storeId === "maya-herbs"
+      ? "Maya Herbs products presented as an independent catalog section, with their own categories, formats, identifiers, and product descriptions."
+      : "Sacred Connection products presented as an independent catalog section, including indigenous traditions, formats, identifiers, and product descriptions.";
+  pdf.text(truncatePdfLines(pdf, storeDescription, 145, 5), 16, 139, {
+    lineHeightFactor: 1.45,
+  });
+
+  pdf.setFillColor(255, 255, 255);
+  pdf.roundedRect(16, 180, 178, 48, 2.5, 2.5, "F");
+  const storeStats = [
+    [String(store.products.length), "PRODUCTS"],
+    [String(store.categoryGroups.length), "CATEGORIES"],
+  ];
+  storeStats.forEach(([value, label], index) => {
+    const x = index === 0 ? 62 : 148;
+    if (index) {
+      pdf.setDrawColor(220, 229, 226);
+      pdf.line(105, 190, 105, 218);
+    }
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(21);
+    pdf.setTextColor(...theme.primary);
+    pdf.text(value, x, 201, { align: "center" });
+    pdf.setFontSize(7);
+    pdf.setTextColor(83, 105, 98);
+    pdf.text(label, x, 213, { align: "center" });
+  });
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(7.5);
-  pdf.setTextColor(130, 214, 197);
-  pdf.text(pdfSafeText(category).toUpperCase(), 198, 12, { align: "right" });
+  pdf.setTextColor(255, 255, 255);
+  pdf.text("STORE SECTION", 16, 264);
+  pdf.setFont("helvetica", "normal");
+  pdf.setTextColor(...theme.muted);
+  pdf.text(`Page ${pageNumber} of ${pageCount}`, 16, 276);
+  drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
+}
+
+function drawGridHeader(
+  pdf,
+  logo,
+  mayaLogo,
+  storeId,
+  storeName,
+  category,
+  pageNumber,
+  pageCount
+) {
+  const theme = storePdfTheme(storeId);
+  pdf.setFillColor(...(theme.isMaya ? [255, 255, 255] : [26, 26, 26]));
+  pdf.rect(0, 0, 210, 28, "F");
+  drawStoreBrand(pdf, logo, mayaLogo, storeId, storeName, 12, 6.5, 36);
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7.5);
+  pdf.setTextColor(...theme.secondary);
+  pdf.text(
+    truncatePdfLines(
+      pdf,
+      `${pdfSafeText(storeName)} / ${pdfSafeText(category)}`.toUpperCase(),
+      105,
+      1
+    ),
+    198,
+    12,
+    { align: "right" }
+  );
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(6.5);
-  pdf.setTextColor(190, 201, 198);
+  pdf.setTextColor(...theme.headerMuted);
   pdf.text(`DIGITAL CATALOG  |  ${pageNumber}/${pageCount}`, 198, 19, { align: "right" });
 }
 
 function drawCategoryCover(
   pdf,
   logo,
+  mayaLogo,
   coverBackground,
   coverDecoration,
+  storeId,
+  storeName,
   category,
   products,
   categoryIndex,
@@ -624,16 +835,29 @@ function drawCategoryCover(
   generatedAtLabel
 ) {
   const tribes = [...new Set(products.map((product) => product.tribe).filter(Boolean))];
-  pdf.setFillColor(categoryIndex % 2 ? 26 : 20, categoryIndex % 2 ? 26 : 65, categoryIndex % 2 ? 26 : 57);
+  const theme = storePdfTheme(storeId);
+  const collectionHeadingColor = theme.isMaya
+    ? [255, 255, 255]
+    : theme.secondary;
+  pdf.setFillColor(...theme.primary);
   pdf.rect(0, 0, 210, 297, "F");
-  if (categoryIndex % 2 === 0) drawGreenCoverBackground(pdf, coverBackground);
-  drawCoverDecoration(pdf, coverDecoration);
-  drawCatalogLogo(pdf, logo, 16, 14, 50);
+  if (!theme.isMaya) drawGreenCoverBackground(pdf, coverBackground);
+  if (theme.isMaya) {
+    pdf.setFillColor(255, 255, 255);
+    pdf.rect(0, 0, 210, 42, "F");
+  } else {
+    drawCoverDecoration(pdf, coverDecoration);
+  }
+  drawStoreBrand(pdf, logo, mayaLogo, storeId, storeName, 16, 14, 50);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(8);
-  pdf.setTextColor(130, 214, 197);
-  pdf.text(`COLLECTION ${String(categoryIndex + 1).padStart(2, "0")}`, 16, 76);
-  pdf.setDrawColor(130, 214, 197);
+  pdf.setTextColor(...collectionHeadingColor);
+  pdf.text(
+    `${pdfSafeText(storeName).toUpperCase()} / COLLECTION ${String(categoryIndex + 1).padStart(2, "0")}`,
+    16,
+    76
+  );
+  pdf.setDrawColor(...collectionHeadingColor);
   pdf.setLineWidth(0.7);
   pdf.line(16, 82, 54, 82);
   pdf.setFontSize(29);
@@ -641,17 +865,17 @@ function drawCategoryCover(
   pdf.text(truncatePdfLines(pdf, category, 168, 3), 16, 108, { lineHeightFactor: 1.08 });
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(10);
-  pdf.setTextColor(218, 235, 230);
+  pdf.setTextColor(...theme.secondarySoft);
   const collectionDescription = category === "Rapé Indigenous"
     ? "Traditional rapé blends organized by their source tribe and the product information available in the wholesale catalog."
-    : "Sacred Connection blends presented with their wholesale formats, product identifiers, and catalog descriptions.";
+    : `${pdfSafeText(storeName)} products presented with their wholesale formats, product identifiers, and catalog descriptions.`;
   pdf.text(truncatePdfLines(pdf, collectionDescription, 145, 4), 16, 139, { lineHeightFactor: 1.45 });
 
   pdf.setFillColor(255, 255, 255);
   pdf.roundedRect(16, 180, 178, 48, 2.5, 2.5, "F");
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(21);
-  pdf.setTextColor(38, 128, 114);
+  pdf.setTextColor(...theme.primary);
   pdf.text(String(products.length), 42, 201, { align: "center" });
   pdf.setFontSize(7);
   pdf.setTextColor(83, 105, 98);
@@ -662,7 +886,12 @@ function drawCategoryCover(
   pdf.setFontSize(7.5);
   pdf.setTextColor(83, 105, 98);
   pdf.text(
-    truncatePdfLines(pdf, tribes.length ? `Tribes: ${tribes.join(", ")}` : "Sacred Connection collection", 113, 4),
+    truncatePdfLines(
+      pdf,
+      tribes.length ? `Subcategories: ${tribes.join(", ")}` : `${storeName} collection`,
+      113,
+      4
+    ),
     78,
     195,
     { lineHeightFactor: 1.35 }
@@ -671,7 +900,7 @@ function drawCategoryCover(
   pdf.setTextColor(255, 255, 255);
   pdf.text("CLICK ANY PRODUCT TO CONTINUE ONLINE", 16, 264);
   pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(180, 211, 202);
+  pdf.setTextColor(...theme.muted);
   pdf.text(`Page ${pageNumber} of ${pageCount}`, 16, 276);
   drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
 }
@@ -789,14 +1018,74 @@ function drawGridProductCard(pdf, product, image, includeLinks, x, y) {
   pdf.link(x, y, width, height, { url: pdfProductTarget(product, includeLinks) });
 }
 
-function drawGridFooter(pdf, category, pageNumber, pageCount, generatedAtLabel) {
+function drawIndexNavigationButton(
+  pdf,
+  x,
+  label,
+  theme,
+  destination,
+  width = 50
+) {
+  const y = 270;
+  const height = 8;
+  pdf.setFillColor(...theme.primary);
+  pdf.roundedRect(x, y, width, height, 1, 1, "F");
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(6.2);
+  pdf.setTextColor(...buttonTextColor(theme.primary));
+  pdf.text(label, x + width / 2, y + 5.3, { align: "center" });
+  if (destination) {
+    pdf.link(x, y, width, height, {
+      pageNumber: destination.pageNumber,
+      top: 0,
+      zoom: 1,
+    });
+  }
+}
+
+function drawGridFooter(
+  pdf,
+  storeName,
+  category,
+  pageNumber,
+  pageCount,
+  generatedAtLabel,
+  storeIndexDestinations
+) {
+  drawIndexNavigationButton(
+    pdf,
+    12,
+    "HOME",
+    { primary: [26, 26, 26] },
+    { pageNumber: 1 },
+    36
+  );
+  drawIndexNavigationButton(
+    pdf,
+    53,
+    "SACRED INDEX",
+    storePdfTheme("sacred-connection"),
+    storeIndexDestinations.get("sacred-connection")
+  );
+  drawIndexNavigationButton(
+    pdf,
+    107,
+    "MAYA INDEX",
+    storePdfTheme("maya-herbs"),
+    storeIndexDestinations.get("maya-herbs")
+  );
   pdf.setDrawColor(220, 229, 226);
   pdf.line(12, 282, 198, 282);
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(6);
   pdf.setTextColor(113, 128, 123);
-  pdf.text("Sacred Connection Wholesale", 12, 288);
-  pdf.text(`${pdfSafeText(category)}  |  ${pageNumber}/${pageCount}`, 198, 288, { align: "right" });
+  pdf.text(`${pdfSafeText(storeName)} Wholesale`, 12, 288);
+  pdf.text(
+    `${pdfSafeText(storeName)} / ${pdfSafeText(category)}  |  ${pageNumber}/${pageCount}`,
+    198,
+    288,
+    { align: "right" }
+  );
   drawGenerationStamp(pdf, generatedAtLabel);
 }
 
@@ -804,52 +1093,112 @@ function drawGridPage(pdf, {
   products,
   images,
   logo,
+  mayaLogo,
+  productWatermarks,
   includeLinks,
+  storeId,
+  storeName,
   category,
   pageNumber,
   pageCount,
   generatedAtLabel,
+  storeIndexDestinations,
 }) {
-  drawGridHeader(pdf, logo, category, pageNumber, pageCount);
+  drawGridHeader(
+    pdf,
+    logo,
+    mayaLogo,
+    storeId,
+    storeName,
+    category,
+    pageNumber,
+    pageCount
+  );
   products.forEach((product, index) => {
     const column = index % 2;
     const row = Math.floor(index / 2);
     drawGridProductCard(pdf, product, images[index], includeLinks, 12 + column * 96, 39 + row * 117);
   });
-  drawGridFooter(pdf, category, pageNumber, pageCount, generatedAtLabel);
+  const productWatermark = productWatermarks[storeId];
+  if (productWatermark) {
+    pdf.addImage(
+      productWatermark,
+      "PNG",
+      0,
+      0,
+      210,
+      297,
+      `product-watermark-${storeId}`,
+      "FAST"
+    );
+    drawGridHeader(
+      pdf,
+      logo,
+      mayaLogo,
+      storeId,
+      storeName,
+      category,
+      pageNumber,
+      pageCount
+    );
+  }
+  drawGridFooter(
+    pdf,
+    storeName,
+    category,
+    pageNumber,
+    pageCount,
+    generatedAtLabel,
+    storeIndexDestinations
+  );
 }
 
-function buildIndexRows(categoryGroups) {
+function buildIndexRows(store) {
   const rows = [];
-  categoryGroups.forEach((group) => {
-    rows.push({ type: "category", label: group.category, height: 10 });
-    const ethnicityNames = [...new Set(group.products.map((product) => product.tribe || group.category))]
-      .sort((a, b) => a.localeCompare(b));
+  store.categoryGroups.forEach((group, categoryIndex) => {
+    const gapBefore = categoryIndex === 0 ? 0 : 5;
+    rows.push({
+      type: "category",
+      storeId: store.storeId,
+      label: group.category,
+      gapBefore,
+      height: 10 + gapBefore,
+    });
+    const ethnicityNames = [
+      ...new Set(
+        group.products.map((product) => product.tribe || group.category)
+      ),
+    ].sort((a, b) => a.localeCompare(b));
     ethnicityNames.forEach((ethnicity) => {
       if (normalizeEthnicity(ethnicity) !== normalizeEthnicity(group.category)) {
-        rows.push({ type: "ethnicity", label: ethnicity, height: 9 });
+        rows.push({
+          type: "ethnicity",
+          storeId: store.storeId,
+          label: ethnicity,
+          gapBefore: 3,
+          height: 12,
+        });
       }
       group.products
         .filter((product) => (product.tribe || group.category) === ethnicity)
-        .sort((a, b) => String(a.name || "").localeCompare(String(b.name || "")))
-        .forEach((product) => rows.push({ type: "product", product, height: 8.5 }));
+        .sort((a, b) =>
+          String(a.name || "").localeCompare(String(b.name || ""))
+        )
+        .forEach((product) =>
+          rows.push({
+            type: "product",
+            storeId: store.storeId,
+            product,
+            height: 8.5,
+          })
+        );
     });
   });
   return rows;
 }
 
-const INDEX_NAV_COLUMNS = 4;
-const INDEX_NAV_BUTTON_HEIGHT = 9;
-const INDEX_NAV_GAP = 2;
-
-function indexNavigationHeight(ethnicityCount) {
-  if (!ethnicityCount) return 0;
-  const buttonRows = Math.ceil(ethnicityCount / INDEX_NAV_COLUMNS);
-  return 7 + buttonRows * INDEX_NAV_BUTTON_HEIGHT + (buttonRows - 1) * INDEX_NAV_GAP + 5;
-}
-
-function paginateIndexRows(rows, ethnicityCount) {
-  const columnHeight = 232 - indexNavigationHeight(ethnicityCount);
+function paginateIndexRows(rows) {
+  const columnHeight = 236;
   const pages = [];
   let page = [[], []];
   let column = 0;
@@ -874,11 +1223,7 @@ function paginateIndexRows(rows, ethnicityCount) {
   };
 
   const continuationRows = (row) => {
-    if (!currentCategory || row.type === "category") return [];
-
-    const repeated = [
-      { type: "category", label: currentCategory, height: 10, continuation: true },
-    ];
+    const repeated = [];
     if (
       row.type === "product" &&
       currentEthnicity &&
@@ -886,6 +1231,7 @@ function paginateIndexRows(rows, ethnicityCount) {
     ) {
       repeated.push({
         type: "ethnicity",
+        storeId: row.storeId,
         label: currentEthnicity,
         height: 9,
         continuation: true,
@@ -916,70 +1262,36 @@ function paginateIndexRows(rows, ethnicityCount) {
   return pages;
 }
 
-function drawIndexEthnicityNavigation(pdf, ethnicityLinks) {
-  if (!ethnicityLinks.length) return 38;
-
-  const startX = 12;
-  const startY = 38;
-  const availableWidth = 186;
-  const buttonWidth =
-    (availableWidth - (INDEX_NAV_COLUMNS - 1) * INDEX_NAV_GAP) / INDEX_NAV_COLUMNS;
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(6.5);
-  pdf.setTextColor(83, 105, 98);
-  pdf.text("JUMP TO ETHNICITY", startX, startY - 3);
-
-  ethnicityLinks.forEach(({ label, destination }, index) => {
-    const column = index % INDEX_NAV_COLUMNS;
-    const row = Math.floor(index / INDEX_NAV_COLUMNS);
-    const x = startX + column * (buttonWidth + INDEX_NAV_GAP);
-    const y = startY + row * (INDEX_NAV_BUTTON_HEIGHT + INDEX_NAV_GAP);
-    const accent = ethnicityColor({ tribe: label });
-
-    pdf.setFillColor(...accent);
-    pdf.roundedRect(x, y, buttonWidth, INDEX_NAV_BUTTON_HEIGHT, 1.2, 1.2, "F");
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(6.2);
-    pdf.setTextColor(...buttonTextColor(accent));
-    pdf.text(truncatePdfLines(pdf, label, buttonWidth - 6, 1), x + buttonWidth / 2, y + 5.8, {
-      align: "center",
-    });
-    if (destination) {
-      pdf.link(x, y, buttonWidth, INDEX_NAV_BUTTON_HEIGHT, {
-        pageNumber: destination.pageNumber,
-        top: destination.top,
-        zoom: 1,
-      });
-    }
-  });
-
-  return startY + indexNavigationHeight(ethnicityLinks.length);
-}
-
 function drawIndexPage(pdf, {
   columns,
   ethnicityLinks,
   logo,
+  mayaLogo,
   productDestinations,
+  storeId,
+  storeName,
   pageNumber,
   pageCount,
   indexPage,
   indexPageCount,
   generatedAtLabel,
 }) {
-  pdf.setFillColor(26, 26, 26);
+  const theme = storePdfTheme(storeId);
+  const medicineGreen = ethnicityColor({ tribe: "Medicina Sagrada" });
+  pdf.setFillColor(...(theme.isMaya ? [255, 255, 255] : [26, 26, 26]));
   pdf.rect(0, 0, 210, 28, "F");
-  drawCatalogLogo(pdf, logo, 12, 6.5, 36);
+  drawStoreBrand(pdf, logo, mayaLogo, storeId, storeName, 12, 6.5, 36);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
-  pdf.setTextColor(130, 214, 197);
-  pdf.text("INDEX", 198, 12, { align: "right" });
+  pdf.setTextColor(...theme.secondary);
+  pdf.text(`${pdfSafeText(storeName).toUpperCase()} INDEX`, 198, 12, {
+    align: "right",
+  });
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(6.5);
-  pdf.setTextColor(190, 201, 198);
+  pdf.setTextColor(...theme.headerMuted);
   pdf.text(`PRODUCT DIRECTORY  |  ${indexPage}/${indexPageCount}`, 198, 19, { align: "right" });
-  const indexRowsTop = drawIndexEthnicityNavigation(pdf, ethnicityLinks);
+  const indexRowsTop = 38;
   pdf.setDrawColor(220, 229, 226);
   pdf.setLineWidth(0.25);
   pdf.line(103, indexRowsTop, 103, 274);
@@ -990,46 +1302,72 @@ function drawIndexPage(pdf, {
     let y = indexRowsTop;
     rows.forEach((row) => {
       if (row.type === "category") {
-        pdf.setFillColor(20, 65, 57);
-        pdf.roundedRect(x, y, width, 9, 1, 1, "F");
+        const categoryY = y + (row.gapBefore || 0);
+        const useMedicineGreen =
+          storeId === "sacred-connection" &&
+          normalizeEthnicity(row.label) ===
+            normalizeEthnicity("Sacred Connection");
+        if (row.gapBefore) {
+          pdf.setDrawColor(211, 224, 220);
+          pdf.setLineWidth(0.2);
+          pdf.line(x, y + 2, x + width, y + 2);
+        }
+        pdf.setFillColor(
+          ...(useMedicineGreen
+            ? mixWithWhite(medicineGreen, 0.86)
+            : theme.primary)
+        );
+        pdf.roundedRect(x, categoryY, width, 9, 1, 1, "F");
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(8);
-        pdf.setTextColor(255, 255, 255);
-        pdf.text(
-          truncatePdfLines(pdf, pdfSafeText(row.label).toUpperCase(), row.continuation ? width - 24 : width - 6, 1),
-          x + 3,
-          y + 6
+        pdf.setTextColor(
+          ...(useMedicineGreen ? medicineGreen : [255, 255, 255])
         );
-        if (row.continuation) {
-          pdf.setFontSize(5.5);
-          pdf.text("CONT.", x + width - 3, y + 6, { align: "right" });
-        }
+        pdf.text(
+          truncatePdfLines(
+            pdf,
+            pdfSafeText(row.label).toUpperCase(),
+            width - 6,
+            1
+          ),
+          x + 3,
+          categoryY + 6
+        );
       } else if (row.type === "ethnicity") {
-        const accent = ethnicityColor({ tribe: row.label });
-        const destination = ethnicityLinks.find((item) => item.label === row.label)?.destination;
+        const ethnicityY = y + (row.gapBefore || 0);
+        const accent = theme.isMaya
+          ? theme.secondary
+          : ethnicityColor({ tribe: row.label });
+        const destination = ethnicityLinks.find(
+          (item) => item.storeId === row.storeId && item.label === row.label
+        )?.destination;
         pdf.setFillColor(...mixWithWhite(accent, 0.86));
-        pdf.roundedRect(x, y, width, 8, 1, 1, "F");
+        pdf.roundedRect(x, ethnicityY, width, 8, 1, 1, "F");
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(7.3);
         pdf.setTextColor(...accent);
         pdf.text(
           truncatePdfLines(pdf, pdfSafeText(row.label).toUpperCase(), row.continuation ? width - 24 : width - 6, 1),
           x + 3,
-          y + 5.4
+          ethnicityY + 5.4
         );
         if (row.continuation) {
           pdf.setFontSize(5.2);
-          pdf.text("CONT.", x + width - 3, y + 5.4, { align: "right" });
+          pdf.text("CONT.", x + width - 3, ethnicityY + 5.4, {
+            align: "right",
+          });
         }
         if (destination) {
-          pdf.link(x, y, width, 8, {
+          pdf.link(x, ethnicityY, width, 8, {
             pageNumber: destination.pageNumber,
             top: destination.top,
             zoom: 1,
           });
         }
       } else {
-        const accent = ethnicityColor(row.product);
+        const accent = theme.isMaya
+          ? theme.secondary
+          : ethnicityColor(row.product);
         pdf.setFillColor(...accent);
         pdf.rect(x, y, 1.8, row.height, "F");
         pdf.setFont("helvetica", "normal");
@@ -1058,51 +1396,73 @@ function drawIndexPage(pdf, {
   pdf.setFont("helvetica", "normal");
   pdf.setFontSize(6);
   pdf.setTextColor(113, 128, 123);
-  pdf.text("Sacred Connection Wholesale", 12, 288);
+  pdf.text(`${pdfSafeText(storeName)} Wholesale`, 12, 288);
   pdf.text(`Index  |  ${pageNumber}/${pageCount}`, 198, 288, { align: "right" });
   drawGenerationStamp(pdf, generatedAtLabel);
 }
 
-export async function downloadDigitalCatalogPdf({
+async function fetchDigitalCatalogProducts({
   search = "",
   category = "",
   tribe = "",
   attributes = {},
-  filterLabel = "Complete catalog",
 } = {}) {
+  const params = new URLSearchParams({ export: "true" });
+  if (search) params.set("q", search);
+  if (category) params.set("category", category);
+  if (tribe) params.set("tribe", tribe);
+  Object.entries(attributes).forEach(([key, value]) => {
+    if (value) params.append("attribute", `${key}:${value}`);
+  });
+
+  const response = await fetch(`/api/catalog?${params.toString()}`, {
+    cache: "no-store",
+    credentials: "omit",
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      data.error || "The digital catalog could not be prepared for export."
+    );
+  }
+  if (!Array.isArray(data.products) || data.products.length === 0) {
+    throw new Error(
+      "There are no digital catalog products matching the selected filters."
+    );
+  }
+  return data.products;
+}
+
+async function buildDigitalCatalogPdf(options = {}) {
   const generatedAt = new Date();
-  const filename = `sacred-connection-catalog-${safeFilenameTimestamp(generatedAt)}.pdf`;
+  const products = await fetchDigitalCatalogProducts(options);
+  const pdf = await renderDigitalCatalogPdf({
+    products,
+    includeLinks: false,
+    filterLabel: options.filterLabel || "Complete catalog",
+    generatedAt,
+  });
+  return { pdf, products, generatedAt };
+}
+
+export async function createDigitalCatalogPdfPreview(options = {}) {
+  const { pdf, products, generatedAt } = await buildDigitalCatalogPdf(options);
+  return {
+    blob: pdf.output("blob"),
+    generatedAt,
+    productCount: products.length,
+    storeCount: new Set(products.map((product) => product.storeId).filter(Boolean))
+      .size,
+  };
+}
+
+export async function downloadDigitalCatalogPdf(options = {}) {
   const delivery = preparePdfDelivery();
 
   try {
-    const params = new URLSearchParams({ export: "true" });
-    if (search) params.set("q", search);
-    if (category) params.set("category", category);
-    if (tribe) params.set("tribe", tribe);
-    Object.entries(attributes).forEach(([key, value]) => {
-      if (value) params.append("attribute", `${key}:${value}`);
-    });
-
-    const response = await fetch(`/api/catalog?${params.toString()}`, {
-      cache: "no-store",
-      credentials: "omit",
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || "The digital catalog could not be prepared for export.");
-    }
-    if (!Array.isArray(data.products) || data.products.length === 0) {
-      throw new Error("There are no digital catalog products matching the selected filters.");
-    }
-
-    await renderDigitalCatalogPdf({
-      products: data.products,
-      includeLinks: false,
-      filterLabel,
-      generatedAt,
-      filename,
-      delivery,
-    });
+    const { pdf, generatedAt } = await buildDigitalCatalogPdf(options);
+    const filename = `sacred-connection-catalog-${safeFilenameTimestamp(generatedAt)}.pdf`;
+    await deliverPdf(pdf, filename, delivery);
   } catch (error) {
     showPdfDeliveryError(delivery);
     throw error;
@@ -1114,62 +1474,139 @@ async function renderDigitalCatalogPdf({
   includeLinks,
   filterLabel,
   generatedAt,
-  filename,
-  delivery,
 }) {
   const { jsPDF } = await import("jspdf");
-  const preferredCategories = ["Rapé Indigenous", "Sacred Connection"];
-  const categories = [...new Set(products.map((product) => product.category || "Other"))].sort(
-    (a, b) => {
-      const aIndex = preferredCategories.indexOf(a);
-      const bIndex = preferredCategories.indexOf(b);
-      if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-      if (aIndex === -1) return 1;
-      if (bIndex === -1) return -1;
-      return aIndex - bIndex;
-    }
-  );
-  const categoryGroups = categories.map((category) => ({
-    category,
-    products: products.filter((product) => (product.category || "Other") === category),
-  }));
+  const preferredStoreOrder = ["sacred-connection", "maya-herbs"];
+  const preferredCategoriesByStore = {
+    "sacred-connection": ["Rapé Indigenous", "Sacred Connection"],
+    "maya-herbs": [
+      "Accessories",
+      "CBD",
+      "Ethnobotanicals",
+      "Incense",
+      "Rapé Indigenous",
+      "Sacred Connection",
+      "Superfoods",
+    ],
+  };
+  const categorySort = (storeId) => (a, b) => {
+    const preferredCategories =
+      preferredCategoriesByStore[storeId]?.map(normalizeEthnicity) || [];
+    const aIndex = preferredCategories.indexOf(normalizeEthnicity(a));
+    const bIndex = preferredCategories.indexOf(normalizeEthnicity(b));
+    if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  };
+  const storeIds = [
+    ...new Set(products.map((product) => product.storeId || "sacred-connection")),
+  ].sort((a, b) => {
+    const aIndex = preferredStoreOrder.indexOf(a);
+    const bIndex = preferredStoreOrder.indexOf(b);
+    if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
+    if (aIndex === -1) return 1;
+    if (bIndex === -1) return -1;
+    return aIndex - bIndex;
+  });
+  const storeGroups = storeIds.map((storeId) => {
+    const storeProducts = products.filter(
+      (product) => (product.storeId || "sacred-connection") === storeId
+    );
+    const storeName =
+      storeProducts.find((product) => product.storeName)?.storeName ||
+      (storeId === "maya-herbs" ? "Maya Herbs" : "Sacred Connection");
+    const categories = [
+      ...new Set(
+        storeProducts.map((product) => product.category || "Other")
+      ),
+    ].sort(categorySort(storeId));
+    return {
+      storeId,
+      storeName,
+      products: storeProducts,
+      categoryGroups: categories.map((category) => ({
+        storeId,
+        storeName,
+        category,
+        products: storeProducts.filter(
+          (product) => (product.category || "Other") === category
+        ),
+      })),
+    };
+  });
+  const categoryGroups = storeGroups.flatMap((store) => store.categoryGroups);
   const firstProductByEthnicity = new Map();
   categoryGroups.forEach((group) => {
     group.products.forEach((product) => {
       const ethnicity = product.tribe || group.category;
-      if (!firstProductByEthnicity.has(ethnicity)) {
-        firstProductByEthnicity.set(ethnicity, product);
+      const key = `${group.storeId}\u0000${ethnicity}`;
+      if (!firstProductByEthnicity.has(key)) {
+        firstProductByEthnicity.set(key, {
+          storeId: group.storeId,
+          label: ethnicity,
+          product,
+        });
       }
     });
   });
-  const indexEthnicityNames = [...firstProductByEthnicity.keys()].sort((a, b) =>
-    a.localeCompare(b)
+  const indexEthnicities = [...firstProductByEthnicity.values()].sort(
+    (a, b) => {
+      const storeComparison =
+        preferredStoreOrder.indexOf(a.storeId) -
+        preferredStoreOrder.indexOf(b.storeId);
+      return storeComparison || a.label.localeCompare(b.label);
+    }
   );
-  const indexPages = paginateIndexRows(
-    buildIndexRows(categoryGroups),
-    indexEthnicityNames.length
-  );
-  const pageCount = 1 + indexPages.length + categoryGroups.length + categoryGroups.reduce(
-    (total, group) => total + Math.ceil(group.products.length / 4),
-    0
-  );
-  const productDestinations = new Map();
-  let destinationPage = 1 + indexPages.length;
-  categoryGroups.forEach((group) => {
-    destinationPage += 1;
-    for (let start = 0; start < group.products.length; start += 4) {
-      destinationPage += 1;
-      group.products.slice(start, start + 4).forEach((product, index) => {
-        productDestinations.set(product, {
-          pageNumber: destinationPage,
-          top: 35 + Math.floor(index / 2) * 117,
-        });
+  const storeIndexes = storeGroups.map((store) => ({
+    storeId: store.storeId,
+    storeName: store.storeName,
+    pages: paginateIndexRows(buildIndexRows(store)),
+  }));
+  const storeIndexDestinations = new Map();
+  let storeIndexPageNumber = 2;
+  storeIndexes.forEach((storeIndex) => {
+    if (storeIndex.pages.length) {
+      storeIndexDestinations.set(storeIndex.storeId, {
+        pageNumber: storeIndexPageNumber,
       });
     }
+    storeIndexPageNumber += storeIndex.pages.length;
   });
-  const ethnicityLinks = indexEthnicityNames.map((label) => ({
-    label,
-    destination: productDestinations.get(firstProductByEthnicity.get(label)),
+  const indexPageCount = storeIndexes.reduce(
+    (total, storeIndex) => total + storeIndex.pages.length,
+    0
+  );
+  const pageCount =
+    1 +
+    indexPageCount +
+    storeGroups.length +
+    categoryGroups.length +
+    categoryGroups.reduce(
+      (total, group) => total + Math.ceil(group.products.length / 4),
+      0
+    );
+  const productDestinations = new Map();
+  let destinationPage = 1 + indexPageCount;
+  storeGroups.forEach((store) => {
+    destinationPage += 1;
+    store.categoryGroups.forEach((group) => {
+      destinationPage += 1;
+      for (let start = 0; start < group.products.length; start += 4) {
+        destinationPage += 1;
+        group.products.slice(start, start + 4).forEach((product, index) => {
+          productDestinations.set(product, {
+            pageNumber: destinationPage,
+            top: 35 + Math.floor(index / 2) * 117,
+          });
+        });
+      }
+    });
+  });
+  const ethnicityLinks = indexEthnicities.map((item) => ({
+    storeId: item.storeId,
+    label: item.label,
+    destination: productDestinations.get(item.product),
   }));
   const pdf = new jsPDF({
     unit: "mm",
@@ -1180,10 +1617,10 @@ async function renderDigitalCatalogPdf({
   });
   pdf.setDisplayMode("100%", "continuous", "UseNone");
   pdf.setProperties({
-    title: "Sacred Connection Wholesale Catalog",
+    title: "Sacred Connection and Maya Herbs Wholesale Catalog",
     subject: "Interactive wholesale product catalog",
-    author: "Sacred Connection Wholesale",
-    creator: "Sacred Connection Digital Catalog",
+    author: "Sacred Connection and Maya Herbs",
+    creator: "Wholesale Digital Catalog",
   });
 
   let logo = null;
@@ -1191,6 +1628,37 @@ async function renderDigitalCatalogPdf({
     logo = await fetchPdfAsset("/logo-pdf.png?v=transparent-20260721");
   } catch {
     // A text fallback is drawn when the local brand asset cannot be loaded.
+  }
+
+  let mayaLogo = null;
+  try {
+    mayaLogo = await rasterizePdfSvg(
+      "/marketplace/logos/logo-maya-herbs-01.svg?v=pdf-20260723"
+    );
+  } catch {
+    // A colored text fallback is drawn if the Maya brand asset cannot be loaded.
+  }
+
+  const productWatermarks = {
+    "sacred-connection": null,
+    "maya-herbs": null,
+  };
+  const watermarkVersion = generatedAt.getTime();
+  try {
+    productWatermarks["sacred-connection"] = await fetchPdfAsset(
+      `/product-watermarks/watermark-sacred-products.png?v=${watermarkVersion}`,
+      { cache: "no-store" }
+    );
+  } catch {
+    // Sacred product pages remain available if the optional watermark is missing.
+  }
+  try {
+    productWatermarks["maya-herbs"] = await fetchPdfAsset(
+      `/product-watermarks/watermark-maya-products.png?v=${watermarkVersion}`,
+      { cache: "no-store" }
+    );
+  } catch {
+    // Maya product pages remain available if the optional watermark is missing.
   }
 
   let coverBackground = null;
@@ -1244,6 +1712,7 @@ async function renderDigitalCatalogPdf({
   drawPdfCover(
     pdf,
     logo,
+    mayaLogo,
     coverBackground,
     coverDecoration,
     contactIcons,
@@ -1252,52 +1721,87 @@ async function renderDigitalCatalogPdf({
     generatedAtLabel
   );
   let currentPage = 1;
-  indexPages.forEach((columns, indexPage) => {
-    pdf.addPage("a4", "portrait");
-    currentPage += 1;
-    drawIndexPage(pdf, {
-      columns,
-      ethnicityLinks,
-      logo,
-      productDestinations,
-      pageNumber: currentPage,
-      pageCount,
-      indexPage: indexPage + 1,
-      indexPageCount: indexPages.length,
-      generatedAtLabel,
+  storeIndexes.forEach((storeIndex) => {
+    const storeEthnicityLinks = ethnicityLinks.filter(
+      (item) => item.storeId === storeIndex.storeId
+    );
+    storeIndex.pages.forEach((columns, indexPage) => {
+      pdf.addPage("a4", "portrait");
+      currentPage += 1;
+      drawIndexPage(pdf, {
+        columns,
+        ethnicityLinks: storeEthnicityLinks,
+        logo,
+        mayaLogo,
+        productDestinations,
+        storeId: storeIndex.storeId,
+        storeName: storeIndex.storeName,
+        pageNumber: currentPage,
+        pageCount,
+        indexPage: indexPage + 1,
+        indexPageCount: storeIndex.pages.length,
+        generatedAtLabel,
+      });
     });
   });
-  categoryGroups.forEach((group, categoryIndex) => {
+  storeGroups.forEach((store, storeIndex) => {
     pdf.addPage("a4", "portrait");
     currentPage += 1;
-    drawCategoryCover(
+    drawStoreCover(
       pdf,
       logo,
+      mayaLogo,
       coverBackground,
       coverDecoration,
-      group.category,
-      group.products,
-      categoryIndex,
+      store,
+      storeIndex,
       currentPage,
       pageCount,
       generatedAtLabel
     );
-    for (let start = 0; start < group.products.length; start += 4) {
-      const pageProducts = group.products.slice(start, start + 4);
+    store.categoryGroups.forEach((group, categoryIndex) => {
       pdf.addPage("a4", "portrait");
       currentPage += 1;
-      drawGridPage(pdf, {
-        products: pageProducts,
-        images: pageProducts.map((product) => imagesByProduct.get(product.id || product.sku) || null),
+      drawCategoryCover(
+        pdf,
         logo,
-        includeLinks,
-        category: group.category,
-        pageNumber: currentPage,
+        mayaLogo,
+        coverBackground,
+        coverDecoration,
+        store.storeId,
+        store.storeName,
+        group.category,
+        group.products,
+        categoryIndex,
+        currentPage,
         pageCount,
-        generatedAtLabel,
-      });
-    }
+        generatedAtLabel
+      );
+      for (let start = 0; start < group.products.length; start += 4) {
+        const pageProducts = group.products.slice(start, start + 4);
+        pdf.addPage("a4", "portrait");
+        currentPage += 1;
+        drawGridPage(pdf, {
+          products: pageProducts,
+          images: pageProducts.map(
+            (product) =>
+              imagesByProduct.get(product.id || product.sku) || null
+          ),
+          logo,
+          mayaLogo,
+          productWatermarks,
+          includeLinks,
+          storeId: store.storeId,
+          storeName: store.storeName,
+          category: group.category,
+          pageNumber: currentPage,
+          pageCount,
+          generatedAtLabel,
+          storeIndexDestinations,
+        });
+      }
+    });
   });
 
-  await deliverPdf(pdf, filename, delivery);
+  return pdf;
 }

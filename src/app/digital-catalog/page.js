@@ -4,12 +4,16 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronLeft,
   ChevronRight,
+  Download,
+  Eye,
   FileSpreadsheet,
   FileText,
   Info,
   LoaderCircle,
   PackageOpen,
+  RefreshCw,
   ShoppingBag,
+  X,
 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -19,9 +23,11 @@ import ProductCard from "@/components/catalog/ProductCard";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
 import {
+  createDigitalCatalogPdfPreview,
   downloadDigitalCatalogPdf,
   exportCatalogExcel,
 } from "@/lib/catalog-export";
+import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 
 const EMPTY_FILTERS = {
   search: "",
@@ -77,8 +83,20 @@ export default function CatalogPage() {
   const [reloadKey, setReloadKey] = useState(0);
   const [exporting, setExporting] = useState("");
   const [exportError, setExportError] = useState("");
+  const [isPreviewOpen, setIsPreviewOpen] = useState(false);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const [previewMeta, setPreviewMeta] = useState(null);
   const resultsRef = useRef(null);
   const hasLoaded = useRef(false);
+  const previewDialogRef = useRef(null);
+  const previewCloseRef = useRef(null);
+  const previewButtonRef = useRef(null);
+
+  useDialogAccessibility(isPreviewOpen, () => setIsPreviewOpen(false), {
+    containerRef: previewDialogRef,
+    initialFocusRef: previewCloseRef,
+    returnFocusRef: previewButtonRef,
+  });
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
@@ -156,6 +174,13 @@ export default function CatalogPage() {
     window.history.replaceState(null, "", query ? `/digital-catalog?${query}` : "/digital-catalog");
   }, [debouncedSearch, filters, page]);
 
+  useEffect(
+    () => () => {
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
+    },
+    [previewUrl]
+  );
+
   const visiblePages = useMemo(
     () => pageList(pagination.page, pagination.totalPages),
     [pagination.page, pagination.totalPages]
@@ -215,6 +240,36 @@ export default function CatalogPage() {
     return labels.length ? labels.join(" | ") : "Complete catalog";
   };
 
+  const currentPdfOptions = () => ({
+    search: debouncedSearch,
+    category: filters.category,
+    tribe: filters.tribe,
+    attributes: filters.attributes,
+    filterLabel: filterLabel(),
+  });
+
+  const handlePreviewPdf = async () => {
+    setExporting("preview");
+    setExportError("");
+    try {
+      const preview = await createDigitalCatalogPdfPreview(currentPdfOptions());
+      const nextUrl = URL.createObjectURL(preview.blob);
+      setPreviewUrl(nextUrl);
+      setPreviewMeta({
+        productCount: preview.productCount,
+        storeCount: preview.storeCount,
+        generatedAt: preview.generatedAt,
+      });
+      setIsPreviewOpen(true);
+    } catch (previewFailure) {
+      setExportError(
+        previewFailure.message || "The PDF preview could not be generated."
+      );
+    } finally {
+      setExporting("");
+    }
+  };
+
   const handleExport = async (format) => {
     setExporting(format);
     setExportError("");
@@ -227,13 +282,7 @@ export default function CatalogPage() {
           includeLinks: isLoggedIn,
         });
       } else {
-        await downloadDigitalCatalogPdf({
-          search: debouncedSearch,
-          category: filters.category,
-          tribe: filters.tribe,
-          attributes: filters.attributes,
-          filterLabel: filterLabel(),
-        });
+        await downloadDigitalCatalogPdf(currentPdfOptions());
       }
     } catch (exportFailure) {
       setExportError(exportFailure.message || "The export could not be generated.");
@@ -246,9 +295,11 @@ export default function CatalogPage() {
     <div id="top" className="site-background-page flex min-h-screen flex-col bg-[#23403B] text-[#e5e2e1] antialiased">
       <Header onOpenLogin={() => setIsLoginOpen(true)} />
 
-      {exporting === "pdf" && (
+      {(exporting === "pdf" || exporting === "preview") && (
         <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#102c27]/95 px-5 backdrop-blur-sm xl:hidden"
+          className={`fixed inset-0 z-[140] flex items-center justify-center bg-[#102c27]/95 px-5 backdrop-blur-sm ${
+            exporting === "pdf" ? "xl:hidden" : ""
+          }`}
           role="status"
           aria-live="assertive"
           aria-label="Generating your PDF catalog. Please wait and keep this page open."
@@ -259,12 +310,99 @@ export default function CatalogPage() {
               aria-hidden="true"
             />
             <p className="mt-7 text-2xl font-black leading-tight tracking-tight text-white sm:text-3xl">
-              Generating your PDF catalog...
+              {exporting === "preview"
+                ? "Updating your PDF preview..."
+                : "Generating your PDF catalog..."}
             </p>
             <p className="mx-auto mt-4 max-w-md text-base font-semibold leading-7 text-white/75 sm:text-lg">
               This may take a moment. Please wait and keep this page open until the PDF is ready.
             </p>
           </div>
+        </div>
+      )}
+
+      {isPreviewOpen && previewUrl && (
+        <div
+          className="fixed inset-0 z-[120] bg-[#081d19]/95 p-0 backdrop-blur-md sm:p-4 lg:p-6"
+          aria-hidden="false"
+        >
+          <section
+            ref={previewDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="pdf-preview-title"
+            tabIndex={-1}
+            className="mx-auto flex h-full w-full max-w-[96rem] flex-col overflow-hidden border border-white/15 bg-[#111] shadow-2xl shadow-black/60 sm:rounded-xl"
+          >
+            <header className="flex flex-col gap-3 border-b border-white/10 bg-[#1a1a1a] px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:px-5">
+              <div className="min-w-0">
+                <h2
+                  id="pdf-preview-title"
+                  className="truncate text-base font-black text-white sm:text-lg"
+                >
+                  PDF Catalog Preview
+                </h2>
+                <p className="mt-1 text-[11px] text-white/45 sm:text-xs">
+                  {previewMeta
+                    ? `${previewMeta.storeCount} stores · ${previewMeta.productCount} products · Updated ${new Intl.DateTimeFormat(
+                        "en-US",
+                        {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                          second: "2-digit",
+                        }
+                      ).format(previewMeta.generatedAt)}`
+                    : "Current catalog preview"}
+                </p>
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:justify-end">
+                <button
+                  type="button"
+                  onClick={handlePreviewPdf}
+                  disabled={Boolean(exporting)}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-sm border border-[#268072]/60 bg-[#268072]/20 px-3 text-[10px] font-black uppercase tracking-wider text-[#82d6c5] transition-colors hover:bg-[#268072]/30 disabled:cursor-wait disabled:opacity-50 sm:px-4 sm:text-xs"
+                >
+                  <RefreshCw
+                    className={`h-4 w-4 ${exporting === "preview" ? "animate-spin" : ""}`}
+                    aria-hidden="true"
+                  />
+                  Update
+                </button>
+                <a
+                  href={previewUrl}
+                  download="sacred-connection-wholesale-catalog.pdf"
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-sm border border-white/15 bg-white/5 px-3 text-[10px] font-black uppercase tracking-wider text-white transition-colors hover:bg-white/10 sm:px-4 sm:text-xs"
+                >
+                  <Download className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
+                  Download
+                </a>
+                <button
+                  ref={previewCloseRef}
+                  type="button"
+                  onClick={() => setIsPreviewOpen(false)}
+                  className="inline-flex min-h-10 items-center justify-center gap-2 rounded-sm border border-white/15 bg-white/5 px-3 text-[10px] font-black uppercase tracking-wider text-white transition-colors hover:bg-white/10 sm:px-4 sm:text-xs"
+                  aria-label="Close PDF preview"
+                >
+                  <X className="h-4 w-4" aria-hidden="true" />
+                  Close
+                </button>
+              </div>
+            </header>
+
+            <div className="relative min-h-0 flex-1 bg-[#292929]">
+              <iframe
+                src={previewUrl}
+                title="Generated wholesale catalog PDF preview"
+                className="h-full w-full border-0"
+              />
+              <noscript>
+                <a href={previewUrl} target="_blank" rel="noreferrer">
+                  Open PDF preview
+                </a>
+              </noscript>
+            </div>
+          </section>
         </div>
       )}
 
@@ -325,6 +463,23 @@ export default function CatalogPage() {
             </section>
 
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+              <button
+                ref={previewButtonRef}
+                type="button"
+                disabled={Boolean(exporting)}
+                onClick={handlePreviewPdf}
+                className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#82d6c5]/35 bg-[#268072]/20 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] text-[#b8eee3] transition-colors hover:border-[#82d6c5]/60 hover:bg-[#268072]/30 disabled:cursor-wait disabled:opacity-50"
+              >
+                {exporting === "preview" ? (
+                  <LoaderCircle
+                    className="h-4 w-4 animate-spin"
+                    aria-hidden="true"
+                  />
+                ) : (
+                  <Eye className="h-4 w-4" aria-hidden="true" />
+                )}
+                {exporting === "preview" ? "Preparing Preview" : "Preview PDF"}
+              </button>
               <button
                 type="button"
                 disabled={Boolean(exporting)}

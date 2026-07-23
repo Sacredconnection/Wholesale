@@ -27,6 +27,7 @@ const contentSecurityPolicy = [
   "base-uri 'self'",
   "form-action 'self'",
   "frame-ancestors 'none'",
+  "frame-src 'self' blob:",
   "worker-src 'self' blob:",
   "upgrade-insecure-requests",
 ].join("; ");
