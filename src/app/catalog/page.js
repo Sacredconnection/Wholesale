@@ -466,7 +466,7 @@ export default function CatalogPage() {
                         {product.image ? (
                           <div className="w-14 h-14 rounded-sm border border-white/10 hover:border-[#268072]/45 overflow-hidden relative shadow-md hover:shadow-lg transition-all duration-300 bg-[#131313]">
                             <img
-                              src={`/api/catalog/image?format=image&url=${encodeURIComponent(product.image)}`}
+                              src={product.image}
                               alt={product.name}
                               loading="lazy"
                               className="w-full h-full object-cover transition-transform duration-300 hover:scale-110"
