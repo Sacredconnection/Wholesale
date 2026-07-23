@@ -622,6 +622,21 @@ function drawPdfCover(
 ) {
   const categoryCount = new Set(products.map((product) => product.category).filter(Boolean)).size;
   const storeCount = new Set(products.map((product) => product.storeId).filter(Boolean)).size;
+  const normalizedFilterLabel = String(filterLabel || "").trim();
+  const isCompleteCatalog =
+    !normalizedFilterLabel ||
+    normalizedFilterLabel.toLowerCase() === "complete catalog";
+  const scopeEyebrow = isCompleteCatalog
+    ? "CATALOG EDITION"
+    : "FILTER PATH";
+  const scopeTitle = isCompleteCatalog
+    ? "COMPLETE CATALOG"
+    : normalizedFilterLabel.replace(/\s*\|\s*/g, " / ");
+  const filterDepth = isCompleteCatalog
+    ? 0
+    : normalizedFilterLabel.split("|").filter(Boolean).length;
+  const scopeFontSize =
+    filterDepth <= 1 ? 18 : filterDepth === 2 ? 13.5 : 10.5;
   pdf.setFillColor(20, 65, 57);
   pdf.rect(0, 0, 210, 297, "F");
   drawGreenCoverBackground(pdf, coverBackground);
@@ -659,6 +674,27 @@ function drawPdfCover(
     { lineHeightFactor: 1.45 }
   );
 
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7.5);
+  pdf.setTextColor(130, 214, 197);
+  pdf.text(scopeEyebrow, 16, 153);
+  pdf.setFontSize(scopeFontSize);
+  pdf.setTextColor(255, 255, 255);
+  const scopeLines = truncatePdfLines(
+    pdf,
+    pdfSafeText(scopeTitle).toUpperCase(),
+    178,
+    3
+  );
+  const scopeLineHeight = scopeFontSize * 0.3528 * 1.08;
+  const scopeStartY = 169 - ((scopeLines.length - 1) * scopeLineHeight) / 2;
+  pdf.text(
+    scopeLines,
+    16,
+    scopeStartY,
+    { lineHeightFactor: 1.08 }
+  );
+
   pdf.setFillColor(255, 255, 255);
   pdf.roundedRect(16, 180, 178, 48, 2.5, 2.5, "F");
   const stats = [
@@ -683,10 +719,6 @@ function drawPdfCover(
 
   drawCoverContactInfo(pdf, contactIcons);
 
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(7.5);
-  pdf.setTextColor(180, 211, 202);
-  pdf.text(pdfSafeText(filterLabel || "Complete catalog"), 16, 250);
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(255, 255, 255);
   pdf.text("SACRED CONNECTION + MAYA HERBS", 16, 278);
