@@ -9,10 +9,10 @@ import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import ProductOptionsModal from "@/components/ProductOptionsModal";
 import AuthGate from "@/components/AuthGate";
+import FilterSidebar from "@/components/catalog/FilterSidebar";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
-import { 
-  Search, 
+import {
   ShoppingBag, 
   Trash2, 
   Plus, 
@@ -22,7 +22,6 @@ import {
   ChevronLeft, 
   ChevronRight, 
   ArrowRight,
-  Filter,
   PackageOpen,
   Store,
   Network,
@@ -399,104 +398,20 @@ export default function CatalogPage() {
           </div>
         </section>
 
-        {/* Filters Panel */}
-        <div className="bg-[#1a1a1a] border border-white/5 rounded-xl p-5 sm:p-6 lg:p-8 flex flex-col gap-5 sm:gap-6">
-          <div className="flex items-center gap-2 text-xs font-bold text-white uppercase tracking-wider font-label-sm">
-            <Filter className="w-4 h-4 text-[#82d6c5]" />
-            Filter Products
-          </div>
-
-          <div className={`grid grid-cols-1 sm:grid-cols-2 ${tribes.length > 0 ? "lg:grid-cols-4" : "lg:grid-cols-3"} gap-5 lg:gap-6 items-end`}>
-            
-            {/* Search Input */}
-            <div className="flex flex-col gap-2 w-full">
-              <label htmlFor="search" className="text-xs text-white/55 font-semibold tracking-wide uppercase font-label-sm">
-                Search
-              </label>
-              <div className="relative w-full">
-                <input 
-                  type="text" 
-                  id="search"
-                  placeholder="Name or SKU..."
-                  value={search}
-                  onChange={(e) => {
-                    setSearch(e.target.value);
-                    setCurrentPage(1);
-                  }}
-                  className="w-full bg-[#131313] border border-white/10 rounded-sm py-4 pl-12 pr-4 text-sm text-white placeholder-white/35 focus:outline-none focus:border-[#268072] transition-colors font-body-md"
-                />
-                <Search className="w-4 h-4 text-white/30 absolute left-4 top-1/2 -translate-y-1/2" />
-              </div>
-            </div>
-
-            {/* Category Dropdown */}
-            <div className="flex flex-col gap-2 w-full">
-              <label htmlFor="category" className="text-xs text-white/55 font-semibold tracking-wide uppercase font-label-sm">
-                Category
-              </label>
-              <div className="relative">
-                <select 
-                  id="category"
-                  value={category}
-                  onChange={(e) => {
-                    setCategory(e.target.value);
-                    setTribe("All");
-                    setCurrentPage(1);
-                  }}
-                  className="w-full bg-[#131313] border border-white/10 rounded-sm py-4 px-4 text-sm text-white focus:outline-none focus:border-[#268072] transition-colors font-body-md cursor-pointer appearance-none"
-                >
-                  {categories.map((cat) => (
-                    <option key={cat} value={cat}>
-                      {cat === "All" ? "All Categories" : cat}
-                    </option>
-                  ))}
-                </select>
-                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/40">
-                  ▼
-                </div>
-              </div>
-            </div>
-
-            {/* Tribe/Etnia Dropdown */}
-            {tribes.length > 0 && (
-              <div className="flex flex-col gap-2 w-full">
-                <label htmlFor="tribe" className="text-xs text-white/55 font-semibold tracking-wide uppercase font-label-sm">
-                  Indigenous Tribe
-                </label>
-                <div className="relative">
-                  <select
-                    id="tribe"
-                    value={tribe}
-                    onChange={(e) => {
-                      setTribe(e.target.value);
-                      setCurrentPage(1);
-                    }}
-                    className="w-full bg-[#131313] border border-white/10 rounded-sm py-4 px-4 text-sm text-white focus:outline-none focus:border-[#268072] transition-colors font-body-md cursor-pointer appearance-none"
-                  >
-                    <option value="All">All Tribes</option>
-                    {tribes.map((tb) => (
-                      <option key={tb} value={tb}>{tb}</option>
-                    ))}
-                  </select>
-                  <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-white/40">
-                    ▼
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Clear Filters Button */}
-            <div className="w-full">
-              <button 
-                onClick={handleClearFilters}
-                className="w-full bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all duration-300 py-4 px-6 rounded-sm text-sm font-bold tracking-wider uppercase text-white cursor-pointer"
-              >
-                Clear Filters
-              </button>
-            </div>
-
-          </div>
-        </div>
+        <FilterSidebar
+          filters={{ search, category, tribe, attributes: {} }}
+          categories={categories.slice(1)}
+          tribes={tribes}
+          allValue="All"
+          onChange={(nextFilters) => {
+            setSearch(nextFilters.search);
+            setCategory(nextFilters.category);
+            setTribe(nextFilters.tribe);
+            setCurrentPage(1);
+          }}
+          onClear={handleClearFilters}
+          disabled={productsLoading}
+        />
 
         {productsWarning && (
           <div role="status" className="rounded-sm border border-yellow-400/25 bg-yellow-400/10 px-4 py-3 text-xs text-yellow-200">

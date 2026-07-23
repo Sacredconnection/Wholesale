@@ -28,6 +28,40 @@ const attributeOption = (attributes, name) => {
   return attr.option || null;
 };
 
+const attributeKey = (attribute) => {
+  const source = attribute.slug || attribute.name || "";
+  return String(source)
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase()
+    .replace(/^pa_/, "")
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+};
+
+const mapProductAttributes = (attributes = []) =>
+  attributes
+    .map((attribute) => {
+      const values = Array.isArray(attribute.options)
+        ? attribute.options
+        : Array.isArray(attribute.terms)
+          ? attribute.terms.map((term) => term?.name)
+          : [attribute.option || attribute.value];
+
+      return {
+        key: attributeKey(attribute),
+        name: decodeHtmlEntities(attribute.name || attribute.slug || ""),
+        values: [...new Set(values.filter(Boolean).map(decodeHtmlEntities))],
+      };
+    })
+    .filter(
+      (attribute) =>
+        attribute.key &&
+        attribute.values.length > 0 &&
+        attribute.name.trim().toLowerCase() !== "tribe"
+    );
+
 // "28gr" → 28, "7.1gr" → 7.1, "1kg" → 1000
 const parseGramsFromText = (text) => {
   const m = /([\d.,]+)\s*(kg|gr?|g)\b/i.exec(text || "");
@@ -291,6 +325,7 @@ export function mapProduct(
       product.stock_status !== "outofstock" &&
       options.some((option) => option.inStock !== false),
     stockQuantity,
+    attributes: mapProductAttributes(product.attributes),
     options,
   };
 }
@@ -355,6 +390,7 @@ export function mapStoreProduct(
       options.some((option) => option.inStock !== false),
     stockQuantity: null,
     stockKnown: true,
+    attributes: mapProductAttributes(product.attributes),
     options,
   };
 }

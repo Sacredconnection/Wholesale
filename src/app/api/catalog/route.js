@@ -17,7 +17,12 @@ import {
 } from "@/lib/wc-mappers";
 import { optionPriceForUser } from "@/lib/pricing";
 import { getSession } from "@/lib/session";
-import { PRIMARY_STORE_ID } from "@/lib/commerce-stores";
+import {
+  getRequiredCommerceStores,
+  isCommerceStoreConfigured,
+  MAYA_HERBS_STORE_ID,
+  PRIMARY_STORE_ID,
+} from "@/lib/commerce-stores";
 
 const PAGE_SIZE = 30;
 const VARIATION_FETCH_CONCURRENCY = 8;
@@ -44,6 +49,39 @@ const pageNumber = (value) => {
   const page = Number.parseInt(value || "1", 10);
   return Number.isFinite(page) && page > 0 ? page : 1;
 };
+
+const attributeSelections = (params) => {
+  const selections = {};
+  params.getAll("attribute").forEach((entry) => {
+    const separator = entry.indexOf(":");
+    if (separator <= 0) return;
+    const key = entry.slice(0, separator).trim().slice(0, 80);
+    const value = entry.slice(separator + 1).trim().slice(0, 120);
+    if (key && value) selections[key] = value;
+  });
+  return selections;
+};
+
+const productHasAttribute = (product, key, value) =>
+  (product.attributes || []).some(
+    (attribute) =>
+      attribute.key === key &&
+      (attribute.values || []).some(
+        (attributeValue) => normalize(attributeValue) === normalize(value)
+      )
+  );
+
+function belongsToExcludedMayaRapeCategory(product, categoryContext) {
+  const { parentById = {}, nameById = {} } = categoryContext;
+
+  return (product.categories || []).some((productCategory) => {
+    let categoryId = productCategory.id;
+    for (let depth = 0; depth < 10 && parentById[categoryId]; depth += 1) {
+      categoryId = parentById[categoryId];
+    }
+    return normalize(nameById[categoryId] || productCategory.name) === "rape";
+  });
+}
 
 async function mapWithConcurrency(items, concurrency, mapper) {
   const results = new Array(items.length);
@@ -82,6 +120,54 @@ async function resolveCustomer() {
   return customer;
 }
 
+async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
+  const [wcProducts, categories] = await Promise.all([
+    getAllProducts(store.id, catalogFetchOptions),
+    getCategories(store.id, catalogFetchOptions),
+  ]);
+  const categoryContext = buildCategoryContext(categories);
+  const visibleProducts =
+    store.id === MAYA_HERBS_STORE_ID
+      ? wcProducts.filter(
+          (product) =>
+            !belongsToExcludedMayaRapeCategory(product, categoryContext)
+        )
+      : wcProducts;
+  const user = customer ? { role: customer.role } : null;
+
+  return mapWithConcurrency(
+    visibleProducts,
+    VARIATION_FETCH_CONCURRENCY,
+    async (product) => {
+      const variations =
+        product.type === "variable"
+          ? await getProductVariations(
+              product.id,
+              store.id,
+              catalogFetchOptions
+            )
+          : [];
+      const mapped = mapProductForRole(
+        product,
+        variations,
+        categoryContext,
+        customer?.role || null,
+        store
+      );
+      const prices = mapped.options
+        .map((option) => optionPriceForUser(option, user, mapped.category))
+        .filter(Number.isFinite);
+
+      return {
+        ...mapped,
+        priceMin: prices.length ? Math.min(...prices) : 0,
+        priceMax: prices.length ? Math.max(...prices) : 0,
+        productUrl: `/product/${encodeURIComponent(mapped.id)}`,
+      };
+    }
+  );
+}
+
 async function loadLocalCatalogSnapshot() {
   const snapshotPath = process.env.CATALOG_SNAPSHOT_PATH;
   if (process.env.NODE_ENV === "production" || !snapshotPath) return null;
@@ -104,6 +190,7 @@ async function loadLocalCatalogSnapshot() {
 
     return {
       ...product,
+      attributes: Array.isArray(product.attributes) ? product.attributes : [],
       options,
       inStock: null,
       stockKnown: false,
@@ -120,6 +207,7 @@ export async function GET(request) {
   const search = queryText(searchParams, "q");
   const category = queryText(searchParams, "category");
   const tribe = queryText(searchParams, "tribe");
+  const selectedAttributes = attributeSelections(searchParams);
   const minPrice = positiveNumber(searchParams.get("minPrice"));
   const maxPrice = positiveNumber(searchParams.get("maxPrice"));
   const onlyInStock = searchParams.get("inStock") === "true";
@@ -133,46 +221,17 @@ export async function GET(request) {
     let source = "snapshot";
 
     if (isWooCommerceConfigured()) {
-      source = "woocommerce-rest";
-      const [resolvedCustomer, wcProducts, categories] = await Promise.all([
-        resolveCustomer(),
-        getAllProducts(PRIMARY_STORE_ID, catalogFetchOptions),
-        getCategories(PRIMARY_STORE_ID, catalogFetchOptions),
-      ]);
-      customer = resolvedCustomer;
-      const categoryContext = buildCategoryContext(categories);
-      const user = customer ? { role: customer.role } : null;
-
-      products = await mapWithConcurrency(
-        wcProducts,
-        VARIATION_FETCH_CONCURRENCY,
-        async (product) => {
-          const variations =
-            product.type === "variable"
-              ? await getProductVariations(
-                  product.id,
-                  PRIMARY_STORE_ID,
-                  catalogFetchOptions
-                )
-              : [];
-          const mapped = mapProductForRole(
-            product,
-            variations,
-            categoryContext,
-            customer?.role || null
-          );
-          const prices = mapped.options
-            .map((option) => optionPriceForUser(option, user, mapped.category))
-            .filter(Number.isFinite);
-
-          return {
-            ...mapped,
-            priceMin: prices.length ? Math.min(...prices) : 0,
-            priceMax: prices.length ? Math.max(...prices) : 0,
-            productUrl: `/product/${mapped.id}`,
-          };
-        }
+      source = "woocommerce-rest-multi";
+      customer = await resolveCustomer();
+      const configuredStores = getRequiredCommerceStores().filter((store) =>
+        isCommerceStoreConfigured(store.id)
       );
+      const catalogs = await Promise.all(
+        configuredStores.map((store) =>
+          loadRestStoreCatalog(store, customer, catalogFetchOptions)
+        )
+      );
+      products = catalogs.flat();
     } else if (isWooCommerceStoreConfigured()) {
       source = "woocommerce-store";
       const storeCatalog = await getPublicStoreCatalog(
@@ -201,7 +260,7 @@ export async function GET(request) {
           ...mapped,
           priceMin: prices.length ? Math.min(...prices) : 0,
           priceMax: prices.length ? Math.max(...prices) : 0,
-          productUrl: `/product/${mapped.id}`,
+          productUrl: `/product/${encodeURIComponent(mapped.id)}`,
         };
       });
     } else {
@@ -214,10 +273,6 @@ export async function GET(request) {
       }
     }
 
-    const availableCategories = Array.from(
-      new Set(products.map((product) => product.category).filter(Boolean))
-    ).sort((a, b) => normalize(a).localeCompare(normalize(b)));
-
     const allPrices = products.flatMap((product) => [
       product.priceMin,
       product.priceMax,
@@ -229,52 +284,116 @@ export async function GET(request) {
 
     const normalizedSearch = normalize(search);
     const normalizedCategory = normalize(category);
-    const availableTribes = normalizedCategory
-      ? Array.from(
-          new Set(
-            products
-              .filter(
-                (product) => normalize(product.category) === normalizedCategory
-              )
-              .map((product) => product.tribe)
-              .filter(
-                (productTribe) =>
-                  productTribe && normalize(productTribe) !== normalizedCategory
-              )
-          )
-        ).sort((a, b) => normalize(a).localeCompare(normalize(b)))
-      : [];
     const normalizedTribe = normalize(tribe);
-    const filtered = products
-      .filter((product) => {
-        const matchesSearch =
-          !normalizedSearch ||
-          normalize(product.name).includes(normalizedSearch) ||
-          normalize(product.sku).includes(normalizedSearch) ||
-          normalize(product.tribe).includes(normalizedSearch) ||
-          product.options.some((option) =>
-            normalize(option.sku).includes(normalizedSearch)
-          );
-        const matchesCategory =
-          !normalizedCategory ||
-          normalize(product.category) === normalizedCategory;
-        const matchesTribe =
-          !normalizedTribe || normalize(product.tribe) === normalizedTribe;
-        const matchesMin =
-          minPrice == null || product.priceMax >= minPrice;
-        const matchesMax =
-          maxPrice == null || product.priceMin <= maxPrice;
-        const matchesStock = !onlyInStock || product.inStock === true;
-
-        return (
-          matchesSearch &&
-          matchesCategory &&
-          matchesTribe &&
-          matchesMin &&
-          matchesMax &&
-          matchesStock
+    const matchesFilters = (
+      product,
+      {
+        ignoreCategory = false,
+        ignoreTribe = false,
+        ignoreAttribute = "",
+      } = {}
+    ) => {
+      const matchesSearch =
+        !normalizedSearch ||
+        normalize(product.name).includes(normalizedSearch) ||
+        normalize(product.sku).includes(normalizedSearch) ||
+        normalize(product.tribe).includes(normalizedSearch) ||
+        normalize(product.storeName).includes(normalizedSearch) ||
+        (product.attributes || []).some(
+          (attribute) =>
+            normalize(attribute.name).includes(normalizedSearch) ||
+            (attribute.values || []).some((value) =>
+              normalize(value).includes(normalizedSearch)
+            )
+        ) ||
+        product.options.some((option) =>
+          normalize(option.sku).includes(normalizedSearch)
         );
+      const matchesCategory =
+        ignoreCategory ||
+        !normalizedCategory ||
+        normalize(product.category) === normalizedCategory;
+      const matchesTribe =
+        ignoreTribe ||
+        !normalizedTribe ||
+        normalize(product.tribe) === normalizedTribe;
+      const matchesAttributes = Object.entries(selectedAttributes).every(
+        ([key, value]) =>
+          key === ignoreAttribute || productHasAttribute(product, key, value)
+      );
+      const matchesMin = minPrice == null || product.priceMax >= minPrice;
+      const matchesMax = maxPrice == null || product.priceMin <= maxPrice;
+      const matchesStock = !onlyInStock || product.inStock === true;
+
+      return (
+        matchesSearch &&
+        matchesCategory &&
+        matchesTribe &&
+        matchesAttributes &&
+        matchesMin &&
+        matchesMax &&
+        matchesStock
+      );
+    };
+
+    const availableCategories = Array.from(
+      new Set(
+        products
+          .filter((product) =>
+            matchesFilters(product, { ignoreCategory: true })
+          )
+          .map((product) => product.category)
+          .filter(Boolean)
+      )
+    ).sort((a, b) => normalize(a).localeCompare(normalize(b)));
+
+    const availableTribes = Array.from(
+      new Set(
+        products
+          .filter((product) => matchesFilters(product, { ignoreTribe: true }))
+          .map((product) => product.tribe)
+          .filter(
+            (productTribe) =>
+              productTribe && normalize(productTribe) !== normalizedCategory
+          )
+      )
+    ).sort((a, b) => normalize(a).localeCompare(normalize(b)));
+
+    const attributeDefinitions = new Map();
+    products.forEach((product) => {
+      (product.attributes || []).forEach((attribute) => {
+        if (!attributeDefinitions.has(attribute.key)) {
+          attributeDefinitions.set(attribute.key, attribute.name);
+        }
+      });
+    });
+    const availableAttributes = [...attributeDefinitions.entries()]
+      .map(([key, name]) => {
+        const candidates = products.filter((product) =>
+          matchesFilters(product, { ignoreAttribute: key })
+        );
+        const counts = new Map();
+        candidates.forEach((product) => {
+          const attribute = (product.attributes || []).find(
+            (item) => item.key === key
+          );
+          (attribute?.values || []).forEach((value) => {
+            counts.set(value, (counts.get(value) || 0) + 1);
+          });
+        });
+        const options = [...counts.entries()]
+          .map(([value, count]) => ({ value, count }))
+          .sort((a, b) => normalize(a.value).localeCompare(normalize(b.value)));
+        return { key, name, options };
       })
+      .filter(
+        (attribute) =>
+          attribute.options.length > 0 || selectedAttributes[attribute.key]
+      )
+      .sort((a, b) => normalize(a.name).localeCompare(normalize(b.name)));
+
+    const filtered = products
+      .filter((product) => matchesFilters(product))
       .sort((a, b) => normalize(a.name).localeCompare(normalize(b.name)));
 
     const totalItems = filtered.length;
@@ -298,6 +417,7 @@ export async function GET(request) {
         filters: {
           categories: availableCategories,
           tribes: availableTribes,
+          attributes: availableAttributes,
           priceBounds,
         },
         viewer: {

@@ -1067,6 +1067,7 @@ export async function downloadDigitalCatalogPdf({
   search = "",
   category = "",
   tribe = "",
+  attributes = {},
   filterLabel = "Complete catalog",
 } = {}) {
   const generatedAt = new Date();
@@ -1078,6 +1079,9 @@ export async function downloadDigitalCatalogPdf({
     if (search) params.set("q", search);
     if (category) params.set("category", category);
     if (tribe) params.set("tribe", tribe);
+    Object.entries(attributes).forEach(([key, value]) => {
+      if (value) params.append("attribute", `${key}:${value}`);
+    });
 
     const response = await fetch(`/api/catalog?${params.toString()}`, {
       cache: "no-store",

@@ -94,13 +94,13 @@ The catalog is aggregated from Sacred Connection and Maya Herbs. Configuration i
 *   **Local dev:** copy `.env.example` to `.env.local` and fill in both sets of keys (WP Admin → WooCommerce → Settings → Advanced → REST API).
 *   **Vercel:** add all variables for Production and Preview, then redeploy.
 
-**How it works:** [src/lib/commerce-stores.js](src/lib/commerce-stores.js) defines the two server-only backends. `/api/products` loads both catalogs and tags each product with its source. The cart preserves this source, and `/api/orders` validates the items against their respective stores before creating one WooCommerce order per represented backend. Authentication and the buyer profile remain authoritative in Sacred Connection. Order history merges orders from both stores.
+**How it works:** [src/lib/commerce-stores.js](src/lib/commerce-stores.js) defines the two server-only backends. `/api/products` and `/api/catalog` load both catalogs and tag each product with its source. The cart preserves this source, and `/api/orders` validates the items against their respective stores before creating one WooCommerce order per represented backend. Authentication and the buyer profile remain authoritative in Sacred Connection. Order history merges orders from both stores.
 
-PDF exports always bypass the WooCommerce data cache, so every generated file uses the published products, current variations, prices, and stock returned at generation time. Normal catalog browsing keeps the short `WC_REVALIDATE_SECONDS` cache for performance.
+PDF exports always bypass the WooCommerce data cache, so every generated file uses the published products, current variations, and stock returned at generation time. Prices are intentionally omitted from the PDF catalog. Normal catalog browsing keeps the short `WC_REVALIDATE_SECONDS` cache for performance.
 
 For immediate on-screen updates, create active WooCommerce webhooks for **Product created**, **Product updated**, **Product deleted**, and **Product restored**. Use `https://YOUR_DOMAIN/api/webhooks/woocommerce` as the delivery URL and the exact `WC_WEBHOOK_SECRET` value as the webhook secret. Valid product events immediately expire the tagged catalog cache; invalid signatures are rejected.
 
-> Product route IDs combine store ID and WooCommerce slug, so equal slugs and SKUs can coexist across the two catalogs. The secondary filter only uses real WooCommerce product attributes or subcategories.
+> Product route IDs combine store ID and WooCommerce slug, so equal slugs and SKUs can coexist across the two catalogs. Digital-catalog filters use real WooCommerce categories, subcategories, and product attributes, and only expose combinations that still return products.
 
 ### Building for Production
 

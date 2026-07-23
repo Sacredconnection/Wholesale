@@ -27,6 +27,7 @@ const EMPTY_FILTERS = {
   search: "",
   category: "",
   tribe: "",
+  attributes: {},
 };
 
 const EMPTY_PAGINATION = {
@@ -53,6 +54,12 @@ function pageList(currentPage, totalPages) {
   });
 }
 
+function appendAttributeFilters(params, attributes) {
+  Object.entries(attributes || {}).forEach(([key, value]) => {
+    if (value) params.append("attribute", `${key}:${value}`);
+  });
+}
+
 export default function CatalogPage() {
   const { isLoggedIn, user } = useAuth();
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
@@ -63,6 +70,7 @@ export default function CatalogPage() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tribes, setTribes] = useState([]);
+  const [attributes, setAttributes] = useState([]);
   const [pagination, setPagination] = useState(EMPTY_PAGINATION);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -90,6 +98,7 @@ export default function CatalogPage() {
       if (debouncedSearch) params.set("q", debouncedSearch);
       if (filters.category) params.set("category", filters.category);
       if (filters.tribe) params.set("tribe", filters.tribe);
+      appendAttributeFilters(params, filters.attributes);
       try {
         const response = await fetch(`/api/catalog?${params.toString()}`, {
           credentials: "same-origin",
@@ -104,6 +113,7 @@ export default function CatalogPage() {
         setProducts(Array.isArray(data.products) ? data.products : []);
         setCategories(data.filters?.categories || []);
         setTribes(data.filters?.tribes || []);
+        setAttributes(data.filters?.attributes || []);
         setPagination(data.pagination || EMPTY_PAGINATION);
         if (data.pagination?.page && data.pagination.page !== page) {
           setPage(data.pagination.page);
@@ -130,6 +140,7 @@ export default function CatalogPage() {
     debouncedSearch,
     filters.category,
     filters.tribe,
+    filters.attributes,
     isLoggedIn,
     reloadKey,
   ]);
@@ -139,6 +150,7 @@ export default function CatalogPage() {
     if (debouncedSearch) params.set("q", debouncedSearch);
     if (filters.category) params.set("category", filters.category);
     if (filters.tribe) params.set("tribe", filters.tribe);
+    appendAttributeFilters(params, filters.attributes);
     if (page > 1) params.set("page", String(page));
     const query = params.toString();
     window.history.replaceState(null, "", query ? `/digital-catalog?${query}` : "/digital-catalog");
@@ -151,7 +163,8 @@ export default function CatalogPage() {
   const hasActiveExportFilters = Boolean(
     debouncedSearch ||
     filters.category ||
-    filters.tribe
+    filters.tribe ||
+    Object.values(filters.attributes).some(Boolean)
   );
 
   const handleFiltersChange = (nextFilters) => {
@@ -175,6 +188,7 @@ export default function CatalogPage() {
     if (debouncedSearch) params.set("q", debouncedSearch);
     if (filters.category) params.set("category", filters.category);
     if (filters.tribe) params.set("tribe", filters.tribe);
+    appendAttributeFilters(params, filters.attributes);
     const response = await fetch(`/api/catalog?${params.toString()}`, {
       credentials: "same-origin",
       cache: "no-store",
@@ -194,6 +208,10 @@ export default function CatalogPage() {
     if (debouncedSearch) labels.push(`Search: ${debouncedSearch}`);
     if (filters.category) labels.push(`Category: ${filters.category}`);
     if (filters.tribe) labels.push(`Ethnicity: ${filters.tribe}`);
+    attributes.forEach((attribute) => {
+      const value = filters.attributes[attribute.key];
+      if (value) labels.push(`${attribute.name}: ${value}`);
+    });
     return labels.length ? labels.join(" | ") : "Complete catalog";
   };
 
@@ -213,6 +231,7 @@ export default function CatalogPage() {
           search: debouncedSearch,
           category: filters.category,
           tribe: filters.tribe,
+          attributes: filters.attributes,
           filterLabel: filterLabel(),
         });
       }
@@ -259,7 +278,7 @@ export default function CatalogPage() {
               Wholesale Digital Catalog
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-              Explore our complete collection, search by product or SKU, and refine the catalog by category.
+              Explore Sacred Connection and Maya Herbs products, then refine the catalog by category, ethnicity, and product attributes.
             </p>
           </div>
 
@@ -275,7 +294,7 @@ export default function CatalogPage() {
                     Customize your PDF catalog
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-white/65">
-                    To include every product, leave the search field empty and clear the category filter. To create a personalized catalog, search for an ethnicity or a single rapé, or combine the available filters before selecting Generate PDF.
+                    To include every product from both collections, leave the search field empty and clear all filters. To create a personalized catalog, combine any available filters before selecting Generate PDF.
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span
@@ -369,6 +388,7 @@ export default function CatalogPage() {
             filters={filters}
             categories={categories}
             tribes={tribes}
+            attributes={attributes}
             onChange={handleFiltersChange}
             onClear={clearFilters}
             disabled={loading}
