@@ -23,7 +23,7 @@ export default function ProductCard({
     <>
       {product.image ? (
         <img
-          src={`/api/catalog/image?format=image&url=${encodeURIComponent(product.image)}`}
+          src={product.image}
           alt={product.name}
           loading="lazy"
           className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
