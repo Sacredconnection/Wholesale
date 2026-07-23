@@ -1,6 +1,6 @@
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { revalidateTag } from "next/cache";
-import { PRIMARY_STORE_ID } from "@/lib/commerce-stores";
+import { getRequiredCommerceStores } from "@/lib/commerce-stores";
 import { getWooCommerceCatalogCacheTag } from "@/lib/woocommerce";
 
 export const runtime = "nodejs";
@@ -51,7 +51,10 @@ export async function POST(request) {
     );
   }
 
-  revalidateTag(getWooCommerceCatalogCacheTag(PRIMARY_STORE_ID), { expire: 0 });
+  getRequiredCommerceStores().forEach((store) => {
+    revalidateTag(getWooCommerceCatalogCacheTag(store.id), { expire: 0 });
+  });
+  revalidateTag("woocommerce-catalog", { expire: 0 });
   return Response.json(
     { accepted: true, revalidated: true, topic },
     { headers: { "Cache-Control": "no-store" } }

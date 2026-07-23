@@ -12,6 +12,7 @@ const SACRED_PRIMARY = [20, 65, 57];
 const SACRED_SECONDARY = [130, 214, 197];
 const MAYA_PRIMARY = [204, 102, 51];
 const MAYA_SECONDARY = [153, 153, 51];
+const MAYA_STORE_ID = "maya-herbs";
 const ETHNICITY_COLORS = {
   apurina: [74, 115, 13],
   "apurina\u00a3": [74, 115, 13],
@@ -163,7 +164,7 @@ function catalogRows(products, user) {
       sku: option.sku || product.sku || "",
       product: product.name || "",
       category: product.category || "",
-      option: option.name || "Default",
+      option: option.name || "Single format",
       weight: Number(option.weightGrams) || null,
       price: optionPriceForUser(option, user, product.category),
       description: "",
@@ -1014,7 +1015,7 @@ function drawGridProductCard(pdf, product, image, includeLinks, x, y) {
 
   const tableOptions = product.options?.length
     ? product.options
-    : [{ name: "Default" }];
+    : [{ name: "Single format" }];
   const tableX = x + 4;
   const tableY = y + 80.5;
   const columnCount = 5;
@@ -1029,7 +1030,7 @@ function drawGridProductCard(pdf, product, image, includeLinks, x, y) {
     const cellY = tableY + row * (cellHeight + rowGap);
     const weightLabel = option.weightGrams
       ? `${option.weightGrams}g`
-      : pdfSafeText(option.name || "Default");
+      : pdfSafeText(option.name || "Single format");
     pdf.setFillColor(...accentSoft);
     pdf.setDrawColor(...accentBorder);
     pdf.setLineWidth(0.2);
@@ -1433,12 +1434,37 @@ async function fetchDigitalCatalogProducts({
       data.error || "The digital catalog could not be prepared for export."
     );
   }
-  if (!Array.isArray(data.products) || data.products.length === 0) {
+  const products = Array.isArray(data.products)
+    ? data.products
+        .map((product) => {
+          if (
+            product.storeId !== MAYA_STORE_ID ||
+            product.productType !== "variable"
+          ) {
+            return product;
+          }
+
+          return {
+            ...product,
+            options: (product.options || []).filter(
+              (option) =>
+                option.wcVariationId != null && option.inStock !== false
+            ),
+          };
+        })
+        .filter(
+          (product) =>
+            product.storeId !== MAYA_STORE_ID ||
+            product.productType !== "variable" ||
+            product.options.length > 0
+        )
+    : [];
+  if (products.length === 0) {
     throw new Error(
       "There are no digital catalog products matching the selected filters."
     );
   }
-  return data.products;
+  return products;
 }
 
 async function buildDigitalCatalogPdf(options = {}) {

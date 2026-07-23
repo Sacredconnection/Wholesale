@@ -50,6 +50,23 @@ const pageNumber = (value) => {
   return Number.isFinite(page) && page > 0 ? page : 1;
 };
 
+function mayaSimpleOptionLabel(product) {
+  const matches = String(product.name || "").match(
+    /\b\d+(?:[.,]\d+)?\s*(?:kg|gr(?:ams?)?|g|ml|cl|l|cps|capsules?|tablets?|pieces?|pcs)\b/gi
+  );
+  return matches?.at(-1)?.replace(/\s+/g, "") || "Single format";
+}
+
+function explicitWeightGrams(label) {
+  const match = String(label || "").match(
+    /([\d.,]+)\s*(kg|gr(?:ams?)?|g)\b/i
+  );
+  if (!match) return null;
+  const amount = Number.parseFloat(match[1].replace(",", "."));
+  if (!Number.isFinite(amount)) return null;
+  return match[2].toLowerCase() === "kg" ? amount * 1000 : amount;
+}
+
 const attributeSelections = (params) => {
   const selections = {};
   params.getAll("attribute").forEach((entry) => {
@@ -139,7 +156,7 @@ async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
     visibleProducts,
     VARIATION_FETCH_CONCURRENCY,
     async (product) => {
-      const variations =
+      const fetchedVariations =
         product.type === "variable"
           ? await getProductVariations(
               product.id,
@@ -147,6 +164,27 @@ async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
               catalogFetchOptions
             )
           : [];
+      const variations =
+        store.id === MAYA_HERBS_STORE_ID
+          ? fetchedVariations.filter(
+              (variation) =>
+                variation.purchasable !== false &&
+                variation.stock_status !== "outofstock"
+            )
+          : fetchedVariations;
+
+      // Maya's parent products can remain published and in stock even when
+      // none of their variations are currently available. Do not let the
+      // mapper turn those empty variable products into a synthetic "Default"
+      // option in the digital catalog.
+      if (
+        store.id === MAYA_HERBS_STORE_ID &&
+        product.type === "variable" &&
+        variations.length === 0
+      ) {
+        return null;
+      }
+
       const mapped = mapProductForRole(
         product,
         variations,
@@ -154,18 +192,47 @@ async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
         customer?.role || null,
         store
       );
-      const prices = mapped.options
+      const catalogProduct =
+        store.id === MAYA_HERBS_STORE_ID
+          ? {
+              ...mapped,
+              options: mapped.options.map((option) => {
+                if (product.type === "variable") {
+                  // A WooCommerce variation weight is often the packed
+                  // shipping weight, not the sellable format. For Maya, only
+                  // present grams when the variation label itself explicitly
+                  // declares a gram or kilogram amount.
+                  return {
+                    ...option,
+                    weightGrams: explicitWeightGrams(option.name),
+                  };
+                }
+                if (
+                  product.type !== "variable" &&
+                  option.name === "Default"
+                ) {
+                  return {
+                    ...option,
+                    name: mayaSimpleOptionLabel(product),
+                    weightGrams: null,
+                  };
+                }
+                return option;
+              }),
+            }
+          : mapped;
+      const prices = catalogProduct.options
         .map((option) => optionPriceForUser(option, user, mapped.category))
         .filter(Number.isFinite);
 
       return {
-        ...mapped,
+        ...catalogProduct,
         priceMin: prices.length ? Math.min(...prices) : 0,
         priceMax: prices.length ? Math.max(...prices) : 0,
-        productUrl: `/product/${encodeURIComponent(mapped.id)}`,
+        productUrl: `/product/${encodeURIComponent(catalogProduct.id)}`,
       };
     }
-  );
+  ).then((products) => products.filter(Boolean));
 }
 
 async function loadLocalCatalogSnapshot() {
