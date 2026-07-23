@@ -5,6 +5,26 @@ export const runtime = "nodejs";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 
+const decodeLegacyUtf8Sequence = (sequence) =>
+  Buffer.from(
+    Array.from(sequence, (character) => character.charCodeAt(0))
+  ).toString("utf8");
+
+const repairLegacyUtf8Url = (value) =>
+  String(value || "")
+    .replace(
+      /[\u00f0-\u00f4][\u0080-\u00bf]{3}/g,
+      decodeLegacyUtf8Sequence
+    )
+    .replace(
+      /[\u00e0-\u00ef][\u0080-\u00bf]{2}/g,
+      decodeLegacyUtf8Sequence
+    )
+    .replace(
+      /[\u00c2-\u00df][\u0080-\u00bf]/g,
+      decodeLegacyUtf8Sequence
+    );
+
 export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -12,7 +32,7 @@ export async function GET(request) {
     const wantsImageResponse = searchParams.get("format") === "image";
     if (!source) return new Response("Missing image URL.", { status: 400 });
 
-    const target = new URL(source);
+    const target = new URL(repairLegacyUtf8Url(source));
     const catalogHosts = new Set(
       getCommerceStoreOrigins().map((origin) => new URL(origin).hostname)
     );
