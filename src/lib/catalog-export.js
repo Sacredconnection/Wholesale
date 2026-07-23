@@ -1094,7 +1094,6 @@ function drawGridPage(pdf, {
   images,
   logo,
   mayaLogo,
-  productWatermarks,
   includeLinks,
   storeId,
   storeName,
@@ -1119,29 +1118,6 @@ function drawGridPage(pdf, {
     const row = Math.floor(index / 2);
     drawGridProductCard(pdf, product, images[index], includeLinks, 12 + column * 96, 39 + row * 117);
   });
-  const productWatermark = productWatermarks[storeId];
-  if (productWatermark) {
-    pdf.addImage(
-      productWatermark,
-      "PNG",
-      0,
-      0,
-      210,
-      297,
-      `product-watermark-${storeId}`,
-      "FAST"
-    );
-    drawGridHeader(
-      pdf,
-      logo,
-      mayaLogo,
-      storeId,
-      storeName,
-      category,
-      pageNumber,
-      pageCount
-    );
-  }
   drawGridFooter(
     pdf,
     storeName,
@@ -1639,28 +1615,6 @@ async function renderDigitalCatalogPdf({
     // A colored text fallback is drawn if the Maya brand asset cannot be loaded.
   }
 
-  const productWatermarks = {
-    "sacred-connection": null,
-    "maya-herbs": null,
-  };
-  const watermarkVersion = generatedAt.getTime();
-  try {
-    productWatermarks["sacred-connection"] = await fetchPdfAsset(
-      `/product-watermarks/watermark-sacred-products.png?v=${watermarkVersion}`,
-      { cache: "no-store" }
-    );
-  } catch {
-    // Sacred product pages remain available if the optional watermark is missing.
-  }
-  try {
-    productWatermarks["maya-herbs"] = await fetchPdfAsset(
-      `/product-watermarks/watermark-maya-products.png?v=${watermarkVersion}`,
-      { cache: "no-store" }
-    );
-  } catch {
-    // Maya product pages remain available if the optional watermark is missing.
-  }
-
   let coverBackground = null;
   try {
     coverBackground = await fetchPdfAsset("/catalog-cover-background/catalog-cover-background.png", {
@@ -1789,7 +1743,6 @@ async function renderDigitalCatalogPdf({
           ),
           logo,
           mayaLogo,
-          productWatermarks,
           includeLinks,
           storeId: store.storeId,
           storeName: store.storeName,

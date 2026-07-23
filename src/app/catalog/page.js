@@ -72,6 +72,7 @@ export default function CatalogPage() {
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [tribe, setTribe] = useState("All");
+  const [attributeFilters, setAttributeFilters] = useState({});
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -183,14 +184,95 @@ export default function CatalogPage() {
       .sort((a, b) => normalizeStr(a.name).localeCompare(normalizeStr(b.name)));
   }, [products, search, category, tribe]);
 
+  const { availableAttributes, compoundFilteredProducts } = useMemo(() => {
+    const selectedAttributes = Object.fromEntries(
+      Object.entries(attributeFilters).filter(([, value]) => value)
+    );
+    const productHasAttribute = (product, key, value) =>
+      (product.attributes || []).some(
+        (attribute) =>
+          attribute.key === key &&
+          (attribute.values || []).some(
+            (attributeValue) =>
+              normalizeStr(attributeValue) === normalizeStr(value)
+          )
+      );
+    const matchesAttributes = (product, ignoredKey = "") =>
+      Object.entries(selectedAttributes).every(
+        ([key, value]) =>
+          key === ignoredKey || productHasAttribute(product, key, value)
+      );
+    const attributeDefinitions = new Map();
+
+    products.forEach((product) => {
+      (product.attributes || []).forEach((attribute) => {
+        if (!attributeDefinitions.has(attribute.key)) {
+          attributeDefinitions.set(attribute.key, attribute.name);
+        }
+      });
+    });
+
+    const facets = [...attributeDefinitions.entries()]
+      .map(([key, name]) => {
+        const counts = new Map();
+        filteredProducts
+          .filter((product) => matchesAttributes(product, key))
+          .forEach((product) => {
+            const attribute = (product.attributes || []).find(
+              (item) => item.key === key
+            );
+            const valuesOnProduct = new Map();
+            (attribute?.values || []).forEach((value) => {
+              const normalizedValue = normalizeStr(value);
+              if (normalizedValue && !valuesOnProduct.has(normalizedValue)) {
+                valuesOnProduct.set(normalizedValue, value);
+              }
+            });
+            valuesOnProduct.forEach((value, normalizedValue) => {
+              const current = counts.get(normalizedValue);
+              counts.set(normalizedValue, {
+                value: current?.value || value,
+                count: (current?.count || 0) + 1,
+              });
+            });
+          });
+
+        return {
+          key,
+          name,
+          options: [...counts.values()].sort((a, b) =>
+            normalizeStr(a.value).localeCompare(normalizeStr(b.value))
+          ),
+        };
+      })
+      .filter(
+        (attribute) =>
+          attribute.options.length > 0 || selectedAttributes[attribute.key]
+      )
+      .sort((a, b) =>
+        normalizeStr(a.name).localeCompare(normalizeStr(b.name))
+      );
+
+    return {
+      availableAttributes: facets,
+      compoundFilteredProducts: filteredProducts.filter((product) =>
+        matchesAttributes(product)
+      ),
+    };
+  }, [products, filteredProducts, attributeFilters]);
+
 
   // Paginated Products
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredProducts.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredProducts, currentPage]);
+    return compoundFilteredProducts.slice(
+      startIndex,
+      startIndex + itemsPerPage
+    );
+  }, [compoundFilteredProducts, currentPage]);
 
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
+  const totalPages =
+    Math.ceil(compoundFilteredProducts.length / itemsPerPage) || 1;
 
   const mobilePageNumbers = useMemo(() => {
     if (totalPages <= 3) {
@@ -215,6 +297,7 @@ export default function CatalogPage() {
     setSearch("");
     setCategory("All");
     setTribe("All");
+    setAttributeFilters({});
     setCurrentPage(1);
   };
 
@@ -399,14 +482,16 @@ export default function CatalogPage() {
         </section>
 
         <FilterSidebar
-          filters={{ search, category, tribe, attributes: {} }}
+          filters={{ search, category, tribe, attributes: attributeFilters }}
           categories={categories.slice(1)}
           tribes={tribes}
+          attributes={availableAttributes}
           allValue="All"
           onChange={(nextFilters) => {
             setSearch(nextFilters.search);
             setCategory(nextFilters.category);
             setTribe(nextFilters.tribe);
+            setAttributeFilters(nextFilters.attributes || {});
             setCurrentPage(1);
           }}
           onClear={handleClearFilters}

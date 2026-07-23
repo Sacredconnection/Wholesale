@@ -66,6 +66,14 @@ function appendAttributeFilters(params, attributes) {
   });
 }
 
+function isIndigenousRapeCategory(category) {
+  return String(category || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase() === "rape indigenous";
+}
+
 export default function CatalogPage() {
   const { isLoggedIn, user } = useAuth();
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
@@ -232,7 +240,15 @@ export default function CatalogPage() {
     const labels = [];
     if (debouncedSearch) labels.push(`Search: ${debouncedSearch}`);
     if (filters.category) labels.push(`Category: ${filters.category}`);
-    if (filters.tribe) labels.push(`Ethnicity: ${filters.tribe}`);
+    if (filters.tribe) {
+      labels.push(
+        `${
+          isIndigenousRapeCategory(filters.category)
+            ? "Indigenous Tribe"
+            : "Product Type"
+        }: ${filters.tribe}`
+      );
+    }
     attributes.forEach((attribute) => {
       const value = filters.attributes[attribute.key];
       if (value) labels.push(`${attribute.name}: ${value}`);
@@ -416,7 +432,7 @@ export default function CatalogPage() {
               Wholesale Digital Catalog
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-              Explore Sacred Connection and Maya Herbs products, then refine the catalog by category, ethnicity, and product attributes.
+              Explore Sacred Connection and Maya Herbs products, then refine the catalog by category, product type or indigenous tribe, and product attributes.
             </p>
           </div>
 
