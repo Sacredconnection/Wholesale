@@ -46,11 +46,12 @@ export default function Footer() {
                 id="maya-wholesale-banner-title"
                 className="mt-7 max-w-2xl text-2xl font-black leading-tight text-white sm:text-3xl"
               >
-                Expand your business with authentic botanical ingredients
+                Expand your business with authentic ethnobotanicals
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
-                Explore wholesale herbs, plant medicines, superfoods and natural
-                incense selected for professional use and global supply.
+                Explore wholesale ethnobotanical herbs, plant medicines,
+                superfoods and natural incense selected for professional use
+                and global supply.
               </p>
               <a
                 href="https://wholesale.mayaherbs.com/"

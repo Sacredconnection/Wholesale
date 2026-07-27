@@ -6,10 +6,14 @@ export default function RetailRedirectSection() {
     >
       <div
         aria-hidden="true"
-        className="absolute inset-0 -z-10 bg-gradient-to-b from-[#111616]/85 via-[#111616]/65 to-black/30 md:bg-gradient-to-r"
+        className="pointer-events-none absolute inset-0 z-0 bg-gradient-to-b from-[#131313]/88 via-[#131313]/48 to-[#131313]/8 md:bg-gradient-to-r md:from-[#131313]/90 md:via-[#131313]/65 md:to-[#131313]/15"
+      />
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-0 hidden bg-gradient-to-t from-[#131313] via-transparent to-transparent opacity-65 md:block"
       />
 
-      <div className="mx-auto flex min-h-[430px] w-full max-w-7xl items-start px-4 pb-14 pt-8 sm:min-h-[380px] sm:px-6 sm:pb-16 sm:pt-10 md:items-center md:py-16 lg:min-h-[420px] lg:px-8 lg:py-20">
+      <div className="relative z-10 mx-auto flex min-h-[430px] w-full max-w-7xl items-start px-4 pb-14 pt-8 sm:min-h-[380px] sm:px-6 sm:pb-16 sm:pt-10 md:items-center md:py-16 lg:min-h-[420px] lg:px-8 lg:py-20">
           <div className="mx-auto max-w-xl text-center md:mx-0 md:text-left">
             <p className="mb-3 font-label-sm text-xs font-bold uppercase tracking-[0.18em] text-[#82d6c5]">
               Individual Orders &amp; Retail
