@@ -479,23 +479,6 @@ export default function CatalogPage() {
 
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
               <button
-                ref={previewButtonRef}
-                type="button"
-                disabled={Boolean(exporting)}
-                onClick={handlePreviewPdf}
-                className="inline-flex items-center justify-center gap-2 rounded-sm border border-[#82d6c5]/35 bg-[#268072]/20 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] text-[#b8eee3] transition-colors hover:border-[#82d6c5]/60 hover:bg-[#268072]/30 disabled:cursor-wait disabled:opacity-50"
-              >
-                {exporting === "preview" ? (
-                  <LoaderCircle
-                    className="h-4 w-4 animate-spin"
-                    aria-hidden="true"
-                  />
-                ) : (
-                  <Eye className="h-4 w-4" aria-hidden="true" />
-                )}
-                {exporting === "preview" ? "Preparing Preview" : "Preview PDF"}
-              </button>
-              <button
                 type="button"
                 disabled={Boolean(exporting)}
                 onClick={() => handleExport("pdf")}
