@@ -12,6 +12,7 @@ import LeadMagnet from '@/components/LeadMagnet';
 import Onboarding from '@/components/Onboarding';
 import NGOSection from '@/components/NGOSection';
 import RetailRedirectSection from '@/components/RetailRedirectSection';
+import MayaWholesaleBanner from '@/components/MayaWholesaleBanner';
 import Footer from '@/components/Footer';
 import LoginModal from '@/components/LoginModal';
 
@@ -59,6 +60,9 @@ export default function HomeClient() {
           <NGOSection />
         </div>
       </main>
+
+      {/* Maya Herbs partner promotion */}
+      <MayaWholesaleBanner />
 
       {/* Footer Details */}
       <Footer />
