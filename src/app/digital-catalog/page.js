@@ -273,7 +273,6 @@ export default function CatalogPage() {
       setPreviewUrl(nextUrl);
       setPreviewMeta({
         productCount: preview.productCount,
-        storeCount: preview.storeCount,
         generatedAt: preview.generatedAt,
       });
       setIsPreviewOpen(true);
@@ -360,7 +359,7 @@ export default function CatalogPage() {
                 </h2>
                 <p className="mt-1 text-[11px] text-white/45 sm:text-xs">
                   {previewMeta
-                    ? `${previewMeta.storeCount} stores · ${previewMeta.productCount} products · Updated ${new Intl.DateTimeFormat(
+                    ? `${previewMeta.productCount} products · Updated ${new Intl.DateTimeFormat(
                         "en-US",
                         {
                           hour: "2-digit",
@@ -432,7 +431,7 @@ export default function CatalogPage() {
               Wholesale Digital Catalog
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-              Explore Sacred Connection and Maya Herbs products, then refine the catalog by category, product type or indigenous tribe, and product attributes.
+              Explore Sacred Connection products, then refine the catalog by category, product type or indigenous tribe, and product attributes.
             </p>
           </div>
 
@@ -448,7 +447,7 @@ export default function CatalogPage() {
                     Customize your PDF catalog
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-white/65">
-                    To include every product from both collections, leave the search field empty and clear all filters. To create a personalized catalog, combine any available filters before selecting Generate PDF.
+                    To include every Sacred Connection product, leave the search field empty and clear all filters. To create a personalized catalog, combine any available filters before selecting Generate PDF.
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span

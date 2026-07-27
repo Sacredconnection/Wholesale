@@ -1,7 +1,6 @@
 import "server-only";
 
 export const PRIMARY_STORE_ID = "sacred-connection";
-export const MAYA_HERBS_STORE_ID = "maya-herbs";
 
 const STORE_DEFINITIONS = [
   {
@@ -10,14 +9,6 @@ const STORE_DEFINITIONS = [
     urlEnv: "WOOCOMMERCE_URL",
     keyEnv: "WOOCOMMERCE_CONSUMER_KEY",
     secretEnv: "WOOCOMMERCE_CONSUMER_SECRET",
-  },
-  {
-    id: MAYA_HERBS_STORE_ID,
-    name: "Maya Herbs",
-    catalogLanguage: "en",
-    urlEnv: "WOOCOMMERCE_URL_MAYA",
-    keyEnv: "WOOCOMMERCE_CONSUMER_KEY_MAYA",
-    secretEnv: "WOOCOMMERCE_CONSUMER_SECRET_MAYA",
   },
 ];
 

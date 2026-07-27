@@ -10,9 +10,7 @@ const BRAND_RED = "FFEC2300";
 const DEFAULT_ETHNICITY_COLOR = [38, 128, 114];
 const SACRED_PRIMARY = [20, 65, 57];
 const SACRED_SECONDARY = [130, 214, 197];
-const MAYA_PRIMARY = [204, 102, 51];
-const MAYA_SECONDARY = [153, 153, 51];
-const MAYA_STORE_ID = "maya-herbs";
+const SACRED_STORE_ID = "sacred-connection";
 const ETHNICITY_COLORS = {
   apurina: [74, 115, 13],
   "apurina\u00a3": [74, 115, 13],
@@ -379,26 +377,6 @@ async function fetchPdfAsset(url, { cache = "force-cache" } = {}) {
   return new Uint8Array(await response.arrayBuffer());
 }
 
-async function rasterizePdfSvg(url, width = 800, height = 288) {
-  const image = new Image();
-  image.decoding = "async";
-  const loaded = new Promise((resolve, reject) => {
-    image.onload = resolve;
-    image.onerror = () => reject(new Error("PDF SVG asset could not be loaded."));
-  });
-  image.src = url;
-  await loaded;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = width;
-  canvas.height = height;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("PDF SVG asset could not be rasterized.");
-  context.clearRect(0, 0, width, height);
-  context.drawImage(image, 0, 0, width, height);
-  return canvas.toDataURL("image/png");
-}
-
 async function fetchPdfProductImage(url) {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new Error(`PDF product image failed with status ${response.status}.`);
@@ -432,76 +410,23 @@ function drawCatalogLogo(pdf, logo, x, y, width = 45) {
   }
 }
 
-function storePdfTheme(storeId) {
-  const isMaya = storeId === "maya-herbs";
+function storePdfTheme() {
   return {
-    isMaya,
-    primary: isMaya ? MAYA_PRIMARY : SACRED_PRIMARY,
-    secondary: isMaya ? MAYA_SECONDARY : SACRED_SECONDARY,
-    secondarySoft: isMaya ? [235, 226, 188] : [218, 235, 230],
-    muted: isMaya ? [238, 214, 199] : [180, 211, 202],
-    headerMuted: isMaya ? [102, 91, 82] : [190, 201, 198],
+    primary: SACRED_PRIMARY,
+    secondary: SACRED_SECONDARY,
+    secondarySoft: [218, 235, 230],
+    muted: [180, 211, 202],
+    headerMuted: [190, 201, 198],
   };
 }
 
-function drawStoreBrand(
-  pdf,
-  logo,
-  mayaLogo,
-  storeId,
-  storeName,
-  x,
-  y,
-  width = 45
-) {
-  if (storeId !== "maya-herbs") {
-    drawCatalogLogo(pdf, logo, x, y, width);
-    return;
-  }
-
-  if (mayaLogo) {
-    pdf.addImage(
-      mayaLogo,
-      "PNG",
-      x,
-      y,
-      width,
-      width * 0.36,
-      "maya-catalog-logo",
-      "FAST"
-    );
-    return;
-  }
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(width / 4.4);
-  pdf.setTextColor(...MAYA_PRIMARY);
-  pdf.text(pdfSafeText(storeName || "Maya Herbs").toUpperCase(), x, y + width * 0.22);
+function drawStoreBrand(pdf, logo, x, y, width = 45) {
+  drawCatalogLogo(pdf, logo, x, y, width);
 }
 
-function drawSharedCatalogBrand(pdf, logo, mayaLogo, x, y) {
+function drawSharedCatalogBrand(pdf, logo, x, y) {
   const logoWidth = 36;
-  const logoGap = 7;
-  drawStoreBrand(
-    pdf,
-    logo,
-    mayaLogo,
-    "sacred-connection",
-    "Sacred Connection",
-    x,
-    y,
-    logoWidth
-  );
-  drawStoreBrand(
-    pdf,
-    logo,
-    mayaLogo,
-    "maya-herbs",
-    "Maya Herbs",
-    x + logoWidth + logoGap,
-    y,
-    logoWidth
-  );
+  drawStoreBrand(pdf, logo, x, y, logoWidth);
 }
 
 function drawGreenCoverBackground(pdf, background) {
@@ -613,7 +538,6 @@ function drawGenerationStamp(pdf, generatedAtLabel, { darkBackground = false } =
 function drawPdfCover(
   pdf,
   logo,
-  mayaLogo,
   coverBackground,
   coverDecoration,
   contactIcons,
@@ -622,7 +546,7 @@ function drawPdfCover(
   generatedAtLabel
 ) {
   const categoryCount = new Set(products.map((product) => product.category).filter(Boolean)).size;
-  const storeCount = new Set(products.map((product) => product.storeId).filter(Boolean)).size;
+  const traditionCount = new Set(products.map((product) => product.tribe).filter(Boolean)).size;
   const normalizedFilterLabel = String(filterLabel || "").trim();
   const isCompleteCatalog =
     !normalizedFilterLabel ||
@@ -644,7 +568,7 @@ function drawPdfCover(
   pdf.setFillColor(26, 26, 26);
   pdf.rect(0, 0, 210, 42, "F");
   drawCoverDecoration(pdf, coverDecoration);
-  drawSharedCatalogBrand(pdf, logo, mayaLogo, 16, 13);
+  drawSharedCatalogBrand(pdf, logo, 16, 13);
 
   pdf.setDrawColor(130, 214, 197);
   pdf.setLineWidth(0.6);
@@ -666,7 +590,7 @@ function drawPdfCover(
   pdf.text(
     truncatePdfLines(
       pdf,
-      "A curated guide to Sacred Connection and Maya Herbs products, organized by store, collection, and product details.",
+      "A curated guide to Sacred Connection products, organized by collection and product details.",
       130,
       4
     ),
@@ -699,7 +623,7 @@ function drawPdfCover(
   pdf.setFillColor(255, 255, 255);
   pdf.roundedRect(16, 180, 178, 48, 2.5, 2.5, "F");
   const stats = [
-    [String(storeCount), "STORES"],
+    [String(traditionCount), "TRADITIONS"],
     [String(products.length), "PRODUCTS"],
     [String(categoryCount), "CATEGORIES"],
   ];
@@ -722,14 +646,13 @@ function drawPdfCover(
 
   pdf.setFont("helvetica", "bold");
   pdf.setTextColor(255, 255, 255);
-  pdf.text("SACRED CONNECTION + MAYA HERBS", 16, 278);
+  pdf.text("SACRED CONNECTION", 16, 278);
   drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
 }
 
 function drawStoreCover(
   pdf,
   logo,
-  mayaLogo,
   coverBackground,
   coverDecoration,
   store,
@@ -739,28 +662,12 @@ function drawStoreCover(
   generatedAtLabel
 ) {
   const theme = storePdfTheme(store.storeId);
-  const storeHeadingColor = theme.isMaya
-    ? [255, 255, 255]
-    : theme.secondary;
+  const storeHeadingColor = theme.secondary;
   pdf.setFillColor(...theme.primary);
   pdf.rect(0, 0, 210, 297, "F");
-  if (!theme.isMaya) drawGreenCoverBackground(pdf, coverBackground);
-  if (theme.isMaya) {
-    pdf.setFillColor(255, 255, 255);
-    pdf.rect(0, 0, 210, 42, "F");
-  } else {
-    drawCoverDecoration(pdf, coverDecoration);
-  }
-  drawStoreBrand(
-    pdf,
-    logo,
-    mayaLogo,
-    store.storeId,
-    store.storeName,
-    16,
-    14,
-    50
-  );
+  drawGreenCoverBackground(pdf, coverBackground);
+  drawCoverDecoration(pdf, coverDecoration);
+  drawStoreBrand(pdf, logo, 16, 14, 50);
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(8);
@@ -779,9 +686,7 @@ function drawStoreCover(
   pdf.setFontSize(10);
   pdf.setTextColor(...theme.secondarySoft);
   const storeDescription =
-    store.storeId === "maya-herbs"
-      ? "Maya Herbs products presented as an independent catalog section, with their own categories, formats, identifiers, and product descriptions."
-      : "Sacred Connection products presented as an independent catalog section, including indigenous traditions, formats, identifiers, and product descriptions.";
+    "Sacred Connection products presented by collection, including indigenous traditions, formats, identifiers, and product descriptions.";
   pdf.text(truncatePdfLines(pdf, storeDescription, 145, 5), 16, 139, {
     lineHeightFactor: 1.45,
   });
@@ -820,7 +725,6 @@ function drawStoreCover(
 function drawGridHeader(
   pdf,
   logo,
-  mayaLogo,
   storeId,
   storeName,
   category,
@@ -828,9 +732,9 @@ function drawGridHeader(
   pageCount
 ) {
   const theme = storePdfTheme(storeId);
-  pdf.setFillColor(...(theme.isMaya ? [255, 255, 255] : [26, 26, 26]));
+  pdf.setFillColor(26, 26, 26);
   pdf.rect(0, 0, 210, 28, "F");
-  drawStoreBrand(pdf, logo, mayaLogo, storeId, storeName, 12, 6.5, 36);
+  drawStoreBrand(pdf, logo, 12, 6.5, 36);
 
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(7.5);
@@ -855,7 +759,6 @@ function drawGridHeader(
 function drawCategoryCover(
   pdf,
   logo,
-  mayaLogo,
   coverBackground,
   coverDecoration,
   storeId,
@@ -869,19 +772,12 @@ function drawCategoryCover(
 ) {
   const tribes = [...new Set(products.map((product) => product.tribe).filter(Boolean))];
   const theme = storePdfTheme(storeId);
-  const collectionHeadingColor = theme.isMaya
-    ? [255, 255, 255]
-    : theme.secondary;
+  const collectionHeadingColor = theme.secondary;
   pdf.setFillColor(...theme.primary);
   pdf.rect(0, 0, 210, 297, "F");
-  if (!theme.isMaya) drawGreenCoverBackground(pdf, coverBackground);
-  if (theme.isMaya) {
-    pdf.setFillColor(255, 255, 255);
-    pdf.rect(0, 0, 210, 42, "F");
-  } else {
-    drawCoverDecoration(pdf, coverDecoration);
-  }
-  drawStoreBrand(pdf, logo, mayaLogo, storeId, storeName, 16, 14, 50);
+  drawGreenCoverBackground(pdf, coverBackground);
+  drawCoverDecoration(pdf, coverDecoration);
+  drawStoreBrand(pdf, logo, 16, 14, 50);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(8);
   pdf.setTextColor(...collectionHeadingColor);
@@ -1096,16 +992,10 @@ function drawGridFooter(
   drawIndexNavigationButton(
     pdf,
     53,
-    "SACRED INDEX",
-    storePdfTheme("sacred-connection"),
-    storeIndexDestinations.get("sacred-connection")
-  );
-  drawIndexNavigationButton(
-    pdf,
-    107,
-    "MAYA INDEX",
-    storePdfTheme("maya-herbs"),
-    storeIndexDestinations.get("maya-herbs")
+    "CATALOG INDEX",
+    storePdfTheme(SACRED_STORE_ID),
+    storeIndexDestinations.get(SACRED_STORE_ID),
+    58
   );
   pdf.setDrawColor(220, 229, 226);
   pdf.line(12, 282, 198, 282);
@@ -1126,7 +1016,6 @@ function drawGridPage(pdf, {
   products,
   images,
   logo,
-  mayaLogo,
   includeLinks,
   storeId,
   storeName,
@@ -1139,7 +1028,6 @@ function drawGridPage(pdf, {
   drawGridHeader(
     pdf,
     logo,
-    mayaLogo,
     storeId,
     storeName,
     category,
@@ -1275,7 +1163,6 @@ function drawIndexPage(pdf, {
   columns,
   ethnicityLinks,
   logo,
-  mayaLogo,
   productDestinations,
   storeId,
   storeName,
@@ -1287,9 +1174,9 @@ function drawIndexPage(pdf, {
 }) {
   const theme = storePdfTheme(storeId);
   const medicineGreen = ethnicityColor({ tribe: "Medicina Sagrada" });
-  pdf.setFillColor(...(theme.isMaya ? [255, 255, 255] : [26, 26, 26]));
+  pdf.setFillColor(26, 26, 26);
   pdf.rect(0, 0, 210, 28, "F");
-  drawStoreBrand(pdf, logo, mayaLogo, storeId, storeName, 12, 6.5, 36);
+  drawStoreBrand(pdf, logo, 12, 6.5, 36);
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(10);
   pdf.setTextColor(...theme.secondary);
@@ -1344,9 +1231,7 @@ function drawIndexPage(pdf, {
         );
       } else if (row.type === "ethnicity") {
         const ethnicityY = y + (row.gapBefore || 0);
-        const accent = theme.isMaya
-          ? theme.secondary
-          : ethnicityColor({ tribe: row.label });
+        const accent = ethnicityColor({ tribe: row.label });
         const destination = ethnicityLinks.find(
           (item) => item.storeId === row.storeId && item.label === row.label
         )?.destination;
@@ -1374,9 +1259,7 @@ function drawIndexPage(pdf, {
           });
         }
       } else {
-        const accent = theme.isMaya
-          ? theme.secondary
-          : ethnicityColor(row.product);
+        const accent = ethnicityColor(row.product);
         pdf.setFillColor(...accent);
         pdf.rect(x, y, 1.8, row.height, "F");
         pdf.setFont("helvetica", "normal");
@@ -1435,29 +1318,10 @@ async function fetchDigitalCatalogProducts({
     );
   }
   const products = Array.isArray(data.products)
-    ? data.products
-        .map((product) => {
-          if (
-            product.storeId !== MAYA_STORE_ID ||
-            product.productType !== "variable"
-          ) {
-            return product;
-          }
-
-          return {
-            ...product,
-            options: (product.options || []).filter(
-              (option) =>
-                option.wcVariationId != null && option.inStock !== false
-            ),
-          };
-        })
-        .filter(
-          (product) =>
-            product.storeId !== MAYA_STORE_ID ||
-            product.productType !== "variable" ||
-            product.options.length > 0
-        )
+    ? data.products.filter(
+        (product) =>
+          !product.storeId || product.storeId === SACRED_STORE_ID
+      )
     : [];
   if (products.length === 0) {
     throw new Error(
@@ -1485,8 +1349,6 @@ export async function createDigitalCatalogPdfPreview(options = {}) {
     blob: pdf.output("blob"),
     generatedAt,
     productCount: products.length,
-    storeCount: new Set(products.map((product) => product.storeId).filter(Boolean))
-      .size,
   };
 }
 
@@ -1510,18 +1372,9 @@ async function renderDigitalCatalogPdf({
   generatedAt,
 }) {
   const { jsPDF } = await import("jspdf");
-  const preferredStoreOrder = ["sacred-connection", "maya-herbs"];
+  const preferredStoreOrder = [SACRED_STORE_ID];
   const preferredCategoriesByStore = {
-    "sacred-connection": ["Rapé Indigenous", "Sacred Connection"],
-    "maya-herbs": [
-      "Accessories",
-      "CBD",
-      "Ethnobotanicals",
-      "Incense",
-      "Rapé Indigenous",
-      "Sacred Connection",
-      "Superfoods",
-    ],
+    [SACRED_STORE_ID]: ["Rapé Indigenous", "Sacred Connection"],
   };
   const categorySort = (storeId) => (a, b) => {
     const preferredCategories =
@@ -1534,7 +1387,7 @@ async function renderDigitalCatalogPdf({
     return aIndex - bIndex;
   };
   const storeIds = [
-    ...new Set(products.map((product) => product.storeId || "sacred-connection")),
+    ...new Set(products.map((product) => product.storeId || SACRED_STORE_ID)),
   ].sort((a, b) => {
     const aIndex = preferredStoreOrder.indexOf(a);
     const bIndex = preferredStoreOrder.indexOf(b);
@@ -1545,11 +1398,11 @@ async function renderDigitalCatalogPdf({
   });
   const storeGroups = storeIds.map((storeId) => {
     const storeProducts = products.filter(
-      (product) => (product.storeId || "sacred-connection") === storeId
+      (product) => (product.storeId || SACRED_STORE_ID) === storeId
     );
     const storeName =
       storeProducts.find((product) => product.storeName)?.storeName ||
-      (storeId === "maya-herbs" ? "Maya Herbs" : "Sacred Connection");
+      "Sacred Connection";
     const categories = [
       ...new Set(
         storeProducts.map((product) => product.category || "Other")
@@ -1651,9 +1504,9 @@ async function renderDigitalCatalogPdf({
   });
   pdf.setDisplayMode("100%", "continuous", "UseNone");
   pdf.setProperties({
-    title: "Sacred Connection and Maya Herbs Wholesale Catalog",
+    title: "Sacred Connection Wholesale Catalog",
     subject: "Interactive wholesale product catalog",
-    author: "Sacred Connection and Maya Herbs",
+    author: "Sacred Connection",
     creator: "Wholesale Digital Catalog",
   });
 
@@ -1662,15 +1515,6 @@ async function renderDigitalCatalogPdf({
     logo = await fetchPdfAsset("/logo-pdf.png?v=transparent-20260721");
   } catch {
     // A text fallback is drawn when the local brand asset cannot be loaded.
-  }
-
-  let mayaLogo = null;
-  try {
-    mayaLogo = await rasterizePdfSvg(
-      "/marketplace/logos/logo-maya-herbs-01.svg?v=pdf-20260723"
-    );
-  } catch {
-    // A colored text fallback is drawn if the Maya brand asset cannot be loaded.
   }
 
   let coverBackground = null;
@@ -1724,7 +1568,6 @@ async function renderDigitalCatalogPdf({
   drawPdfCover(
     pdf,
     logo,
-    mayaLogo,
     coverBackground,
     coverDecoration,
     contactIcons,
@@ -1744,7 +1587,6 @@ async function renderDigitalCatalogPdf({
         columns,
         ethnicityLinks: storeEthnicityLinks,
         logo,
-        mayaLogo,
         productDestinations,
         storeId: storeIndex.storeId,
         storeName: storeIndex.storeName,
@@ -1762,7 +1604,6 @@ async function renderDigitalCatalogPdf({
     drawStoreCover(
       pdf,
       logo,
-      mayaLogo,
       coverBackground,
       coverDecoration,
       store,
@@ -1777,7 +1618,6 @@ async function renderDigitalCatalogPdf({
       drawCategoryCover(
         pdf,
         logo,
-        mayaLogo,
         coverBackground,
         coverDecoration,
         store.storeId,
@@ -1800,7 +1640,6 @@ async function renderDigitalCatalogPdf({
               imagesByProduct.get(product.id || product.sku) || null
           ),
           logo,
-          mayaLogo,
           includeLinks,
           storeId: store.storeId,
           storeName: store.storeName,

@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext';
 import { optionPriceForUser, cartUnitPrice } from '@/lib/pricing';
 
 const CartContext = createContext();
+const SACRED_STORE_ID = "sacred-connection";
 
 export function CartProvider({ children }) {
   const { isLoggedIn, user } = useAuth();
@@ -20,15 +21,19 @@ export function CartProvider({ children }) {
         const parsedCart = storedCart ? JSON.parse(storedCart) : [];
         setCart(
           Array.isArray(parsedCart)
-            ? parsedCart.map((item) => {
-                const storeId = item.storeId || "sacred-connection";
-                return {
+            ? parsedCart
+                .filter(
+                  (item) =>
+                    !item.storeId || item.storeId === SACRED_STORE_ID
+                )
+                .map((item) => ({
                   ...item,
-                  storeId,
-                  storeName: item.storeName || "Sacred Connection",
-                  cartKey: item.cartKey || `${storeId}:${item.sku}`,
-                };
-              })
+                  storeId: SACRED_STORE_ID,
+                  storeName: "Sacred Connection",
+                  cartKey:
+                    item.cartKey ||
+                    `${SACRED_STORE_ID}:${item.sku}`,
+                }))
             : []
         );
       } catch (e) {
@@ -55,7 +60,8 @@ export function CartProvider({ children }) {
     if (!selectedOption) return;
 
     setCart((prevCart) => {
-      const storeId = product.storeId || "sacred-connection";
+      const storeId = product.storeId || SACRED_STORE_ID;
+      if (storeId !== SACRED_STORE_ID) return prevCart;
       const cartKey = `${storeId}:${selectedOption.sku}`;
       const existingItemIndex = prevCart.findIndex((item) => item.cartKey === cartKey);
       

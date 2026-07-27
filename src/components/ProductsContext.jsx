@@ -1,8 +1,7 @@
 "use client";
 
-// Preloads the combined catalog as soon as authentication is restored. Keeping
-// this provider above the pages means navigation to /catalog can reuse the
-// already loaded data and both stores become visible in the same render.
+// Preloads the Sacred Connection catalog as soon as authentication is restored.
+// Keeping this provider above the pages lets /catalog reuse the loaded data.
 
 import { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/components/AuthContext";
@@ -51,7 +50,7 @@ export function ProductsProvider({ children }) {
             invalidateSession();
             return;
           }
-          throw new Error(data.error || "Could not load the combined catalog.");
+          throw new Error(data.error || "Could not load the Sacred Connection catalog.");
         }
         if (!cancelled) {
           setProducts(Array.isArray(data.products) ? data.products : []);
@@ -61,7 +60,7 @@ export function ProductsProvider({ children }) {
           setProducts([]);
           setError(
             catalogError.name === "TimeoutError"
-              ? "The combined catalog took too long to load. Please try again."
+              ? "The Sacred Connection catalog took too long to load. Please try again."
               : catalogError.message
           );
         }

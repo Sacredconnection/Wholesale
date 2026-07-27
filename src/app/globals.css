@@ -329,26 +329,12 @@ html[data-theme="light"] .marketplace-store-card--sacred {
   border-color: rgb(38 128 114 / 0.32) !important;
 }
 
-html[data-theme="light"] .marketplace-store-card--maya {
-  background: linear-gradient(135deg, #fff8f3 0%, #f8e9df 100%) !important;
-  border-color: rgb(204 102 50 / 0.38) !important;
-}
-
 html[data-theme="light"] .marketplace-store-card--sacred [class~="text-emerald-200"] {
   color: #006b5e !important;
 }
 
 html[data-theme="light"] .marketplace-store-card--sacred [class~="bg-emerald-300/10"] {
   background-color: rgb(38 128 114 / 0.1) !important;
-}
-
-html[data-theme="light"] .marketplace-store-card--maya [class~="text-amber-100"],
-html[data-theme="light"] .marketplace-store-card--maya [class~="text-[#e0c38b]"] {
-  color: #9b4d27 !important;
-}
-
-html[data-theme="light"] .marketplace-store-card--maya [class~="bg-amber-200/10"] {
-  background-color: rgb(204 102 50 / 0.1) !important;
 }
 
 html[data-theme="light"] [class~="before:bg-[#131313]"]::before {

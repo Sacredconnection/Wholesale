@@ -20,7 +20,6 @@ import { getSession } from "@/lib/session";
 import {
   getRequiredCommerceStores,
   isCommerceStoreConfigured,
-  MAYA_HERBS_STORE_ID,
   PRIMARY_STORE_ID,
 } from "@/lib/commerce-stores";
 
@@ -50,23 +49,6 @@ const pageNumber = (value) => {
   return Number.isFinite(page) && page > 0 ? page : 1;
 };
 
-function mayaSimpleOptionLabel(product) {
-  const matches = String(product.name || "").match(
-    /\b\d+(?:[.,]\d+)?\s*(?:kg|gr(?:ams?)?|g|ml|cl|l|cps|capsules?|tablets?|pieces?|pcs)\b/gi
-  );
-  return matches?.at(-1)?.replace(/\s+/g, "") || "Single format";
-}
-
-function explicitWeightGrams(label) {
-  const match = String(label || "").match(
-    /([\d.,]+)\s*(kg|gr(?:ams?)?|g)\b/i
-  );
-  if (!match) return null;
-  const amount = Number.parseFloat(match[1].replace(",", "."));
-  if (!Number.isFinite(amount)) return null;
-  return match[2].toLowerCase() === "kg" ? amount * 1000 : amount;
-}
-
 const attributeSelections = (params) => {
   const selections = {};
   params.getAll("attribute").forEach((entry) => {
@@ -87,18 +69,6 @@ const productHasAttribute = (product, key, value) =>
         (attributeValue) => normalize(attributeValue) === normalize(value)
       )
   );
-
-function belongsToExcludedMayaRapeCategory(product, categoryContext) {
-  const { parentById = {}, nameById = {} } = categoryContext;
-
-  return (product.categories || []).some((productCategory) => {
-    let categoryId = productCategory.id;
-    for (let depth = 0; depth < 10 && parentById[categoryId]; depth += 1) {
-      categoryId = parentById[categoryId];
-    }
-    return normalize(nameById[categoryId] || productCategory.name) === "rape";
-  });
-}
 
 async function mapWithConcurrency(items, concurrency, mapper) {
   const results = new Array(items.length);
@@ -143,17 +113,10 @@ async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
     getCategories(store.id, catalogFetchOptions),
   ]);
   const categoryContext = buildCategoryContext(categories);
-  const visibleProducts =
-    store.id === MAYA_HERBS_STORE_ID
-      ? wcProducts.filter(
-          (product) =>
-            !belongsToExcludedMayaRapeCategory(product, categoryContext)
-        )
-      : wcProducts;
   const user = customer ? { role: customer.role } : null;
 
   return mapWithConcurrency(
-    visibleProducts,
+    wcProducts,
     VARIATION_FETCH_CONCURRENCY,
     async (product) => {
       const fetchedVariations =
@@ -164,26 +127,7 @@ async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
               catalogFetchOptions
             )
           : [];
-      const variations =
-        store.id === MAYA_HERBS_STORE_ID
-          ? fetchedVariations.filter(
-              (variation) =>
-                variation.purchasable !== false &&
-                variation.stock_status !== "outofstock"
-            )
-          : fetchedVariations;
-
-      // Maya's parent products can remain published and in stock even when
-      // none of their variations are currently available. Do not let the
-      // mapper turn those empty variable products into a synthetic "Default"
-      // option in the digital catalog.
-      if (
-        store.id === MAYA_HERBS_STORE_ID &&
-        product.type === "variable" &&
-        variations.length === 0
-      ) {
-        return null;
-      }
+      const variations = fetchedVariations;
 
       const mapped = mapProductForRole(
         product,
@@ -192,35 +136,7 @@ async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
         customer?.role || null,
         store
       );
-      const catalogProduct =
-        store.id === MAYA_HERBS_STORE_ID
-          ? {
-              ...mapped,
-              options: mapped.options.map((option) => {
-                if (product.type === "variable") {
-                  // A WooCommerce variation weight is often the packed
-                  // shipping weight, not the sellable format. For Maya, only
-                  // present grams when the variation label itself explicitly
-                  // declares a gram or kilogram amount.
-                  return {
-                    ...option,
-                    weightGrams: explicitWeightGrams(option.name),
-                  };
-                }
-                if (
-                  product.type !== "variable" &&
-                  option.name === "Default"
-                ) {
-                  return {
-                    ...option,
-                    name: mayaSimpleOptionLabel(product),
-                    weightGrams: null,
-                  };
-                }
-                return option;
-              }),
-            }
-          : mapped;
+      const catalogProduct = mapped;
       const prices = catalogProduct.options
         .map((option) => optionPriceForUser(option, user, mapped.category))
         .filter(Number.isFinite);
@@ -244,29 +160,36 @@ async function loadLocalCatalogSnapshot() {
     throw new Error("The local catalog snapshot must contain a products array.");
   }
 
-  return snapshot.products.map((product) => {
-    const options = Array.isArray(product.options)
-      ? product.options.map((option) => ({
-          ...option,
-          price: Number(option.price) || 0,
-          inStock: null,
-          stockQuantity: null,
-        }))
-      : [];
-    const prices = options.map((option) => option.price).filter(Number.isFinite);
+  return snapshot.products
+    .filter(
+      (product) =>
+        !product.storeId || product.storeId === PRIMARY_STORE_ID
+    )
+    .map((product) => {
+      const options = Array.isArray(product.options)
+        ? product.options.map((option) => ({
+            ...option,
+            price: Number(option.price) || 0,
+            inStock: null,
+            stockQuantity: null,
+          }))
+        : [];
+      const prices = options
+        .map((option) => option.price)
+        .filter(Number.isFinite);
 
-    return {
-      ...product,
-      attributes: Array.isArray(product.attributes) ? product.attributes : [],
-      options,
-      inStock: null,
-      stockKnown: false,
-      stockQuantity: null,
-      priceMin: prices.length ? Math.min(...prices) : 0,
-      priceMax: prices.length ? Math.max(...prices) : 0,
-      productUrl: `/product/${product.id}`,
-    };
-  });
+      return {
+        ...product,
+        attributes: Array.isArray(product.attributes) ? product.attributes : [],
+        options,
+        inStock: null,
+        stockKnown: false,
+        stockQuantity: null,
+        priceMin: prices.length ? Math.min(...prices) : 0,
+        priceMax: prices.length ? Math.max(...prices) : 0,
+        productUrl: `/product/${product.id}`,
+      };
+    });
 }
 
 export async function GET(request) {
@@ -288,7 +211,7 @@ export async function GET(request) {
     let source = "snapshot";
 
     if (isWooCommerceConfigured()) {
-      source = "woocommerce-rest-multi";
+      source = "woocommerce-rest";
       customer = await resolveCustomer();
       const configuredStores = getRequiredCommerceStores().filter((store) =>
         isCommerceStoreConfigured(store.id)

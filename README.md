@@ -74,27 +74,24 @@ npm run dev
 ```
 Open **[http://localhost:3000](http://localhost:3000)** in your browser.
 
-### Headless WooCommerce Backends
+### Headless WooCommerce Backend
 
-The catalog is aggregated from Sacred Connection and Maya Herbs. Configuration is entirely server-side through environment variables (see [.env.example](.env.example)):
+The catalog is sourced exclusively from Sacred Connection. Configuration is entirely server-side through environment variables (see [.env.example](.env.example)):
 
 | Variable | Description |
 | --- | --- |
 | `WOOCOMMERCE_URL` | Sacred Connection WooCommerce base URL |
 | `WOOCOMMERCE_CONSUMER_KEY` | Sacred Connection REST API key with Read/Write permission |
 | `WOOCOMMERCE_CONSUMER_SECRET` | Sacred Connection REST API secret |
-| `WOOCOMMERCE_URL_MAYA` | Maya Herbs WooCommerce base URL |
-| `WOOCOMMERCE_CONSUMER_KEY_MAYA` | Maya Herbs REST API key with Read/Write permission |
-| `WOOCOMMERCE_CONSUMER_SECRET_MAYA` | Maya Herbs REST API secret |
 | `WC_REVALIDATE_SECONDS` | Optional server-side catalog cache TTL (default `300`) |
 | `WC_WEBHOOK_SECRET` | Recommended shared secret for immediate product-cache invalidation from WooCommerce webhooks |
 | `SESSION_SECRET` | Required random secret (minimum 32 characters) used to sign authentication cookies |
 | `ORDER_PAYMENT_INSTRUCTIONS` | Server-only payment text appended to every created order |
 
-*   **Local dev:** copy `.env.example` to `.env.local` and fill in both sets of keys (WP Admin → WooCommerce → Settings → Advanced → REST API).
+*   **Local dev:** copy `.env.example` to `.env.local` and fill in the Sacred Connection keys (WP Admin → WooCommerce → Settings → Advanced → REST API).
 *   **Vercel:** add all variables for Production and Preview, then redeploy.
 
-**How it works:** [src/lib/commerce-stores.js](src/lib/commerce-stores.js) defines the two server-only backends. `/api/products` and `/api/catalog` load both catalogs and tag each product with its source. The cart preserves this source, and `/api/orders` validates the items against their respective stores before creating one WooCommerce order per represented backend. Authentication and the buyer profile remain authoritative in Sacred Connection. Order history merges orders from both stores.
+**How it works:** [src/lib/commerce-stores.js](src/lib/commerce-stores.js) defines the server-only Sacred Connection backend. `/api/products` and `/api/catalog` load only that catalog. The cart preserves the product source, and `/api/orders` validates every item against Sacred Connection before creating the WooCommerce order. Authentication, the buyer profile, and order history remain authoritative in Sacred Connection.
 
 PDF exports always bypass the WooCommerce data cache, so every generated file uses the published products, current variations, and stock returned at generation time. Prices are intentionally omitted from the PDF catalog. Normal catalog browsing keeps the short `WC_REVALIDATE_SECONDS` cache for performance.
 
