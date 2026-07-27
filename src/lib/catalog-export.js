@@ -377,6 +377,25 @@ async function fetchPdfAsset(url, { cache = "force-cache" } = {}) {
   return new Uint8Array(await response.arrayBuffer());
 }
 
+async function loadPdfLogo() {
+  const image = new Image();
+  image.decoding = "async";
+  const loaded = new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = () => reject(new Error("The catalog logo could not be loaded."));
+  });
+  image.src = new URL("/logo-pdf.png", window.location.origin).href;
+  await loaded;
+
+  const canvas = document.createElement("canvas");
+  canvas.width = image.naturalWidth;
+  canvas.height = image.naturalHeight;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("The catalog logo could not be rendered.");
+  context.drawImage(image, 0, 0);
+  return canvas.toDataURL("image/png");
+}
+
 async function fetchPdfProductImage(url) {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new Error(`PDF product image failed with status ${response.status}.`);
@@ -1512,7 +1531,7 @@ async function renderDigitalCatalogPdf({
 
   let logo = null;
   try {
-    logo = await fetchPdfAsset("/logo-pdf.png?v=transparent-20260721");
+    logo = await loadPdfLogo();
   } catch {
     // A text fallback is drawn when the local brand asset cannot be loaded.
   }

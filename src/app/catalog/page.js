@@ -23,8 +23,6 @@ import {
   ChevronRight, 
   ArrowRight,
   PackageOpen,
-  Store,
-  Network,
   LoaderCircle,
 } from "lucide-react";
 
@@ -408,51 +406,6 @@ export default function CatalogPage() {
             {pdfExportError}
           </div>
         )}
-
-        {/* Sacred Connection catalog */}
-        <section aria-labelledby="marketplace-stores-title" className="marketplace-stores-panel overflow-hidden rounded-xl border border-white/10 bg-[#171717] shadow-xl">
-          <div className="grid gap-6 border-b border-white/10 px-5 py-6 sm:px-7 lg:grid-cols-[1.15fr_0.85fr] lg:items-center lg:px-8 lg:py-8">
-            <div>
-              <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-[#268072]/30 bg-[#268072]/15 px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#82d6c5]">
-                <Network className="h-3.5 w-3.5" />
-                Sacred Connection wholesale
-              </div>
-              <h2 id="marketplace-stores-title" className="font-headline-md text-2xl font-black text-white sm:text-3xl">
-                Sacred Connection wholesale catalog
-              </h2>
-            </div>
-            <p className="text-sm leading-6 text-white/60">
-              Browse the complete Sacred Connection selection and submit your wholesale order directly to our catalog.
-            </p>
-          </div>
-
-          <div className="grid gap-4 p-5 sm:p-7 lg:p-8">
-            <article className="marketplace-store-card marketplace-store-card--sacred group relative overflow-hidden rounded-lg border border-[#268072]/35 bg-gradient-to-br from-[#173d36] to-[#111817] p-5 sm:p-6">
-              <div className="absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#268072]/20 blur-2xl" />
-              <div className="relative flex h-full flex-col gap-5">
-                <div className="flex items-center justify-between gap-4">
-                  <div className="flex h-14 w-32 items-center justify-center rounded border border-white/10 bg-black/30 px-3">
-                    <img src="/logo.svg" alt="Sacred Connection" className="max-h-10 w-full object-contain" />
-                  </div>
-                  <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-emerald-200">
-                    Integrated
-                  </span>
-                </div>
-                <div>
-                  <h3 className="text-lg font-bold text-white">Sacred Connection</h3>
-                  <p className="mt-1 text-sm leading-5 text-white/55">
-                    The original wholesale catalog, focused on traditional botanical products and direct community relationships.
-                  </p>
-                </div>
-                <div className="mt-auto flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-[#82d6c5]">
-                  <Store className="h-3.5 w-3.5" />
-                  Official catalog
-                </div>
-              </div>
-            </article>
-
-          </div>
-        </section>
 
         <FilterSidebar
           filters={{ search, category, tribe, attributes: attributeFilters }}
