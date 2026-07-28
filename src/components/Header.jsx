@@ -43,7 +43,7 @@ export default function Header({ onOpenLogin }) {
   };
 
   return (
-    <header className="theme-dark-zone sticky top-0 w-full bg-[#212121] border-b-2 border-[#268072] z-50 relative">
+    <header className="theme-dark-zone sticky top-0 z-50 w-full border-b-2 border-[#268072] bg-[#212121] shadow-lg shadow-black/15">
       <div className="mx-auto flex min-h-[4.5rem] w-full max-w-7xl items-center justify-between px-4 sm:min-h-[5.5rem] sm:px-6 lg:min-h-24 lg:px-8">
         {/* Logotipo (Left) */}
         <Link className="group flex self-stretch shrink-0 items-center" href="/" onClick={handleHomeClick}>
@@ -57,7 +57,7 @@ export default function Header({ onOpenLogin }) {
         </Link>
 
         {/* Navigation Links (Center - Desktop Only) */}
-        <nav aria-label="Primary navigation" className="hidden self-stretch items-center gap-6 text-sm font-medium tracking-wide text-white/70 font-body-md lg:flex">
+        <nav aria-label="Primary navigation" className="hidden self-stretch items-center gap-4 text-sm font-medium tracking-wide text-white/70 xl:gap-6 font-body-md lg:flex">
           <Link
             className={`${pathname === '/' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:after:scale-x-100 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/"
@@ -77,13 +77,6 @@ export default function Header({ onOpenLogin }) {
             Wholesale Catalog
           </Link>
           <Link
-            className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5] hover:border-[#82d6c5] hover:bg-[#268072]/20 hover:text-white'} inline-flex items-center justify-center rounded-sm border px-3 py-2 text-[11px] font-bold uppercase tracking-wider transition-all duration-300`}
-            href="/digital-catalog"
-            aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
-          >
-            Digital Catalog
-          </Link>
-          <Link
             className={`${pathname === '/contact' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:after:scale-x-100 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/contact"
             aria-current={pathname === '/contact' ? 'page' : undefined}
@@ -93,7 +86,7 @@ export default function Header({ onOpenLogin }) {
         </nav>
 
         {/* CTA Actions (Right - Desktop Only) */}
-        <div className="hidden self-stretch shrink-0 items-center gap-6 lg:flex">
+        <div className="hidden self-stretch shrink-0 items-center gap-3 xl:gap-5 lg:flex">
           <ThemeToggle />
 
           {/* Cart Icon Trigger */}
@@ -110,6 +103,14 @@ export default function Header({ onOpenLogin }) {
               </span>
             )}
           </button>
+
+          <Link
+            className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5] hover:border-[#82d6c5] hover:bg-[#268072]/20 hover:text-white'} inline-flex items-center justify-center rounded-sm border px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-300`}
+            href="/digital-catalog"
+            aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
+          >
+            Digital Catalog
+          </Link>
 
           {isLoggedIn ? (
             <>
@@ -210,14 +211,6 @@ export default function Header({ onOpenLogin }) {
             Wholesale Catalog
           </Link>
           <Link
-            className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5]'} rounded-sm border px-4 py-3 text-center text-sm font-bold uppercase tracking-wider transition-colors hover:border-[#82d6c5] hover:text-white`}
-            href="/digital-catalog"
-            aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Open Digital Catalog
-          </Link>
-          <Link
             className={`${pathname === '/contact' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/contact"
             aria-current={pathname === '/contact' ? 'page' : undefined}
@@ -226,6 +219,14 @@ export default function Header({ onOpenLogin }) {
             Contact
           </Link>
           <div className="h-px bg-white/10 my-2"></div>
+          <Link
+            className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5]'} rounded-sm border px-4 py-3 text-center text-sm font-bold uppercase tracking-wider transition-colors hover:border-[#82d6c5] hover:text-white`}
+            href="/digital-catalog"
+            aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Open Digital Catalog
+          </Link>
           {isLoggedIn ? (
             <>
               <Link

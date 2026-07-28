@@ -3,6 +3,7 @@ import { AuthProvider } from "@/components/AuthContext";
 import { CartProvider } from "@/components/CartContext";
 import { ProductsProvider } from "@/components/ProductsContext";
 import CartDrawer from "@/components/CartDrawer";
+import BackToTop from "@/components/BackToTop";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -51,6 +52,7 @@ export default function RootLayout({ children }) {
             <CartProvider>
               {children}
               <CartDrawer />
+              <BackToTop />
             </CartProvider>
           </ProductsProvider>
         </AuthProvider>

@@ -430,17 +430,8 @@ export default function CatalogPage() {
           </div>
         )}
 
-        {/* Product Table Grid */}
-        <div ref={productListRef} className="border border-white/10 rounded-xl overflow-hidden bg-[#1a1a1a]">
-          {/* Header Row */}
-          <div className="hidden lg:grid grid-cols-12 gap-4 px-8 py-3 bg-[#131313] border-b border-white/10 text-[10px] font-mono text-white/40 uppercase tracking-widest font-bold">
-            <div className="col-span-1">Image</div>
-            <div className="col-span-4">Product details</div>
-            <div className="col-span-2 text-center">SKU Code</div>
-            <div className="col-span-1 text-right">Est. Price</div>
-            <div className="col-span-4 text-right">Configure & Purchase</div>
-          </div>
-
+        {/* Product Card Grid */}
+        <div ref={productListRef} className="scroll-mt-28 overflow-hidden rounded-xl border border-white/10 bg-[#131313]/60">
           {/* Product Items */}
           {productsLoading ? (
             <div className="flex flex-col items-center justify-center py-16 sm:py-20 lg:py-24 gap-4">
@@ -463,19 +454,19 @@ export default function CatalogPage() {
               </button>
             </div>
           ) : paginatedProducts.length > 0 ? (
-            <div className="flex flex-col gap-3 p-3 lg:block lg:divide-y lg:divide-white/10 lg:p-0">
+            <div className="grid grid-cols-1 gap-4 p-3 sm:p-4 lg:grid-cols-2">
               {paginatedProducts.map((product) => {
                 const currentOptIdx = selectedOptions[product.id] !== undefined ? selectedOptions[product.id] : 0;
                 return (
                   <div 
                     key={product.id}
-                    className="catalog-product-row grid grid-cols-1 items-center gap-4 rounded-lg border border-white/10 bg-[#171717] px-4 py-6 shadow-sm shadow-black/20 transition-colors hover:bg-white/[0.01] sm:px-6 sm:py-6 lg:grid-cols-12 lg:rounded-none lg:border-0 lg:bg-transparent lg:px-8 lg:shadow-none"
+                    className="catalog-product-row grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-5 rounded-xl border border-white/10 bg-[#171717] p-5 shadow-lg shadow-black/20 transition-[background-color,border-color,box-shadow] hover:border-[#268072]/50 hover:bg-[#1b1b1b] hover:shadow-xl"
                   >
                     {/* Image Column — product thumbnail, tribe-letter fallback */}
-                    <div className="col-span-1 lg:col-span-1 flex items-center">
+                    <div className="col-span-1 flex items-center">
                       <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="block">
                         {product.image ? (
-                          <div className="w-14 h-14 rounded-sm border border-white/10 hover:border-[#268072]/45 overflow-hidden relative shadow-md hover:shadow-lg transition-all duration-300 bg-[#131313]">
+                          <div className="relative h-16 w-16 overflow-hidden rounded-lg border border-white/10 bg-[#131313] shadow-md transition-all duration-300 hover:border-[#268072]/45 hover:shadow-lg">
                             <img
                               src={product.image}
                               alt={product.name}
@@ -485,7 +476,7 @@ export default function CatalogPage() {
                           </div>
                         ) : (
                           <div
-                            className="w-14 h-14 rounded-sm border border-white/10 hover:border-[#268072]/45 flex items-center justify-center text-lg font-black text-white select-none transition-all duration-300 relative shadow-md hover:shadow-lg font-mono uppercase"
+                            className="relative flex h-16 w-16 items-center justify-center rounded-lg border border-white/10 text-lg font-black uppercase text-white shadow-md transition-all duration-300 hover:border-[#268072]/45 hover:shadow-lg font-mono select-none"
                             style={{ backgroundColor: getEthnicityColor(product.tribe, product.category) }}
                           >
                             <span className="transform hover:scale-110 transition-transform duration-300">
@@ -497,7 +488,7 @@ export default function CatalogPage() {
                     </div>
 
                     {/* Name Column */}
-                    <div className="col-span-1 lg:col-span-4 flex flex-col gap-1">
+                    <div className="col-span-1 flex min-w-0 flex-col gap-2">
                       <Link href={`/product/${product.id}?fromPage=${currentPage}`} className="hover:text-[#82d6c5] transition-colors text-left no-underline group">
                         <h3 className="catalog-product-title font-headline-md text-lg font-bold text-white group-hover:text-[#82d6c5] transition-colors flex items-center gap-2 flex-wrap">
                           {product.name}
@@ -524,21 +515,23 @@ export default function CatalogPage() {
                     </div>
 
                     {/* SKU Column */}
-                    <div className="col-span-1 lg:col-span-2 text-left lg:text-center">
+                    <div className="col-span-2 flex items-center justify-between gap-3 border-t border-white/5 pt-4">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">SKU</span>
                       <span className="break-all text-[11px] font-mono text-white/45 bg-[#131313] border border-white/5 px-2 py-1.5 rounded-sm tracking-wide">
                         {product.options[currentOptIdx]?.sku || product.sku}
                       </span>
                     </div>
 
                     {/* Price Column */}
-                    <div className="col-span-1 lg:col-span-1 text-left lg:text-right">
+                    <div className="col-span-2 flex items-center justify-between gap-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">Est. price</span>
                       <span className="catalog-product-price text-base font-bold text-[#82d6c5] font-headline-md whitespace-nowrap">
                         ${optionPriceForUser(product.options[currentOptIdx], user, product.category).toFixed(2)}
                       </span>
                     </div>
 
                     {/* Actions Column */}
-                    <div className="col-span-1 lg:col-span-4 flex items-center justify-start lg:justify-end gap-3 flex-wrap lg:flex-nowrap">
+                    <div className="col-span-2 flex flex-wrap items-center justify-start gap-3 border-t border-white/10 pt-4">
                       {!product.optionsLoaded ? (
                         <button
                           type="button"
