@@ -98,7 +98,17 @@ The catalog is sourced exclusively from Sacred Connection. Configuration is enti
 
 PDF exports always bypass the WooCommerce data cache, so every generated file uses the published products, current variations, and stock returned at generation time. Prices are intentionally omitted from the PDF catalog. Normal catalog browsing keeps the short `WC_REVALIDATE_SECONDS` cache for performance.
 
-Create active WooCommerce webhooks for **Product created**, **Product updated**, **Product deleted**, **Product restored**, **Customer created**, and **Customer updated**. Use `https://YOUR_DOMAIN/api/webhooks/woocommerce` as the delivery URL and the exact `WC_WEBHOOK_SECRET` value as the secret for every webhook. Product events expire the tagged catalog cache. Customer events retry the application-received email and send the approval email when a portal registration moves from `pending` to an approved WordPress role. Invalid signatures are rejected.
+Create active WooCommerce webhooks for **Product created**, **Product updated**, **Product deleted**, **Product restored**, **Customer created**, and **Customer updated**. Use `https://YOUR_DOMAIN/api/webhooks/woocommerce` as the delivery URL and the exact `WC_WEBHOOK_SECRET` value as the secret for every webhook. Product events expire the tagged catalog cache and customer events retry the application-received email.
+
+WordPress role changes do not trigger WooCommerce's standard **Customer updated** topic. To send the approval email when an administrator changes a portal account from `pending` to an approved category:
+
+1. In **WP Admin → WPCode → Add Snippet → Add Your Custom Code**, create a PHP snippet named `Sacred Wholesale - Role approval webhook`.
+2. Paste the contents of [`integrations/wordpress/sacred-wholesale-role-webhook.php`](integrations/wordpress/sacred-wholesale-role-webhook.php), excluding the opening `<?php` if WPCode already supplies it. Set the insertion method to **Auto Insert**, location to **Run Everywhere**, and activate it.
+3. In **WooCommerce → Settings → Advanced → Webhooks**, add an active webhook named `Sacred Portal - Customer Approved`.
+4. Select topic **Action** and enter `woocommerce_sacred_wholesale_customer_approved` in **Action event**.
+5. Use `https://YOUR_DOMAIN/api/webhooks/woocommerce` as the delivery URL, the exact `WC_WEBHOOK_SECRET` value as the secret, and **WP REST API Integration v3** as the API version.
+
+The action sends the WordPress user ID in WooCommerce's `arg` payload field. The portal then fetches the current customer, verifies that it originated in the wholesale portal and still has a pending approval marker, sends the approval email, and marks it as sent. Repeated deliveries therefore do not duplicate the email. Invalid webhook signatures are rejected.
 
 The sender domain in `TRANSACTIONAL_EMAIL_FROM` must be verified in Resend before customer emails can be delivered. Configure the email variables in Vercel before activating the customer webhooks; WooCommerce may automatically disable a webhook after repeated failed deliveries.
 

@@ -21,7 +21,13 @@ const PRODUCT_TOPICS = new Set([
   "product.deleted",
   "product.restored",
 ]);
-const CUSTOMER_TOPICS = new Set(["customer.created", "customer.updated"]);
+const CUSTOMER_ROLE_APPROVED_TOPIC =
+  "action.woocommerce_sacred_wholesale_customer_approved";
+const CUSTOMER_TOPICS = new Set([
+  "customer.created",
+  "customer.updated",
+  CUSTOMER_ROLE_APPROVED_TOPIC,
+]);
 const MAX_WEBHOOK_BYTES = 2 * 1024 * 1024;
 
 const customerMeta = (customer, key) => {
@@ -33,7 +39,9 @@ const customerMeta = (customer, key) => {
 };
 
 async function handleCustomerWebhook(topic, payload) {
-  const customerId = Number(payload?.id);
+  const customerId = Number(
+    topic === CUSTOMER_ROLE_APPROVED_TOPIC ? payload?.arg : payload?.id
+  );
   if (!Number.isInteger(customerId) || customerId <= 0) {
     return { accepted: true, emailSent: false, reason: "invalid-customer" };
   }
