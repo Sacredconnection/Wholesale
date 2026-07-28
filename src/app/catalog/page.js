@@ -7,7 +7,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
-import ProductOptionsModal from "@/components/ProductOptionsModal";
+import ProductPurchaseControls from "@/components/ProductPurchaseControls";
 import AuthGate from "@/components/AuthGate";
 import FilterSidebar from "@/components/catalog/FilterSidebar";
 import { useAuth } from "@/components/AuthContext";
@@ -15,8 +15,6 @@ import { useCart } from "@/components/CartContext";
 import {
   ShoppingBag, 
   Trash2, 
-  Plus, 
-  Minus, 
   X, 
   Check, 
   ChevronLeft, 
@@ -27,7 +25,6 @@ import {
 } from "lucide-react";
 
 import { useProducts } from "@/components/ProductsContext";
-import { optionPriceForUser } from "@/lib/pricing";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
 import { downloadDigitalCatalogPdf } from "@/lib/catalog-export";
 
@@ -56,15 +53,10 @@ const getPaginationItems = (currentPage, totalPages) => {
 export default function CatalogPage() {
   const { products, loading: productsLoading, error: productsError, warning: productsWarning, reload } = useProducts();
   const { isLoggedIn, user, loading: authLoading } = useAuth();
-  const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
+  const { setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [optionsProduct, setOptionsProduct] = useState(null);
   const [pdfExporting, setPdfExporting] = useState(false);
   const [pdfExportError, setPdfExportError] = useState("");
-
-  // Inline Option and Quantity States
-  const [selectedOptions, setSelectedOptions] = useState({});
-  const [quantities, setQuantities] = useState({});
 
   // Filter States
   const [search, setSearch] = useState("");
@@ -455,9 +447,7 @@ export default function CatalogPage() {
             </div>
           ) : paginatedProducts.length > 0 ? (
             <div className="grid grid-cols-1 gap-4 p-3 sm:p-4 lg:grid-cols-2">
-              {paginatedProducts.map((product) => {
-                const currentOptIdx = selectedOptions[product.id] !== undefined ? selectedOptions[product.id] : 0;
-                return (
+              {paginatedProducts.map((product) => (
                   <div 
                     key={product.id}
                     className="catalog-product-row grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-5 rounded-xl border border-white/10 bg-[#171717] p-5 shadow-lg shadow-black/20 transition-[background-color,border-color,box-shadow] hover:border-[#268072]/50 hover:bg-[#1b1b1b] hover:shadow-xl"
@@ -514,91 +504,15 @@ export default function CatalogPage() {
                       </div>
                     </div>
 
-                    {/* SKU Column */}
-                    <div className="col-span-2 flex items-center justify-between gap-3 border-t border-white/5 pt-4">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">SKU</span>
-                      <span className="break-all text-[11px] font-mono text-white/45 bg-[#131313] border border-white/5 px-2 py-1.5 rounded-sm tracking-wide">
-                        {product.options[currentOptIdx]?.sku || product.sku}
-                      </span>
-                    </div>
-
-                    {/* Price Column */}
-                    <div className="col-span-2 flex items-center justify-between gap-3">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-white/35">Est. price</span>
-                      <span className="catalog-product-price text-base font-bold text-[#82d6c5] font-headline-md whitespace-nowrap">
-                        ${optionPriceForUser(product.options[currentOptIdx], user, product.category).toFixed(2)}
-                      </span>
-                    </div>
-
-                    {/* Actions Column */}
-                    <div className="col-span-2 flex flex-wrap items-center justify-start gap-3 border-t border-white/10 pt-4">
-                      {!product.optionsLoaded ? (
-                        <button
-                          type="button"
-                          onClick={() => setOptionsProduct(product)}
-                          className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm shadow-md transition-all border-0 cursor-pointer"
-                        >
-                          View options
-                        </button>
-                      ) : (
-                        <>
-                      {/* Option Select Dropdown */}
-                      {product.options.length > 1 ? (
-                        <select
-                          value={currentOptIdx}
-                          onChange={(e) => setSelectedOptions(prev => ({ ...prev, [product.id]: parseInt(e.target.value) }))}
-                          className="w-full sm:w-auto bg-[#131313] border border-white/10 text-white text-xs rounded-sm px-3 py-2.5 focus:border-[#268072] outline-none sm:max-w-[180px] shrink-0"
-                        >
-                          {product.options.map((opt, idx) => (
-                            <option key={opt.sku} value={idx}>
-                              {opt.name} (${optionPriceForUser(opt, user, product.category).toFixed(2)})
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <span className="text-[10px] font-mono text-white/45 px-2 py-1.5 bg-white/5 border border-white/10 rounded-sm">
-                          {product.options[0].name}
-                        </span>
-                      )}
-
-                      {/* Quantity controls */}
-                      <div className="flex items-center bg-[#131313] border border-white/10 rounded-sm shrink-0">
-                        <button
-                          onClick={() => setQuantities(prev => ({ ...prev, [product.id]: Math.max(1, (prev[product.id] || 1) - 1) }))}
-                          className="p-1.5 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="w-7 text-center text-xs font-bold text-white font-mono select-none">
-                          {quantities[product.id] || 1}
-                        </span>
-                        <button
-                          onClick={() => setQuantities(prev => ({ ...prev, [product.id]: (prev[product.id] || 1) + 1 }))}
-                          className="p-1.5 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      {/* Add to Cart button */}
-                      <button
-                        onClick={() => {
-                          const qty = quantities[product.id] || 1;
-                          addToCart(product, currentOptIdx, qty);
-                          setQuantities(prev => ({ ...prev, [product.id]: 1 }));
-                          setIsCartOpen(true);
-                        }}
-                        className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-2.5 px-4 rounded-sm shadow-md hover:shadow-lg transition-all duration-300 cursor-pointer border-0 shrink-0"
-                      >
-                        Add
-                      </button>
-                        </>
-                      )}
+                    <div className="col-span-2 border-t border-white/10 pt-4">
+                      <ProductPurchaseControls
+                        product={product}
+                        onAdded={() => setIsCartOpen(true)}
+                      />
                     </div>
 
                   </div>
-                );
-              })}
+              ))}
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-20 px-6 gap-4">
@@ -682,17 +596,6 @@ export default function CatalogPage() {
       </main>
 
       {/* Shared Modals */}
-      <ProductOptionsModal
-        key={optionsProduct?.id || "closed-product-options"}
-        product={optionsProduct}
-        user={user}
-        onClose={() => setOptionsProduct(null)}
-        onAddToCart={(product, optionIndex, quantity) => {
-          addToCart(product, optionIndex, quantity);
-          setOptionsProduct(null);
-          setIsCartOpen(true);
-        }}
-      />
       <LoginModal 
         isOpen={isLoginOpen} 
         onClose={() => setIsLoginOpen(false)} 

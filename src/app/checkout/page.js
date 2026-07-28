@@ -24,6 +24,7 @@ import {
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
+import ProductRecommendations from "@/components/ProductRecommendations";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
@@ -442,6 +443,14 @@ export default function CheckoutPage() {
                       {!billingMatchesShipping && <p className="mt-3 border-t border-white/5 pt-3 text-[10px] text-white/40">Separate billing address provided.</p>}
                     </div>
                   </div>
+
+                  <ProductRecommendations
+                    eyebrow="Order bump"
+                    title="Complete your order"
+                    description="Frequently purchased products you can add before confirming the order."
+                    variant="checkout"
+                    limit={2}
+                  />
 
                   <div className="flex items-start gap-3 rounded-sm border border-[#268072]/30 bg-[#268072]/10 p-4">
                     <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-[#82d6c5]" />

@@ -126,7 +126,7 @@ html {
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   font-size: 100%;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 body {
@@ -143,7 +143,13 @@ body {
   background-size: cover;
   background-attachment: fixed;
   color: #e5e2e1;
-  overflow-x: hidden;
+  overflow-x: clip;
+}
+
+.site-header {
+  position: sticky !important;
+  top: 0;
+  z-index: 50;
 }
 
 h1, h2, h3, h4, h5, h6 {

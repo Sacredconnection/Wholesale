@@ -3,7 +3,7 @@
 // Preloads the Sacred Connection catalog as soon as authentication is restored.
 // Keeping this provider above the pages lets /catalog reuse the loaded data.
 
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/components/AuthContext";
 
 const ProductsContext = createContext(null);
@@ -16,8 +16,45 @@ export function ProductsProvider({ children }) {
   const [error, setError] = useState("");
   const [warning, setWarning] = useState("");
   const [reloadKey, setReloadKey] = useState(0);
+  const productRequests = useRef(new Map());
 
   const reload = useCallback(() => setReloadKey((key) => key + 1), []);
+
+  const resolveProduct = useCallback(async (product) => {
+    if (!product || product.optionsLoaded) return product;
+    if (productRequests.current.has(product.id)) {
+      return productRequests.current.get(product.id);
+    }
+
+    const request = (async () => {
+      try {
+        const response = await fetch(`/api/products/${encodeURIComponent(product.id)}`, {
+          credentials: "same-origin",
+          cache: "no-store",
+          signal: AbortSignal.timeout(20000),
+        });
+        const data = await response.json().catch(() => ({}));
+        if (!response.ok) {
+          if (response.status === 401) invalidateSession();
+          throw new Error(data.error || "Could not load product options.");
+        }
+        setProducts((currentProducts) =>
+          currentProducts.map((entry) => (entry.id === data.product.id ? data.product : entry))
+        );
+        return data.product;
+      } catch (loadError) {
+        if (loadError.name === "TimeoutError") {
+          throw new Error("The product options took too long to load. Please try again.");
+        }
+        throw loadError;
+      } finally {
+        productRequests.current.delete(product.id);
+      }
+    })();
+
+    productRequests.current.set(product.id, request);
+    return request;
+  }, [invalidateSession]);
 
   useEffect(() => {
     let cancelled = false;
@@ -76,7 +113,7 @@ export function ProductsProvider({ children }) {
   }, [authLoading, invalidateSession, isLoggedIn, reloadKey]);
 
   return (
-    <ProductsContext.Provider value={{ products, loading, error, warning, reload }}>
+    <ProductsContext.Provider value={{ products, loading, error, warning, reload, resolveProduct }}>
       {children}
     </ProductsContext.Provider>
   );

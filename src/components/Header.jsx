@@ -43,7 +43,7 @@ export default function Header({ onOpenLogin }) {
   };
 
   return (
-    <header className="theme-dark-zone sticky top-0 z-50 w-full border-b-2 border-[#268072] bg-[#212121] shadow-lg shadow-black/15">
+    <header className="site-header theme-dark-zone sticky top-0 z-50 w-full border-b-2 border-[#268072] bg-[#212121] shadow-lg shadow-black/15">
       <div className="mx-auto flex min-h-[4.5rem] w-full max-w-7xl items-center justify-between px-4 sm:min-h-[5.5rem] sm:px-6 lg:min-h-24 lg:px-8">
         {/* Logotipo (Left) */}
         <Link className="group flex self-stretch shrink-0 items-center" href="/" onClick={handleHomeClick}>
