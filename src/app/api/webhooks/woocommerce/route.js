@@ -86,6 +86,16 @@ function hasValidSignature(body, signature, secret) {
   return received.length === expected.length && timingSafeEqual(received, expected);
 }
 
+function isWooCommercePing(request, body, signature) {
+  if (signature || body.byteLength > 256) return false;
+  const userAgent = request.headers.get("user-agent") || "";
+  if (!userAgent.includes("WooCommerce/") || !userAgent.includes("Hookshot")) return false;
+
+  const params = new URLSearchParams(body.toString("utf8"));
+  const webhookId = params.get("webhook_id");
+  return [...params.keys()].length === 1 && /^\d+$/.test(webhookId || "");
+}
+
 export async function POST(request) {
   const secret = process.env.WC_WEBHOOK_SECRET;
   if (!secret) {
@@ -111,6 +121,12 @@ export async function POST(request) {
     );
   }
   const signature = request.headers.get("x-wc-webhook-signature");
+  if (isWooCommercePing(request, body, signature)) {
+    return Response.json(
+      { accepted: true, ping: true },
+      { headers: { "Cache-Control": "no-store" } }
+    );
+  }
   if (!hasValidSignature(body, signature, secret)) {
     return Response.json(
       { error: "Invalid webhook signature." },
