@@ -50,7 +50,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
       tempErrors.email = 'Invalid email address';
     }
     if (!formData.phone.trim()) tempErrors.phone = 'Phone number is required';
-    if (!formData.agreeEthical) tempErrors.agreeEthical = 'You must agree to respect ancestral origins';
+    if (!formData.agreeEthical) tempErrors.agreeEthical = 'You must agree to represent product origins responsibly';
     
     setErrors(tempErrors);
     return Object.keys(tempErrors).length === 0;
@@ -184,7 +184,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   required
                   value={formData.businessName}
                   onChange={handleChange}
-                  placeholder="e.g. Ancestral Botanicals Ltd."
+                  placeholder="e.g. Forest Botanicals Ltd."
                   className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors"
                 />
                 {errors.businessName && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.businessName}</span>}
@@ -298,7 +298,7 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   className="w-4 h-4 mt-0.5 rounded text-[#268072] focus:ring-[#268072] bg-[#131313] border-white/10"
                 />
                 <label htmlFor="agreeEthical" className="text-xs text-white/70 leading-relaxed font-body-md cursor-pointer select-none">
-                  I agree to respect the sacred origins of the botanical blends and support the direct profit-sharing program back to the tribal gatherers.
+                  I agree to represent the origin of these botanical blends responsibly and support the direct profit-sharing program for producer communities.
                 </label>
               </div>
               {errors.agreeEthical && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.agreeEthical}</span>}

@@ -14,7 +14,7 @@ const BANNERS = [
   {
     desktopSrc: "/banner/hero-banner-01.webp",
     mobileSrc: "/banner/hero-mobile/hero-banner-01-mobile.webp",
-    alt: "Sacred medicines and tribal forest scenery"
+    alt: "Amazonian botanicals and forest scenery"
   }
 ];
 
@@ -77,11 +77,11 @@ export default function Hero() {
           </div>
           
           <h1 className="max-w-xl text-[2rem] font-black leading-[1.02] tracking-tighter text-white sm:text-4xl md:max-w-3xl md:text-6xl md:leading-[0.98] lg:text-7xl font-headline-lg">
-            The Power of <span className="text-[#82d6c5]">Ancestral Science</span> in Every Blend.
+            <span className="text-[#82d6c5]">Quality and Traceability</span> in Every Blend.
           </h1>
           
           <p className="max-w-md text-base font-normal leading-relaxed text-white/75 sm:text-lg md:max-w-2xl md:text-xl md:text-white/70 font-body-lg">
-            Premium, sustainably harvested sacred snuffs for global retailers and holistic partners through direct fair-trade distribution.
+            Responsibly sourced botanical blends for global retailers and wholesale partners through direct fair-trade distribution.
           </p>
           
           <div className="hidden w-full max-w-sm flex-col items-stretch gap-4 pt-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center md:flex md:pt-4">

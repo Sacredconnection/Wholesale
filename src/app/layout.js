@@ -27,7 +27,7 @@ export const metadata = {
   metadataBase: new URL("https://wholesale.sacredconnection.com"),
   title: "Sacred Connection Wholesale | B2B Portal",
   description:
-    "Direct fair-trade sourcing of sacred Amazonian botanicals and traditional forest remedies for wholesale partners.",
+    "Direct fair-trade sourcing of traditional Amazonian botanicals and responsibly produced goods for wholesale partners.",
   applicationName: "Sacred Connection Wholesale",
 };
 

@@ -6,8 +6,6 @@ import Hero from '@/components/Hero';
 import TrustBar from '@/components/TrustBar';
 import WholesaleFormats from '@/components/WholesaleFormats';
 import LineageShowcase from '@/components/LineageShowcase';
-import TestimonialSection from '@/components/TestimonialSection';
-import LeadMagnet from '@/components/LeadMagnet';
 import Onboarding from '@/components/Onboarding';
 import NGOSection from '@/components/NGOSection';
 import RetailRedirectSection from '@/components/RetailRedirectSection';
@@ -41,11 +39,6 @@ export default function HomeClient() {
           {/* Product volumes and packaging formats */}
           <WholesaleFormats />
 
-          {/* Retail Partner Testimonial */}
-          <TestimonialSection />
-
-          {/* Wholesale newsletter signup */}
-          <LeadMagnet />
         </div>
 
         {/* Secondary path for individual retail customers */}

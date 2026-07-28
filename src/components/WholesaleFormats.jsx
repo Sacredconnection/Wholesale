@@ -20,7 +20,7 @@ const FORMATS = [
     imageAlt: "Sacred Connection wholesale supply bags",
     sizes: [
       { volume: "250g", label: "Practitioner & refill supply" },
-      { volume: "1kg", label: "Master wholesale volume" },
+      { volume: "1kg", label: "Bulk wholesale volume" },
     ],
   },
 ];
@@ -39,10 +39,10 @@ export default function WholesaleFormats() {
           id="wholesale-formats-title"
           className="mb-3 font-headline-lg text-3xl font-black tracking-tighter text-white sm:mb-4 sm:text-4xl md:text-5xl"
         >
-          Ancestral Volumes &amp; Retail Formats
+          Product Formats &amp; Wholesale Volumes
         </h2>
         <p className="max-w-2xl font-body-md text-base font-normal leading-relaxed text-white/70 sm:text-lg">
-          Pure lineages secured in protective vessels, available from retail-ready tins to master wholesale bags.
+          Protective packaging options for retail display and bulk supply, from compact tins to 1kg wholesale bags.
         </p>
         <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 font-label-sm">
           <span>Blends</span>

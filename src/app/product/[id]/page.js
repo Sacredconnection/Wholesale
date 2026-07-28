@@ -178,7 +178,7 @@ export default function ProductDetailPage() {
   }
 
   const selectedOption = product.options[selectedOptIdx];
-  const productDescription = product.description || "Premium wholesale ritual medicine sourced directly through equitable fair-trade agreements with Amazonian community associations. Harvested and processed using traditional forest milling protocols.";
+  const productDescription = product.description || "Wholesale botanical product sourced through equitable fair-trade agreements with Amazonian community associations and prepared using established local production methods.";
   const hasLongDescription = productDescription.length > 280;
 
   // Pricing calculations with discount
