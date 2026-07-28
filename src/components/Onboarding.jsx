@@ -17,7 +17,7 @@ const steps = [
   {
     num: "03",
     title: "Access Wholesale Portal",
-    desc: "Once approved, log in with your credentials to unlock bulk prices, Net-30 credit limits, and custom discounts.",
+    desc: "Once approved, log in with your credentials to unlock bulk prices and custom discounts.",
   },
 ];
 

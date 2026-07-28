@@ -7,7 +7,6 @@ import TrustBar from '@/components/TrustBar';
 import WholesaleFormats from '@/components/WholesaleFormats';
 import LineageShowcase from '@/components/LineageShowcase';
 import TestimonialSection from '@/components/TestimonialSection';
-import B2BFAQ from '@/components/B2BFAQ';
 import LeadMagnet from '@/components/LeadMagnet';
 import Onboarding from '@/components/Onboarding';
 import NGOSection from '@/components/NGOSection';
@@ -41,9 +40,6 @@ export default function HomeClient() {
 
           {/* Product volumes and packaging formats */}
           <WholesaleFormats />
-
-          {/* B2B operational FAQ */}
-          <B2BFAQ />
 
           {/* Retail Partner Testimonial */}
           <TestimonialSection />

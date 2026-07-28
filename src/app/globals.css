@@ -658,20 +658,6 @@ html[data-theme="light"] .theme-dark-zone .lineage-card::after {
   }
 }
 
-.b2b-faq-item {
-  transition: background-color 300ms ease;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .b2b-faq-card:hover {
-    box-shadow: 0 28px 80px rgb(0 0 0 / 0.2);
-  }
-
-  .b2b-faq-item:hover {
-    background-color: rgb(130 214 197 / 0.035);
-  }
-}
-
 .compendium-email-box {
   transition: border-color 300ms ease, box-shadow 300ms ease;
 }
@@ -763,59 +749,6 @@ html[data-theme="light"] .wholesale-format-badge {
 
   html[data-theme="light"] .wholesale-format-card:hover .wholesale-format-badge {
     border-color: rgb(38 128 114 / 0.25) !important;
-  }
-}
-
-.b2b-faq-toggle {
-  background-color: #131313 !important;
-  border-color: rgb(255 255 255 / 0.15) !important;
-  color: #82d6c5 !important;
-  box-shadow: 0 8px 20px rgb(0 0 0 / 0.18);
-}
-
-.b2b-faq-item[open] .b2b-faq-toggle {
-  border-color: #82d6c5 !important;
-  color: #9ef2e1 !important;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  .b2b-faq-item:hover .b2b-faq-toggle {
-    border-color: #82d6c5 !important;
-    color: #9ef2e1 !important;
-  }
-}
-
-html[data-theme="light"] .b2b-faq-toggle {
-  background-color: #ffffff !important;
-  border-color: rgb(38 128 114 / 0.38) !important;
-  color: #006b5e !important;
-  box-shadow: 0 5px 14px rgb(0 0 0 / 0.1);
-}
-
-html[data-theme="light"] .b2b-faq-item[open] .b2b-faq-toggle {
-  background-color: #eef4f1 !important;
-  border-color: rgb(0 107 94 / 0.72) !important;
-  color: #004f46 !important;
-}
-
-html[data-theme="light"] .b2b-faq-item[open] .b2b-faq-question,
-html[data-theme="light"] .b2b-faq-item:hover .b2b-faq-question {
-  color: #006b5e !important;
-}
-
-@media (hover: hover) and (pointer: fine) {
-  html[data-theme="light"] .b2b-faq-item:hover .b2b-faq-toggle {
-    background-color: #eef4f1 !important;
-    border-color: rgb(0 107 94 / 0.72) !important;
-    color: #004f46 !important;
-  }
-
-  html[data-theme="light"] .b2b-faq-card:hover {
-    box-shadow: 0 28px 70px rgb(23 32 30 / 0.12);
-  }
-
-  html[data-theme="light"] .b2b-faq-item:hover {
-    background-color: rgb(0 107 94 / 0.04);
   }
 }
 

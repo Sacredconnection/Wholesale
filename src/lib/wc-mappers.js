@@ -201,8 +201,8 @@ export function isApprovedWholesaleCustomer(customer) {
 }
 
 // Maps a WooCommerce customer to the user shape the UI stores in AuthContext.
-// Wholesale terms (credit limit / discount) live in customer meta so the team
-// can manage them from WP Admin; they default to 0 when absent.
+// Wholesale discounts live in customer meta so the team can manage them from
+// WP Admin; they default to 0 when absent.
 export function mapCustomerToUser(customer) {
   return {
     firstName: customer.first_name || "",
@@ -223,7 +223,6 @@ export function mapCustomerToUser(customer) {
     status: ["pending", "customer"].includes((customer.role || "").toLowerCase())
       ? "PENDING"
       : "ACTIVE",
-    creditLimit: Number(customerMeta(customer, "sc_credit_limit")) || 0,
     discountRate: Number(customerMeta(customer, "sc_discount_rate")) || 0,
     avatar: customer.avatar_url || null,
     isAdmin: customer.role === "administrator",

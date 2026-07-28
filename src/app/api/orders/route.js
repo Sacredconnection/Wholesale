@@ -51,7 +51,7 @@ Zip code: 94104
 Address: H&F: 2301 Stampede Ave Cody WY 82414
 – – – – –
 Terms of Payment:
-Net 30 days . Buyer shall pay all sales, use, customs, excise or other
+Buyer shall pay all sales, use, customs, excise or other
 taxes presently or hereafter payable in regards to this transaction, and
 Buyer shall reimburse Seller for any such taxes or charges paid by
 H&F Trading Company (hereafter “Seller.”)

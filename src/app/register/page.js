@@ -88,7 +88,6 @@ export default function RegisterPage() {
         password: form.password,
         accountId: `SC-${Date.now().toString(36).toUpperCase()}`,
         status: "PENDING",
-        creditLimit: 0,
         discountRate: 0,
         shippingAddress: {
           street: form.address.trim(),
