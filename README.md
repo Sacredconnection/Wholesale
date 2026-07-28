@@ -84,7 +84,11 @@ The catalog is sourced exclusively from Sacred Connection. Configuration is enti
 | `WOOCOMMERCE_CONSUMER_KEY` | Sacred Connection REST API key with Read/Write permission |
 | `WOOCOMMERCE_CONSUMER_SECRET` | Sacred Connection REST API secret |
 | `WC_REVALIDATE_SECONDS` | Optional server-side catalog cache TTL (default `300`) |
-| `WC_WEBHOOK_SECRET` | Recommended shared secret for immediate product-cache invalidation from WooCommerce webhooks |
+| `WC_WEBHOOK_SECRET` | Shared secret for signed product and customer webhooks |
+| `RESEND_API_KEY` | Resend API key used for registration and approval emails |
+| `TRANSACTIONAL_EMAIL_FROM` | Verified sender, for example `Sacred Connection Wholesale <wholesale@sacredconnection.co>` |
+| `TRANSACTIONAL_EMAIL_REPLY_TO` | Reply-to address for partner emails |
+| `PORTAL_URL` | Public portal origin used by email action buttons |
 | `SESSION_SECRET` | Required random secret (minimum 32 characters) used to sign authentication cookies |
 
 *   **Local dev:** copy `.env.example` to `.env.local` and fill in the Sacred Connection keys (WP Admin → WooCommerce → Settings → Advanced → REST API).
@@ -94,7 +98,9 @@ The catalog is sourced exclusively from Sacred Connection. Configuration is enti
 
 PDF exports always bypass the WooCommerce data cache, so every generated file uses the published products, current variations, and stock returned at generation time. Prices are intentionally omitted from the PDF catalog. Normal catalog browsing keeps the short `WC_REVALIDATE_SECONDS` cache for performance.
 
-For immediate on-screen updates, create active WooCommerce webhooks for **Product created**, **Product updated**, **Product deleted**, and **Product restored**. Use `https://YOUR_DOMAIN/api/webhooks/woocommerce` as the delivery URL and the exact `WC_WEBHOOK_SECRET` value as the webhook secret. Valid product events immediately expire the tagged catalog cache; invalid signatures are rejected.
+Create active WooCommerce webhooks for **Product created**, **Product updated**, **Product deleted**, **Product restored**, **Customer created**, and **Customer updated**. Use `https://YOUR_DOMAIN/api/webhooks/woocommerce` as the delivery URL and the exact `WC_WEBHOOK_SECRET` value as the secret for every webhook. Product events expire the tagged catalog cache. Customer events retry the application-received email and send the approval email when a portal registration moves from `pending` to an approved WordPress role. Invalid signatures are rejected.
+
+The sender domain in `TRANSACTIONAL_EMAIL_FROM` must be verified in Resend before customer emails can be delivered. Configure the email variables in Vercel before activating the customer webhooks; WooCommerce may automatically disable a webhook after repeated failed deliveries.
 
 > Product route IDs combine store ID and WooCommerce slug, so equal slugs and SKUs can coexist across the two catalogs. Digital-catalog filters use real WooCommerce categories, subcategories, and product attributes, and only expose combinations that still return products.
 

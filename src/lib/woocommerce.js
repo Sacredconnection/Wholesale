@@ -407,12 +407,26 @@ export async function getCustomerByEmail(email, storeId = PRIMARY_STORE_ID) {
   );
 }
 
+export async function getCustomerById(customerId, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, `customers/${customerId}`, { revalidate: 0 });
+  return data;
+}
+
 export async function updateCustomer(customerId, updates, storeId = PRIMARY_STORE_ID) {
   const { data } = await wcFetch(storeId, `customers/${customerId}`, {
     method: "PUT",
     body: updates,
   });
   return data;
+}
+
+export async function updateCustomerMeta(customer, values, storeId = PRIMARY_STORE_ID) {
+  const entries = customer.meta_data || [];
+  const metaData = Object.entries(values).map(([key, value]) => {
+    const existing = [...entries].reverse().find((entry) => entry.key === key);
+    return existing?.id ? { id: existing.id, key, value } : { key, value };
+  });
+  return updateCustomer(customer.id, { meta_data: metaData }, storeId);
 }
 
 // ── Orders ──────────────────────────────────────────────────────────

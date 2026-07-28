@@ -1,6 +1,12 @@
-import { createCustomer, isWooCommerceConfigured, WooCommerceApiError } from "@/lib/woocommerce";
+import {
+  createCustomer,
+  isWooCommerceConfigured,
+  updateCustomerMeta,
+  WooCommerceApiError,
+} from "@/lib/woocommerce";
 import { setWpUserRole } from "@/lib/wp-auth";
 import { mapCustomerToUser, toWcAddress } from "@/lib/wc-mappers";
+import { sendApplicationReceivedEmail } from "@/lib/transactional-email";
 import { isSupportedCountryCode } from "@/lib/countries";
 import {
   cleanText,
@@ -76,8 +82,18 @@ export async function POST(request) {
     });
 
     await setWpUserRole(customer.id, "pending");
+    let confirmationEmailSent = false;
+    try {
+      await sendApplicationReceivedEmail(customer);
+      confirmationEmailSent = true;
+      await updateCustomerMeta(customer, {
+        sc_pending_email_sent_at: new Date().toISOString(),
+      });
+    } catch (emailError) {
+      console.error("Wholesale application confirmation email failed:", emailError);
+    }
     return Response.json(
-      { user: mapCustomerToUser(customer) },
+      { user: mapCustomerToUser(customer), confirmationEmailSent },
       { status: 201, headers: { "Cache-Control": "no-store" } }
     );
   } catch (err) {
