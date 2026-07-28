@@ -191,8 +191,13 @@ export const fromWcAddress = (address = {}) => ({
   country: address.country || "",
 });
 
-const customerMeta = (customer, key) =>
-  (customer.meta_data || []).find((m) => m.key === key)?.value;
+const customerMeta = (customer, key) => {
+  const entries = customer.meta_data || [];
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    if (entries[index].key === key) return entries[index].value;
+  }
+  return undefined;
+};
 
 export function isApprovedWholesaleCustomer(customer) {
   return Boolean(
@@ -204,6 +209,7 @@ export function isApprovedWholesaleCustomer(customer) {
 // Wholesale discounts live in customer meta so the team can manage them from
 // WP Admin; they default to 0 when absent.
 export function mapCustomerToUser(customer) {
+  const profileAvatar = customerMeta(customer, "sc_profile_avatar_url");
   return {
     firstName: customer.first_name || "",
     lastName: customer.last_name || "",
@@ -224,7 +230,10 @@ export function mapCustomerToUser(customer) {
       ? "PENDING"
       : "ACTIVE",
     discountRate: Number(customerMeta(customer, "sc_discount_rate")) || 0,
-    avatar: customer.avatar_url || null,
+    avatar:
+      profileAvatar === "__none__"
+        ? null
+        : profileAvatar || customer.avatar_url || null,
     isAdmin: customer.role === "administrator",
     shippingAddress: fromWcAddress(customer.shipping),
     billingAddress: fromWcAddress(customer.billing),

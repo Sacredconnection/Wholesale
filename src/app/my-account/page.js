@@ -55,12 +55,14 @@ export default function MyAccountPage() {
   const avatarInputRef = useRef(null);
   const [avatarMessage, setAvatarMessage] = useState("");
   const [avatarError, setAvatarError] = useState("");
+  const [avatarSaving, setAvatarSaving] = useState(false);
+  const [avatarLoadFailed, setAvatarLoadFailed] = useState(false);
   
   // Navigation tabs state
   const [activeTab, setActiveTab] = useState("dashboard");
   
   // Avatar upload handler
-  const handleAvatarChange = (e) => {
+  const handleAvatarChange = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
     setAvatarMessage("");
@@ -76,13 +78,47 @@ export default function MyAccountPage() {
       e.target.value = "";
       return;
     }
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      updateUser({ avatar: ev.target.result });
-      setAvatarMessage("Profile photo preview updated for this session.");
-    };
-    reader.onerror = () => setAvatarError("The selected image could not be read.");
-    reader.readAsDataURL(file);
+    setAvatarSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+      const response = await fetch("/api/account/avatar", {
+        method: "POST",
+        credentials: "same-origin",
+        body: formData,
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "The profile photo could not be saved.");
+      updateUser(data.user);
+      setAvatarLoadFailed(false);
+      setAvatarMessage("Profile photo saved.");
+    } catch (error) {
+      setAvatarError(error.message || "The profile photo could not be saved.");
+    } finally {
+      setAvatarSaving(false);
+      e.target.value = "";
+    }
+  };
+
+  const handleAvatarRemove = async () => {
+    setAvatarMessage("");
+    setAvatarError("");
+    setAvatarSaving(true);
+    try {
+      const response = await fetch("/api/account/avatar", {
+        method: "DELETE",
+        credentials: "same-origin",
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || "The profile photo could not be removed.");
+      updateUser(data.user);
+      setAvatarLoadFailed(false);
+      setAvatarMessage("Profile photo removed.");
+    } catch (error) {
+      setAvatarError(error.message || "The profile photo could not be removed.");
+    } finally {
+      setAvatarSaving(false);
+    }
   };
   
   
@@ -390,11 +426,18 @@ export default function MyAccountPage() {
           <button
             type="button"
             onClick={() => avatarInputRef.current?.click()}
+            disabled={avatarSaving}
+            aria-busy={avatarSaving}
             aria-label="Choose a new profile photo"
             className="relative w-20 h-20 md:w-24 md:h-24 rounded-full border-2 border-white/20 hover:border-[#268072] cursor-pointer overflow-hidden group shrink-0 bg-[#131313] flex items-center justify-center transition-all p-0"
           >
-            {user.avatar ? (
-              <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+            {user.avatar && !avatarLoadFailed ? (
+              <img
+                src={user.avatar}
+                alt="Profile"
+                onError={() => setAvatarLoadFailed(true)}
+                className="w-full h-full object-cover"
+              />
             ) : (
               <span className="text-2xl font-bold text-white/40">
                 {(user.firstName || user.displayName || "?")[0]?.toUpperCase()}
@@ -411,6 +454,7 @@ export default function MyAccountPage() {
             type="file"
             accept="image/jpeg,image/png,image/webp"
             onChange={handleAvatarChange}
+            disabled={avatarSaving}
             aria-describedby="avatar-upload-feedback"
             className="hidden"
           />
@@ -1040,11 +1084,18 @@ export default function MyAccountPage() {
                     <button
                       type="button"
                       onClick={() => avatarInputRef.current?.click()}
+                      disabled={avatarSaving}
+                      aria-busy={avatarSaving}
                       aria-label="Choose a new profile photo"
                       className="relative w-20 h-20 rounded-full border-2 border-dashed border-white/20 hover:border-[#268072] cursor-pointer overflow-hidden group transition-all bg-[#131313] flex items-center justify-center shrink-0 p-0"
                     >
-                      {user.avatar ? (
-                        <img src={user.avatar} alt="Profile" className="w-full h-full object-cover" />
+                      {user.avatar && !avatarLoadFailed ? (
+                        <img
+                          src={user.avatar}
+                          alt="Profile"
+                          onError={() => setAvatarLoadFailed(true)}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
                         <span className="text-2xl font-bold text-white/30">
                           {(user.firstName || user.displayName || "?")[0]?.toUpperCase()}
@@ -1058,18 +1109,16 @@ export default function MyAccountPage() {
                       <button
                         type="button"
                         onClick={() => avatarInputRef.current?.click()}
+                        disabled={avatarSaving}
                         className="bg-[#EC2300]/15 hover:bg-[#EC2300]/30 text-[#EC2300] text-xs font-bold uppercase tracking-wider px-4 py-2.5 rounded border border-[#EC2300]/30 cursor-pointer transition-all"
                       >
-                        Upload New Photo
+                        {avatarSaving ? "Saving..." : "Upload New Photo"}
                       </button>
                       {user.avatar && (
                         <button
                           type="button"
-                          onClick={() => {
-                            updateUser({ avatar: null });
-                            setAvatarError("");
-                            setAvatarMessage("Profile photo preview removed for this session.");
-                          }}
+                          onClick={handleAvatarRemove}
+                          disabled={avatarSaving}
                           className="text-[#ffb4ab] text-xs font-medium hover:underline bg-transparent border-0 cursor-pointer text-left"
                         >
                           Remove photo
@@ -1090,7 +1139,7 @@ export default function MyAccountPage() {
                   Account Details
                 </h3>
                 <p className="-mt-4 mb-6 text-xs leading-relaxed text-white/50">
-                  Profile and address edits are previewed for the current session until account synchronization is connected.
+                  Account and address field edits are previewed for the current session until account synchronization is connected.
                 </p>
 
                 {accountSuccess && (

@@ -1,4 +1,4 @@
-const FALLBACK_WORDPRESS_URL = "https://wholesale.sacred-snuff.com";
+const FALLBACK_WORDPRESS_URL = "https://backend-wholesale.sacred-snuff.com";
 
 export function GET() {
   let baseUrl = FALLBACK_WORDPRESS_URL;

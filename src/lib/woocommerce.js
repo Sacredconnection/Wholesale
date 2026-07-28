@@ -407,6 +407,14 @@ export async function getCustomerByEmail(email, storeId = PRIMARY_STORE_ID) {
   );
 }
 
+export async function updateCustomer(customerId, updates, storeId = PRIMARY_STORE_ID) {
+  const { data } = await wcFetch(storeId, `customers/${customerId}`, {
+    method: "PUT",
+    body: updates,
+  });
+  return data;
+}
+
 // ── Orders ──────────────────────────────────────────────────────────
 
 export async function createOrder(order, storeId = PRIMARY_STORE_ID) {

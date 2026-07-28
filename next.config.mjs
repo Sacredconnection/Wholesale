@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const isDevelopment = process.env.NODE_ENV === "development";
 const commerceOrigins = [
-  process.env.WOOCOMMERCE_URL || "https://wholesale.sacred-snuff.com",
+  process.env.WOOCOMMERCE_URL || "https://backend-wholesale.sacred-snuff.com",
 ]
   .filter(Boolean)
   .flatMap((value) => {
@@ -56,6 +56,16 @@ const nextConfig = {
   },
   productionBrowserSourceMaps: false,
   poweredByHeader: false,
+
+  async redirects() {
+    return [
+      {
+        source: "/wp-admin/:path*",
+        destination: "https://backend-wholesale.sacred-snuff.com/wp-admin/:path*",
+        permanent: true,
+      },
+    ];
+  },
 
   async headers() {
     return [

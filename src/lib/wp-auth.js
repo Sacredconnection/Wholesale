@@ -17,6 +17,57 @@ const xmlEscape = (value) =>
     '"': "&quot;",
   })[c]);
 
+const wpAdminAuthHeader = () => {
+  const adminUser = process.env.WP_ADMIN_USER;
+  const appPassword = process.env.WP_APP_PASSWORD;
+  if (!adminUser || !appPassword) return null;
+  return "Basic " + Buffer.from(`${adminUser}:${appPassword}`).toString("base64");
+};
+
+export function isWordPressMediaUploadConfigured() {
+  return Boolean(wpAdminAuthHeader());
+}
+
+export async function uploadWordPressMedia({ bytes, contentType, filename, altText }) {
+  const base = getWooCommerceBaseUrl();
+  const authorization = wpAdminAuthHeader();
+  if (!authorization) {
+    throw new Error("WordPress media upload credentials are not configured.");
+  }
+
+  const response = await fetch(`${base}/wp-json/wp/v2/media`, {
+    method: "POST",
+    headers: {
+      Authorization: authorization,
+      "Content-Type": contentType,
+      "Content-Disposition": `attachment; filename="${filename}"`,
+    },
+    body: bytes,
+    cache: "no-store",
+    signal: AbortSignal.timeout(30000),
+  });
+  const media = await response.json().catch(() => ({}));
+  if (!response.ok || !media.source_url) {
+    const upstreamMessage = media?.message ? ` ${media.message}` : "";
+    throw new Error(`WordPress rejected the profile image.${upstreamMessage}`);
+  }
+
+  if (altText) {
+    await fetch(`${base}/wp-json/wp/v2/media/${media.id}`, {
+      method: "POST",
+      headers: {
+        Authorization: authorization,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ alt_text: altText }),
+      cache: "no-store",
+      signal: AbortSignal.timeout(15000),
+    }).catch(() => {});
+  }
+
+  return { id: media.id, url: media.source_url };
+}
+
 /**
  * Sets a WordPress user's role via the wp/v2 users API. Needs an admin
  * Application Password (WP Admin → Users → Profile → Application Passwords)
@@ -30,16 +81,14 @@ export async function setWpUserRole(userId, role) {
   } catch {
     return false;
   }
-  const adminUser = process.env.WP_ADMIN_USER;
-  const appPassword = process.env.WP_APP_PASSWORD;
-  if (!base || !adminUser || !appPassword) return false;
+  const authorization = wpAdminAuthHeader();
+  if (!base || !authorization) return false;
 
   try {
     const res = await fetch(`${base}/wp-json/wp/v2/users/${userId}`, {
       method: "POST",
       headers: {
-        Authorization:
-          "Basic " + Buffer.from(`${adminUser}:${appPassword}`).toString("base64"),
+        Authorization: authorization,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({ roles: [role] }),
