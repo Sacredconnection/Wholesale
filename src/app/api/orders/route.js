@@ -34,6 +34,7 @@ import {
   securityError,
 } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
+import { isSupportedCountryCode } from "@/lib/countries";
 
 const paymentInstructions = () =>
   cleanText(process.env.ORDER_PAYMENT_INSTRUCTIONS, 4000, { multiline: true });
@@ -52,6 +53,26 @@ const missingBackendsResponse = () => {
 
 const orderErrorStatus = (err) =>
   err instanceof WooCommerceApiError && err.status >= 400 ? 502 : 500;
+
+const sanitizedAddress = (address) => {
+  if (!address || typeof address !== "object" || Array.isArray(address)) return null;
+  return {
+    street: cleanText(address.street, 160),
+    neighborhood: cleanText(address.neighborhood, 160),
+    city: cleanText(address.city, 100),
+    state: cleanText(address.state, 100),
+    zip: cleanText(address.zip, 24),
+    country: cleanText(address.country, 2).toUpperCase(),
+  };
+};
+
+const addressIsComplete = (address) =>
+  Boolean(
+    address?.street &&
+      address.city &&
+      address.zip &&
+      isSupportedCountryCode(address.country)
+  );
 
 // Lists orders from both backends for My Account.
 export async function GET() {
@@ -113,8 +134,30 @@ export async function POST(request) {
 
   const { items = [] } = body;
   const note = cleanText(body.note, 1000, { multiline: true });
+  const checkout =
+    body.checkout && typeof body.checkout === "object" && !Array.isArray(body.checkout)
+      ? {
+          firstName: cleanText(body.checkout.firstName, 80),
+          lastName: cleanText(body.checkout.lastName, 80),
+          company: cleanText(body.checkout.company, 160),
+          phone: cleanText(body.checkout.phone, 40),
+          shippingAddress: sanitizedAddress(body.checkout.shippingAddress),
+          billingAddress: sanitizedAddress(body.checkout.billingAddress),
+        }
+      : null;
   if (!Array.isArray(items) || items.length === 0 || items.length > 100) {
     return securityError("The order sheet must contain between 1 and 100 items.", 400);
+  }
+  if (
+    body.checkout &&
+    (!checkout ||
+      !checkout.firstName ||
+      !checkout.lastName ||
+      !checkout.phone ||
+      !addressIsComplete(checkout.shippingAddress) ||
+      !addressIsComplete(checkout.billingAddress))
+  ) {
+    return securityError("Complete contact, shipping, and billing details are required.", 400);
   }
 
   try {
@@ -236,19 +279,25 @@ export async function POST(request) {
     const customerNote = [instructions, note ? `Buyer note: ${note}` : ""]
       .filter(Boolean)
       .join("\n---\n");
+    const orderFirstName = checkout?.firstName || customer.firstName || "";
+    const orderLastName = checkout?.lastName || customer.lastName || "";
+    const orderCompany = checkout?.company || customer.company || "";
+    const orderPhone = checkout?.phone || customer.phone || "";
+    const orderBillingAddress = checkout?.billingAddress || customer.billingAddress;
+    const orderShippingAddress = checkout?.shippingAddress || customer.shippingAddress;
     const billing = {
-      first_name: customer.firstName || "",
-      last_name: customer.lastName || "",
-      company: customer.company || "",
+      first_name: orderFirstName,
+      last_name: orderLastName,
+      company: orderCompany,
       email: customer.email,
-      phone: customer.phone || "",
-      ...toWcAddress(customer.billingAddress),
+      phone: orderPhone,
+      ...toWcAddress(orderBillingAddress),
     };
     const shipping = {
-      first_name: customer.firstName || "",
-      last_name: customer.lastName || "",
-      company: customer.company || "",
-      ...toWcAddress(customer.shippingAddress),
+      first_name: orderFirstName,
+      last_name: orderLastName,
+      company: orderCompany,
+      ...toWcAddress(orderShippingAddress),
     };
 
     const storesInOrder = stores.filter((store) => entriesByStore.has(store.id));

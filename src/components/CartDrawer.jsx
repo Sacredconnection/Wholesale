@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
-import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, Loader2, Scale } from 'lucide-react';
+import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, Scale } from 'lucide-react';
 import { MIN_ORDER_GRAMS, NEW_CUSTOMER_ROLE, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
 import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
@@ -20,15 +20,11 @@ export default function CartDrawer() {
     setIsCartOpen,
     updateQuantity,
     removeFromCart,
-    clearCart,
-    removeItemsByStore,
     cartSubtotal,
     cartTotalItems,
     cartTotalWeightGrams
   } = useCart();
 
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [orderError, setOrderError] = useState("");
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const drawerRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -56,59 +52,15 @@ export default function CartDrawer() {
           .filter((r) => r.rate != null)
       : [];
 
-  const handleCheckout = async () => {
+  const handleCheckout = () => {
     if (!isLoggedIn || !user) {
       setIsLoginOpen(true);
       return;
     }
     if (!meetsMinimumWeight) return;
 
-    setIsSubmitting(true);
-    setOrderError("");
-
-    try {
-      const res = await fetch("/api/orders", {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          items: cart.map(({ sku, quantity, wcProductId, wcVariationId, storeId }) => ({
-            sku,
-            storeId,
-            quantity,
-            wcProductId,
-            wcVariationId,
-          })),
-        }),
-      });
-
-      const data = await res.json();
-      if (!res.ok) {
-        throw new Error(data.error || "Order submission failed. Please try again.");
-      }
-
-      const completedStoreIds = (data.orders || []).map((order) => order.storeId);
-      if (data.failures?.length) {
-        removeItemsByStore(completedStoreIds);
-        throw new Error(
-          `Orders were created for ${data.orders.map((order) => order.storeName).join(", ")}, but failed for ${data.failures.map((failure) => failure.storeName).join(", ")}. The remaining items are still in your cart.`
-        );
-      }
-
-      clearCart();
-      setIsCartOpen(false);
-      const orderSummary = data.orders
-        .map((order) => `${order.storeName} #${order.number}`)
-        .join(" · ");
-      const orderTotal = data.orders.reduce((sum, order) => sum + Number(order.total || 0), 0);
-      router.push(
-        `/order-received?orders=${encodeURIComponent(orderSummary)}&total=${encodeURIComponent(orderTotal.toFixed(2))}`
-      );
-    } catch (err) {
-      setOrderError(err.message || "Order submission failed. Please try again.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    setIsCartOpen(false);
+    router.push("/checkout");
   };
 
   const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
@@ -311,27 +263,15 @@ export default function CartDrawer() {
                 </p>
               </div>
 
-              {orderError && (
-                <div role="alert" className="bg-[#93000a]/15 border border-[#ffb4ab]/25 text-[#ffb4ab] text-xs px-4 py-3 rounded-sm leading-relaxed">
-                  {orderError}
-                </div>
-              )}
-
               <button
                 type="button"
                 onClick={handleCheckout}
-                disabled={cart.length === 0 || isSubmitting || (isLoggedIn && !meetsMinimumWeight)}
-                aria-busy={isSubmitting}
+                disabled={cart.length === 0 || (isLoggedIn && !meetsMinimumWeight)}
                 className="w-full bg-[#EC2300] hover:bg-[#c51d00] disabled:opacity-40 disabled:hover:bg-[#EC2300] text-white text-xs font-bold uppercase tracking-widest py-5 rounded-sm transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 flex items-center justify-center gap-3 cursor-pointer disabled:cursor-not-allowed border-0"
               >
-                {isSubmitting ? (
+                {isLoggedIn ? (
                   <>
-                    Submitting Order…
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                  </>
-                ) : isLoggedIn ? (
-                  <>
-                    Submit Wholesale Order
+                    Proceed to Checkout
                     <ArrowRight className="w-4 h-4" />
                   </>
                 ) : (
