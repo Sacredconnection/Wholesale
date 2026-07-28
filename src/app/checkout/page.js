@@ -178,7 +178,6 @@ export default function CheckoutPage() {
   const [shippingAddress, setShippingAddress] = useState(EMPTY_ADDRESS);
   const [billingAddress, setBillingAddress] = useState(EMPTY_ADDRESS);
   const [billingMatchesShipping, setBillingMatchesShipping] = useState(true);
-  const [note, setNote] = useState("");
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -250,7 +249,6 @@ export default function CheckoutPage() {
             wcProductId,
             wcVariationId,
           })),
-          note,
           checkout: {
             firstName: contact.firstName.trim(),
             lastName: contact.lastName.trim(),
@@ -443,21 +441,6 @@ export default function CheckoutPage() {
                       <p className="text-xs leading-relaxed text-white/65">{addressLine(shippingAddress)}</p>
                       {!billingMatchesShipping && <p className="mt-3 border-t border-white/5 pt-3 text-[10px] text-white/40">Separate billing address provided.</p>}
                     </div>
-                  </div>
-
-                  <div>
-                    <label htmlFor="order-note" className="text-[10px] font-bold uppercase tracking-wider text-white/55">
-                      Order notes (optional)
-                    </label>
-                    <textarea
-                      id="order-note"
-                      maxLength={1000}
-                      rows={4}
-                      value={note}
-                      onChange={(event) => setNote(event.target.value)}
-                      placeholder="Delivery access, preferred contact time, or other instructions..."
-                      className="mt-1.5 w-full resize-y rounded-sm border border-white/10 bg-[#131313] px-4 py-3 text-sm text-white outline-none placeholder:text-white/25 focus:border-[#82d6c5]"
-                    />
                   </div>
 
                   <div className="flex items-start gap-3 rounded-sm border border-[#268072]/30 bg-[#268072]/10 p-4">

@@ -86,7 +86,6 @@ The catalog is sourced exclusively from Sacred Connection. Configuration is enti
 | `WC_REVALIDATE_SECONDS` | Optional server-side catalog cache TTL (default `300`) |
 | `WC_WEBHOOK_SECRET` | Recommended shared secret for immediate product-cache invalidation from WooCommerce webhooks |
 | `SESSION_SECRET` | Required random secret (minimum 32 characters) used to sign authentication cookies |
-| `ORDER_PAYMENT_INSTRUCTIONS` | Server-only payment text appended to every created order |
 
 *   **Local dev:** copy `.env.example` to `.env.local` and fill in the Sacred Connection keys (WP Admin → WooCommerce → Settings → Advanced → REST API).
 *   **Vercel:** add all variables for Production and Preview, then redeploy.

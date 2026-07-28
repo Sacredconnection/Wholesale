@@ -36,8 +36,28 @@ import {
 import { getSession } from "@/lib/session";
 import { isSupportedCountryCode } from "@/lib/countries";
 
-const paymentInstructions = () =>
-  cleanText(process.env.ORDER_PAYMENT_INSTRUCTIONS, 4000, { multiline: true });
+const ORDER_CUSTOMER_NOTE = `H & F Bank Account:
+Zelle: mslumiar@gmail.com
+H&F Trading Company
+Wells Fargo
+Account: 6114240598
+Routing numbers:
+Direct deposits, electronic payments 121042882
+Wire transfers – domestic 121000248
+Swift Wells Fargo: WFBIUS6S
+Wells Fargo Address: 420 Montgomery Street
+Sao Francisco – California
+Zip code: 94104
+Address: H&F: 2301 Stampede Ave Cody WY 82414
+– – – – –
+Terms of Payment:
+Net 30 days . Buyer shall pay all sales, use, customs, excise or other
+taxes presently or hereafter payable in regards to this transaction, and
+Buyer shall reimburse Seller for any such taxes or charges paid by
+H&F Trading Company (hereafter “Seller.”)
+As importer no state excise tax is paid
+No excise tax paid.
+Shipment from USA`;
 
 const missingBackendsResponse = () => {
   const missingStores = getMissingCommerceStores();
@@ -133,7 +153,6 @@ export async function POST(request) {
   }
 
   const { items = [] } = body;
-  const note = cleanText(body.note, 1000, { multiline: true });
   const checkout =
     body.checkout && typeof body.checkout === "object" && !Array.isArray(body.checkout)
       ? {
@@ -275,10 +294,6 @@ export async function POST(request) {
       entriesByStore.get(entry.store.id).push(entry);
     }
 
-    const instructions = paymentInstructions();
-    const customerNote = [instructions, note ? `Buyer note: ${note}` : ""]
-      .filter(Boolean)
-      .join("\n---\n");
     const orderFirstName = checkout?.firstName || customer.firstName || "";
     const orderLastName = checkout?.lastName || customer.lastName || "";
     const orderCompany = checkout?.company || customer.company || "";
@@ -334,7 +349,7 @@ export async function POST(request) {
             billing,
             shipping,
             line_items: lineItems,
-            customer_note: customerNote,
+            customer_note: ORDER_CUSTOMER_NOTE,
             meta_data: [
               { key: "sc_channel", value: "wholesale-portal" },
               { key: "sc_source_store", value: store.id },
