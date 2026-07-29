@@ -79,8 +79,8 @@ export function AuthProvider({ children }) {
     }
   };
 
-  // Profile editing is currently local UI state only. Protected APIs reload
-  // identity, role, prices and addresses directly from WooCommerce.
+  // API mutations return the authoritative WooCommerce customer mapped to the
+  // UI shape; merge it into the active session without a full page reload.
   const updateUser = (updatedFields) => {
     setUser((currentUser) =>
       currentUser ? { ...currentUser, ...updatedFields } : currentUser

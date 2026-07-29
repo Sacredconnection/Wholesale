@@ -165,6 +165,7 @@ export default function MyAccountPage() {
   });
   const [accountSuccess, setAccountSuccess] = useState("");
   const [accountError, setAccountError] = useState("");
+  const [accountSaving, setAccountSaving] = useState(false);
 
   // Live orders registered in WooCommerce, looked up by billing email
   const [orders, setOrders] = useState([]);
@@ -318,7 +319,7 @@ export default function MyAccountPage() {
   };
 
   // Handle Account Update
-  const handleAccountSubmit = (e) => {
+  const handleAccountSubmit = async (e) => {
     e.preventDefault();
     setAccountSuccess("");
     setAccountError("");
@@ -327,32 +328,44 @@ export default function MyAccountPage() {
       firstName: accountForm.firstName.trim(),
       lastName: accountForm.lastName.trim(),
       displayName: accountForm.displayName.trim(),
-      email: accountForm.email.trim().toLowerCase(),
       phone: accountForm.phone.trim(),
-      company: accountForm.company,
     };
 
     if (!normalizedProfile.firstName || !normalizedProfile.lastName || !normalizedProfile.displayName || !normalizedProfile.phone) {
       setAccountError("Please complete all required account fields.");
       return;
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedProfile.email)) {
-      setAccountError("Please enter a valid partner email address.");
-      return;
+
+    setAccountSaving(true);
+    try {
+      const response = await fetch("/api/account/profile", {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(normalizedProfile),
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Account details could not be saved.");
+      }
+
+      updateUser(data.user);
+      setAccountForm((prev) => ({
+        ...prev,
+        firstName: data.user.firstName || "",
+        lastName: data.user.lastName || "",
+        displayName: data.user.displayName || "",
+        phone: data.user.phone || "",
+        currentPassword: "",
+        newPassword: "",
+        confirmPassword: "",
+      }));
+      setAccountSuccess("Account details saved.");
+    } catch (error) {
+      setAccountError(error.message || "Account details could not be saved.");
+    } finally {
+      setAccountSaving(false);
     }
-
-    updateUser(normalizedProfile);
-
-    setAccountForm((prev) => ({ ...prev, ...normalizedProfile }));
-    setAccountSuccess("Account preview updated for this session.");
-    
-    // Clear passwords
-    setAccountForm(prev => ({
-      ...prev,
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: ""
-    }));
   };
 
   // Handle Address Updates
@@ -1139,7 +1152,7 @@ export default function MyAccountPage() {
                   Account Details
                 </h3>
                 <p className="-mt-4 mb-6 text-xs leading-relaxed text-white/50">
-                  Account and address field edits are previewed for the current session until account synchronization is connected.
+                  Name and phone changes are saved to your wholesale account.
                 </p>
 
                 {accountSuccess && (
@@ -1215,10 +1228,10 @@ export default function MyAccountPage() {
                         autoComplete="email"
                         maxLength={254}
                         value={accountForm.email} 
-                        onChange={handleAccountFieldChange("email")}
-                        className="bg-[#131313] border border-white/10 rounded px-4 py-3 text-sm text-white focus:border-[#268072] outline-none transition-colors"
-                        required
+                        disabled
+                        className="cursor-not-allowed bg-[#131313]/60 border border-white/5 rounded px-4 py-3 text-sm text-white/50 outline-none"
                       />
+                      <span className="text-[10px] text-white/40 italic">Contact support to change the account email.</span>
                     </div>
                   </div>
 
@@ -1308,10 +1321,16 @@ export default function MyAccountPage() {
 
                   <button 
                     type="submit"
-                    className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 cursor-pointer flex items-center justify-center gap-2 mt-4"
+                    disabled={accountSaving}
+                    aria-busy={accountSaving}
+                    className="bg-[#EC2300] hover:bg-[#c51d00] disabled:cursor-wait disabled:opacity-60 text-white text-xs font-bold uppercase tracking-wider py-4 rounded-sm transition-all border-0 shadow-lg shadow-[#EC2300]/15 hover:shadow-[#EC2300]/30 cursor-pointer flex items-center justify-center gap-2 mt-4"
                   >
-                    <Save className="w-4 h-4" />
-                    Apply Account Preview
+                    {accountSaving ? (
+                      <LoaderCircle className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Save className="w-4 h-4" />
+                    )}
+                    {accountSaving ? "Saving Account Details..." : "Save Account Details"}
                   </button>
 
                   </form>

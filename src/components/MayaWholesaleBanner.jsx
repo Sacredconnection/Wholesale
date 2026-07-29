@@ -25,7 +25,7 @@ export default function MayaWholesaleBanner() {
             unoptimized
             className="h-auto w-60 object-contain object-left sm:w-[300px]"
           />
-          <div className="ml-[19px] sm:ml-6">
+          <div>
             <h2
               id="maya-wholesale-banner-title"
               className="mt-7 max-w-2xl text-2xl font-black leading-tight text-white sm:text-3xl"

@@ -210,10 +210,12 @@ export function isApprovedWholesaleCustomer(customer) {
 // WP Admin; they default to 0 when absent.
 export function mapCustomerToUser(customer) {
   const profileAvatar = customerMeta(customer, "sc_profile_avatar_url");
+  const savedDisplayName = customerMeta(customer, "sc_display_name");
   return {
     firstName: customer.first_name || "",
     lastName: customer.last_name || "",
     displayName:
+      savedDisplayName ||
       [customer.first_name, customer.last_name].filter(Boolean).join(" ") ||
       customer.username ||
       customer.email,
