@@ -78,6 +78,25 @@ const orderMetaValue = (order, key) => {
   return "";
 };
 
+async function mapWithConcurrency(items, concurrency, mapper) {
+  const results = new Array(items.length);
+  let nextIndex = 0;
+
+  async function worker() {
+    for (;;) {
+      const index = nextIndex;
+      nextIndex += 1;
+      if (index >= items.length) return;
+      results[index] = await mapper(items[index], index);
+    }
+  }
+
+  await Promise.all(
+    Array.from({ length: Math.min(concurrency, items.length) }, () => worker())
+  );
+  return results;
+}
+
 const sanitizedAddress = (address) => {
   if (!address || typeof address !== "object" || Array.isArray(address)) return null;
   return {
@@ -239,16 +258,33 @@ export async function POST(request) {
     const stores = getRequiredCommerceStores();
     const storeById = new Map(stores.map((store) => [store.id, store]));
 
-    const resolved = [];
-    const unresolved = [];
-    let totalWeightGrams = 0;
+    const validatedItems = [];
     const productCache = new Map();
+    const variationCache = new Map();
+    const skuCache = new Map();
     const getParentProduct = async (storeId, id) => {
       const key = `${storeId}:${id}`;
       if (!productCache.has(key)) {
-        productCache.set(key, await getProductById(id, storeId));
+        productCache.set(key, getProductById(id, storeId));
       }
       return productCache.get(key);
+    };
+    const getVariation = async (storeId, productId, variationId) => {
+      const key = `${storeId}:${productId}:${variationId}`;
+      if (!variationCache.has(key)) {
+        variationCache.set(
+          key,
+          getVariationById(productId, variationId, storeId)
+        );
+      }
+      return variationCache.get(key);
+    };
+    const getBySku = async (storeId, sku) => {
+      const key = `${storeId}:${sku.toLowerCase()}`;
+      if (!skuCache.has(key)) {
+        skuCache.set(key, findProductBySku(sku, storeId));
+      }
+      return skuCache.get(key);
     };
     const tableKeyFromCategories = (categories = []) =>
       categories.some((category) => progressiveTableKeyFor(category.name) === "shamanic")
@@ -276,50 +312,92 @@ export async function POST(request) {
         return securityError("Invalid product identifier.", 400);
       }
 
-      let payload = null;
-      let productId = null;
-      let variationId = null;
-      if (requestedProductId && requestedVariationId) {
-        payload = await getVariationById(requestedProductId, requestedVariationId, storeId);
-        productId = requestedProductId;
-        variationId = requestedVariationId;
-      } else if (requestedProductId) {
-        payload = await getProductById(requestedProductId, storeId);
-        productId = requestedProductId;
-      } else if (sku) {
-        const found = await findProductBySku(sku, storeId);
-        if (found) {
-          payload = found;
-          productId = found.parent_id || found.id;
-          variationId = found.parent_id ? found.id : null;
-        }
-      }
-
-      if (!payload) {
-        unresolved.push(`${store.name}: ${sku || "unknown item"}`);
-        continue;
-      }
-
-      const optionText =
-        (payload.attributes || []).map((attribute) => attribute.option).filter(Boolean).join(" ") ||
-        payload.name;
-      const weightGrams = extractWeightGrams(optionText, payload.weight) || 0;
-      totalWeightGrams += weightGrams * quantity;
-      const categories = variationId
-        ? (await getParentProduct(storeId, productId)).categories
-        : payload.categories;
-
-      resolved.push({
+      validatedItems.push({
         store,
-        productId,
-        variationId,
+        storeId,
         quantity,
-        weightGrams,
-        tableKey: tableKeyFromCategories(categories),
-        rolePrice: role ? roleBasedPrices(payload.meta_data)[role] : undefined,
-        basePrice: parseFloat(payload.price) || 0,
+        requestedProductId,
+        requestedVariationId,
+        sku,
       });
     }
+
+    const resolutionResults = await mapWithConcurrency(
+      validatedItems,
+      8,
+      async ({
+        store,
+        storeId,
+        quantity,
+        requestedProductId,
+        requestedVariationId,
+        sku,
+      }) => {
+        let payload = null;
+        let productId = null;
+        let variationId = null;
+        let categories = [];
+        if (requestedProductId && requestedVariationId) {
+          const [variation, parentProduct] = await Promise.all([
+            getVariation(storeId, requestedProductId, requestedVariationId),
+            getParentProduct(storeId, requestedProductId),
+          ]);
+          payload = variation;
+          productId = requestedProductId;
+          variationId = requestedVariationId;
+          categories = parentProduct.categories;
+        } else if (requestedProductId) {
+          payload = await getParentProduct(storeId, requestedProductId);
+          productId = requestedProductId;
+          categories = payload.categories;
+        } else if (sku) {
+          const found = await getBySku(storeId, sku);
+          if (found) {
+            payload = found;
+            productId = found.parent_id || found.id;
+            variationId = found.parent_id ? found.id : null;
+            categories = variationId
+              ? (await getParentProduct(storeId, productId)).categories
+              : found.categories;
+          }
+        }
+
+        if (!payload) {
+          return { unresolved: `${store.name}: ${sku || "unknown item"}` };
+        }
+
+        const optionText =
+          (payload.attributes || [])
+            .map((attribute) => attribute.option)
+            .filter(Boolean)
+            .join(" ") || payload.name;
+        const weightGrams = extractWeightGrams(optionText, payload.weight) || 0;
+        return {
+          entry: {
+            store,
+            productId,
+            variationId,
+            quantity,
+            weightGrams,
+            tableKey: tableKeyFromCategories(categories),
+            rolePrice: role ? roleBasedPrices(payload.meta_data)[role] : undefined,
+            basePrice: parseFloat(payload.price) || 0,
+          },
+          lineWeightGrams: weightGrams * quantity,
+        };
+      }
+    );
+
+    const resolved = resolutionResults.flatMap((result) =>
+      result.entry ? [result.entry] : []
+    );
+    const unresolved = resolutionResults.flatMap((result) =>
+      result.unresolved ? [result.unresolved] : []
+    );
+    const totalWeightGrams = resolutionResults.reduce(
+      (total, result) => total + (result.lineWeightGrams || 0),
+      0
+    );
 
     if (unresolved.length > 0) {
       return Response.json(

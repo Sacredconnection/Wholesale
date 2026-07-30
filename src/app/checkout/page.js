@@ -86,6 +86,69 @@ function Field({ id, label, className = "", ...props }) {
   );
 }
 
+function OrderStageIllustration({ stage }) {
+  if (stage === 1) {
+    return (
+      <div className="order-visual-card" aria-hidden="true">
+        {[0, 1, 2].map((row) => (
+          <div
+            key={row}
+            className="order-visual-check-row"
+            style={{ animationDelay: `${row * 280}ms` }}
+          >
+            <span><Check className="h-2.5 w-2.5" /></span>
+            <i className={row === 1 ? "w-7" : "w-10"} />
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  if (stage === 2) {
+    return (
+      <div className="order-visual-package" aria-hidden="true">
+        <span className="order-visual-package-lid" />
+        <span className="order-visual-package-body">
+          <i />
+          <Check className="h-4 w-4" />
+        </span>
+      </div>
+    );
+  }
+
+  if (stage === 3) {
+    return (
+      <div className="order-visual-register" aria-hidden="true">
+        <span className="order-visual-register-sheet">
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className="order-visual-register-stamp">
+          <Check className="h-4 w-4" />
+        </span>
+      </div>
+    );
+  }
+
+  if (stage === 4) {
+    return (
+      <div className="order-visual-waiting" aria-hidden="true">
+        <span />
+        <span />
+        <span />
+      </div>
+    );
+  }
+
+  return (
+    <div className="order-visual-secure" aria-hidden="true">
+      <span />
+      <LockKeyhole className="relative h-7 w-7 text-[#82d6c5]" />
+    </div>
+  );
+}
+
 function OrderSubmissionOverlay({ stage }) {
   const activeStage = ORDER_SUBMISSION_STAGES[stage] || ORDER_SUBMISSION_STAGES.at(-1);
 
@@ -100,22 +163,21 @@ function OrderSubmissionOverlay({ stage }) {
       <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#82d6c5]/25 bg-[#151817] shadow-2xl shadow-black/60">
         <div className="relative overflow-hidden border-b border-white/10 bg-[#102c27] px-6 py-7 text-center sm:px-8">
           <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(circle_at_top,#268072_0,transparent_62%)]" />
-          <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full border border-[#82d6c5]/35 bg-[#268072]/20">
-            <span className="absolute inset-1 animate-ping rounded-full border border-[#82d6c5]/20 motion-reduce:animate-none" />
-            <PackageCheck className="h-7 w-7 text-[#82d6c5]" />
+          <div className="relative mx-auto mb-4 grid h-20 w-24 place-items-center">
+            <OrderStageIllustration stage={stage} />
           </div>
           <div className="relative">
             <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#82d6c5]">
-              Secure order submission
+              Order confirmation in progress
             </p>
             <h2 id="order-progress-title" className="mt-2 text-2xl font-black text-white">
-              We&apos;re confirming your order
+              {activeStage.title}
             </h2>
             <p
               id="order-progress-description"
               className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-white/60"
             >
-              This may take a moment while we securely validate and record every item.
+              {activeStage.detail}
             </p>
           </div>
         </div>

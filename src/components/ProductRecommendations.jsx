@@ -38,7 +38,7 @@ export default function ProductRecommendations({
   const isDrawer = variant === "drawer";
 
   return (
-    <section className={`${isDrawer ? "border-t border-white/10 pt-5" : "rounded-lg border border-[#268072]/25 bg-[#102c27]/45 p-4 sm:p-5"}`}>
+    <section className={`${isDrawer ? "rounded-xl border border-[#82d6c5]/20 bg-[#102c27] p-4 shadow-inner shadow-black/20" : "rounded-lg border border-[#268072]/25 bg-[#102c27]/45 p-4 sm:p-5"}`}>
       <div className="mb-4">
         {eyebrow && (
           <span className="mb-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#82d6c5]">
@@ -48,11 +48,16 @@ export default function ProductRecommendations({
         )}
         <h3 className={`${isDrawer ? "text-sm" : "text-base"} font-bold text-white`}>{title}</h3>
         {description && <p className="mt-1 text-[10px] leading-relaxed text-white/45">{description}</p>}
+        {isDrawer && (
+          <p className="mt-2 inline-flex rounded-full border border-amber-200/20 bg-amber-200/8 px-2.5 py-1 text-[8px] font-black uppercase tracking-[0.14em] text-amber-100/75">
+            Optional · these items are not in your order
+          </p>
+        )}
       </div>
 
       <div className={`grid gap-3 ${isDrawer ? "grid-cols-1" : "sm:grid-cols-2"}`}>
         {recommendations.map((product) => (
-          <article key={product.id} className="rounded-lg border border-white/10 bg-[#1a1a1a] p-3 shadow-md shadow-black/15">
+          <article key={product.id} className="rounded-lg border border-dashed border-white/10 bg-[#131313]/55 p-3">
             <div className="mb-3 flex items-center gap-3">
               <div className="h-12 w-12 shrink-0 overflow-hidden rounded-md border border-white/10 bg-white">
                 {product.image ? (
@@ -69,7 +74,7 @@ export default function ProductRecommendations({
             <ProductPurchaseControls
               product={product}
               compact
-              buttonLabel="Add"
+              buttonLabel="Add to order"
               onAdded={onAdded}
             />
           </article>

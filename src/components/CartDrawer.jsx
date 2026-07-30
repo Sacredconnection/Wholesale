@@ -196,9 +196,9 @@ export default function CartDrawer() {
                     ))}
                   </div>
                   <ProductRecommendations
-                    eyebrow="Recommended add-ons"
-                    title="Frequently bought together"
-                    description="Related products you can add without leaving your order."
+                    eyebrow="Optional add-ons"
+                    title="You may also like"
+                    description="These suggestions are separate from your current order."
                     variant="drawer"
                     limit={2}
                   />
