@@ -6,7 +6,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useAuth } from '@/components/AuthContext';
 import { useCart } from '@/components/CartContext';
-import ThemeToggle from '@/components/ThemeToggle';
 import { Menu, X, ArrowRight, LogOut, ShoppingBag } from 'lucide-react';
 
 export default function Header({ onOpenLogin }) {
@@ -93,8 +92,6 @@ export default function Header({ onOpenLogin }) {
 
         {/* CTA Actions (Right - Desktop Only) */}
         <div className="hidden self-stretch shrink-0 items-center gap-3 xl:gap-5 lg:flex">
-          <ThemeToggle />
-
           {/* Cart Icon Trigger */}
           {isLoggedIn && (
           <button
@@ -160,8 +157,6 @@ export default function Header({ onOpenLogin }) {
 
         {/* Mobile Cart and Hamburger Container (Mobile Only) */}
         <div className="flex items-center gap-2.5 sm:gap-3 lg:hidden">
-          <ThemeToggle />
-
           {isLoggedIn && (
           <button
             type="button"

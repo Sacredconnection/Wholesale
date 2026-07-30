@@ -14,17 +14,6 @@ const roboto = Roboto({
   display: "swap",
 });
 
-const themeBootScript = `
-  (function () {
-    try {
-      var savedTheme = localStorage.getItem('sacred-wholesale-theme');
-      document.documentElement.dataset.theme = savedTheme === 'light' ? 'light' : 'dark';
-    } catch (error) {
-      document.documentElement.dataset.theme = 'dark';
-    }
-  })();
-`;
-
 export const metadata = {
   metadataBase: new URL(SITE_URL),
   title: "Sacred Connection Wholesale | B2B Portal",
@@ -40,14 +29,9 @@ export default function RootLayout({ children }) {
       lang="en"
       data-theme="dark"
       className={`${roboto.variable} ${roboto.className} h-full antialiased`}
-      suppressHydrationWarning
     >
-      <head>
-        <script dangerouslySetInnerHTML={{ __html: themeBootScript }} />
-      </head>
       <body
         className="min-h-full flex flex-col bg-[#23403B] text-[#e5e2e1]"
-        suppressHydrationWarning
       >
         <AuthProvider>
           <ProductsProvider>
