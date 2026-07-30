@@ -5,7 +5,6 @@
 import { useState } from "react";
 import Link from "next/link";
 import { ArrowUpRight, LockKeyhole, ShoppingBag } from "lucide-react";
-import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
 
 export default function ProductCard({
@@ -16,7 +15,6 @@ export default function ProductCard({
 }) {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const selectedOption = product.options[0];
-  const selectedOptionIsOutOfStock = selectedOption?.inStock === false;
   const description =
     product.description || "Wholesale product from the Sacred Connection collection.";
   const hasLongDescription = description.length > 180;
@@ -55,12 +53,8 @@ export default function ProductCard({
     <article
       className={`group grid min-w-0 grid-cols-1 items-stretch overflow-hidden rounded-lg border border-white/15 bg-[#1a1a1a] transition-all duration-300 hover:border-[#268072]/70 hover:shadow-xl hover:shadow-black/20 sm:grid-cols-[13.5rem_minmax(0,1fr)] lg:grid-cols-[15.5rem_minmax(0,1fr)] ${
         isDescriptionExpanded
-          ? selectedOptionIsOutOfStock
-            ? "min-h-[46rem] sm:min-h-[27rem] xl:min-h-[23rem]"
-            : "min-h-[41.5rem] sm:min-h-[22rem] xl:min-h-[18rem]"
-          : selectedOptionIsOutOfStock
-            ? "h-[46rem] sm:h-[27rem] xl:h-[23rem]"
-            : "h-[41.5rem] sm:h-[22rem] xl:h-[18rem]"
+          ? "min-h-[41.5rem] sm:min-h-[22rem] xl:min-h-[18rem]"
+          : "h-[41.5rem] sm:h-[22rem] xl:h-[18rem]"
       }`}
     >
       {isLoggedIn ? (
@@ -153,7 +147,6 @@ export default function ProductCard({
                         className="catalog-format-tag inline-flex min-h-8 shrink-0 items-center rounded-sm border border-white/15 bg-white/5 px-2.5 py-1 text-[11px] font-bold text-white/75"
                       >
                         {label}
-                        {option.inStock === false ? " · Out of stock" : ""}
                       </span>
                     );
                   })}
@@ -163,17 +156,14 @@ export default function ProductCard({
           </div>
 
           {isLoggedIn ? (
-            <div className="flex flex-col gap-2 sm:col-span-2 xl:col-span-1 xl:min-w-48">
-              {selectedOptionIsOutOfStock && <StockBackorderNotice compact />}
-              <button
-                type="button"
-                onClick={() => onAddToCart(product, 0)}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-0 bg-[#EC2300] px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#c51d00]"
-              >
-                <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-                {selectedOptionIsOutOfStock ? "Order for restock" : "Add to order"}
-              </button>
-            </div>
+            <button
+              type="button"
+              onClick={() => onAddToCart(product, 0)}
+              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-0 bg-[#EC2300] px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#c51d00] sm:col-span-2 xl:col-span-1 xl:min-w-48"
+            >
+              <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+              Add to order
+            </button>
           ) : (
             <button
               type="button"

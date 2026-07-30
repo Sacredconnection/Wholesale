@@ -156,7 +156,7 @@ export function buildCategoryContext(categories = []) {
   const nameById = {};
   categories.forEach((c) => {
     parentById[c.id] = c.parent || 0;
-    nameById[c.id] = c.name;
+    nameById[c.id] = decodeHtmlEntities(c.name);
   });
 
   return { parentById, nameById };
@@ -310,10 +310,17 @@ export function mapProduct(
   const topCats = cats.filter((c) => !parentById[c.id]);
   const subCats = cats.filter((c) => parentById[c.id]);
 
-  const tribe =
+  const tribe = decodeHtmlEntities(
     attributeOption(product.attributes, "tribe") ||
-    subCats[0]?.name ||
-    "";
+      subCats[0]?.name ||
+      ""
+  );
+  const category = decodeHtmlEntities(
+    topCats[0]?.name ||
+      (subCats[0] && topLevelCategoryName(subCats[0].id, parentById, nameById)) ||
+      cats[0]?.name ||
+      "Uncategorized"
+  );
 
   return {
     // Prefix with the store id so equal slugs from different backends never collide.
@@ -325,11 +332,7 @@ export function mapProduct(
     optionsLoaded: product.type !== "variable" || variations.length > 0,
     name: decodeHtmlEntities(product.name),
     sku: product.sku || String(product.id),
-    category:
-      topCats[0]?.name ||
-      (subCats[0] && topLevelCategoryName(subCats[0].id, parentById, nameById)) ||
-      cats[0]?.name ||
-      "Uncategorized",
+    category,
     tribe,
     image: product.images?.[0]?.src || null,
     images: (product.images || []).map((img) => img.src),
@@ -379,10 +382,17 @@ export function mapStoreProduct(
   const cats = product.categories || [];
   const topCats = cats.filter((category) => !parentById[category.id]);
   const subCats = cats.filter((category) => parentById[category.id]);
-  const tribe =
+  const tribe = decodeHtmlEntities(
     attributeOption(product.attributes, "tribe") ||
-    subCats[0]?.name ||
-    "";
+      subCats[0]?.name ||
+      ""
+  );
+  const category = decodeHtmlEntities(
+    topCats[0]?.name ||
+      (subCats[0] && topLevelCategoryName(subCats[0].id, parentById, nameById)) ||
+      cats[0]?.name ||
+      "Uncategorized"
+  );
 
   return {
     id: `${store.id}~${product.slug}`,
@@ -393,11 +403,7 @@ export function mapStoreProduct(
     optionsLoaded: product.type !== "variable" || variations.length > 0,
     name: decodeHtmlEntities(product.name),
     sku: product.sku || String(product.id),
-    category:
-      topCats[0]?.name ||
-      (subCats[0] && topLevelCategoryName(subCats[0].id, parentById, nameById)) ||
-      cats[0]?.name ||
-      "Uncategorized",
+    category,
     tribe,
     image: product.images?.[0]?.src || null,
     images: (product.images || []).map((image) => image.src),

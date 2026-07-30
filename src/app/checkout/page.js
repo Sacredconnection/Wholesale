@@ -10,21 +10,14 @@ import {
   ArrowLeft,
   ArrowRight,
   Check,
-  CheckCircle2,
   ChevronDown,
-  ClipboardCheck,
+  LockKeyhole,
   Loader2,
-  MapPin,
+  MessageCircleMore,
   PackageCheck,
-  PhoneCall,
-  ShieldCheck,
   ShoppingBag,
-  UserRound,
 } from "lucide-react";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import LoginModal from "@/components/LoginModal";
-import ProductRecommendations from "@/components/ProductRecommendations";
+import CheckoutHeader from "@/components/CheckoutHeader";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/components/AuthContext";
@@ -41,11 +34,7 @@ const EMPTY_ADDRESS = {
   country: "",
 };
 
-const STEPS = [
-  { label: "Contact", icon: UserRound },
-  { label: "Delivery", icon: MapPin },
-  { label: "Review", icon: ClipboardCheck },
-];
+const STEPS = ["Contact", "Delivery", "Review"];
 
 const addressLine = (address) =>
   [
@@ -163,12 +152,12 @@ export default function CheckoutPage() {
     cart,
     clearCart,
     removeItemsByStore,
+    setIsCartOpen,
     cartSubtotal,
     cartTotalItems,
     cartTotalWeightGrams,
   } = useCart();
   const initializedForUser = useRef(null);
-  const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [step, setStep] = useState(0);
   const [contact, setContact] = useState({
     firstName: "",
@@ -297,47 +286,57 @@ export default function CheckoutPage() {
 
   return (
     <div id="top" className="site-background-page min-h-screen bg-[#23403B] text-[#e5e2e1]">
-      <Header onOpenLogin={() => setIsLoginOpen(true)} />
+      <CheckoutHeader />
 
-      <main className="mx-auto w-full max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8">
-        <div className="mb-8 flex flex-col gap-3 border-b border-white/10 pb-7">
-          <Link href="/catalog" className="inline-flex w-fit items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#82d6c5] transition-colors hover:text-white">
-            <ArrowLeft className="h-4 w-4" />
-            Return to catalog
-          </Link>
+      <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#82d6c5]">
-              Secure wholesale request
-            </span>
-            <h1 className="mt-2 text-3xl font-black tracking-tight text-white sm:text-4xl">
-              Checkout
+            <Link
+              href="/catalog"
+              className="mb-3 inline-flex w-fit items-center gap-1.5 text-xs font-bold text-white/45 transition-colors hover:text-white"
+            >
+              <ArrowLeft className="h-3.5 w-3.5" />
+              Return to catalog
+            </Link>
+            <h1 className="text-2xl font-black tracking-tight text-white sm:text-3xl">
+              Complete your wholesale order
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-white/55">
-              Confirm your details and review the order before sending it to our wholesale team.
-              No payment is collected online.
+            <p className="mt-1.5 text-sm text-white/50">
+              Three short steps. No payment is collected online.
             </p>
           </div>
+          <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-white/50">
+            Step {step + 1} of {STEPS.length}
+          </span>
         </div>
 
-        <ol aria-label="Checkout progress" className="mb-8 grid grid-cols-3 overflow-hidden rounded-lg border border-white/10 bg-[#171717]">
-          {STEPS.map(({ label, icon: Icon }, index) => {
+        <ol aria-label="Checkout progress" className="mb-6 flex items-center">
+          {STEPS.map((label, index) => {
             const complete = index < step;
             const active = index === step;
             return (
               <li
                 key={label}
                 aria-current={active ? "step" : undefined}
-                className={`relative flex min-w-0 items-center justify-center gap-2 border-r border-white/10 px-2 py-4 last:border-r-0 sm:gap-3 sm:px-5 ${
-                  active ? "bg-[#268072]/20 text-white" : complete ? "text-[#82d6c5]" : "text-white/35"
+                className={`flex min-w-0 flex-1 items-center ${
+                  active ? "text-white" : complete ? "text-[#82d6c5]" : "text-white/30"
                 }`}
               >
-                <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border ${active || complete ? "border-[#82d6c5]/50 bg-[#268072]/20" : "border-white/15"}`}>
-                  {complete ? <Check className="h-3.5 w-3.5" /> : <Icon className="h-3.5 w-3.5" />}
+                <span className={`grid h-7 w-7 shrink-0 place-items-center rounded-full border text-[10px] font-black ${
+                  active || complete
+                    ? "border-[#82d6c5]/60 bg-[#268072]/20"
+                    : "border-white/15"
+                }`}>
+                  {complete ? <Check className="h-3.5 w-3.5" /> : index + 1}
                 </span>
-                <span className="truncate text-[10px] font-bold uppercase tracking-wider sm:text-xs">
-                  <span className="hidden sm:inline">{index + 1}. </span>{label}
+                <span className="ml-2 truncate text-[10px] font-bold uppercase tracking-wider sm:text-xs">
+                  {label}
                 </span>
-                {active && <span className="absolute inset-x-0 bottom-0 h-0.5 bg-[#82d6c5]" />}
+                {index < STEPS.length - 1 && (
+                  <span className={`mx-2 h-px min-w-3 flex-1 sm:mx-4 ${
+                    complete ? "bg-[#82d6c5]/50" : "bg-white/10"
+                  }`} />
+                )}
               </li>
             );
           })}
@@ -353,8 +352,8 @@ export default function CheckoutPage() {
             </Link>
           </section>
         ) : (
-          <div className="grid items-start gap-7 lg:grid-cols-[minmax(0,1fr)_23rem]">
-            <section className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-2xl sm:p-7 lg:p-8">
+          <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_21.5rem]">
+            <section className="rounded-xl border border-white/10 bg-[#1a1a1a] p-5 shadow-xl shadow-black/15 sm:p-7">
               {error && (
                 <div role="alert" className="mb-6 flex items-start gap-3 rounded-sm border border-[#ffb4ab]/25 bg-[#93000a]/20 px-4 py-3 text-xs leading-relaxed text-[#ffb4ab]">
                   <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
@@ -363,11 +362,11 @@ export default function CheckoutPage() {
               )}
 
               {step === 0 && (
-                <div className="flex flex-col gap-6">
+                <div className="flex flex-col gap-5">
                   <div>
                     <h2 className="text-xl font-bold text-white">Contact information</h2>
-                    <p className="mt-1 text-xs leading-relaxed text-white/50">
-                      We will use these details to confirm availability, freight, and payment.
+                    <p className="mt-1 text-sm leading-relaxed text-white/50">
+                      Where should our wholesale team contact you?
                     </p>
                   </div>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -377,12 +376,10 @@ export default function CheckoutPage() {
                     <Field id="checkout-phone" label="Phone number" type="tel" autoComplete="tel" maxLength={40} value={contact.phone} onChange={setContactField("phone")} required />
                     <Field id="checkout-email" label="Account email" type="email" autoComplete="email" value={contact.email} disabled className="sm:col-span-2" />
                   </div>
-                  <div className="flex items-start gap-3 rounded-sm border border-[#268072]/25 bg-[#268072]/10 p-4">
-                    <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-[#82d6c5]" />
-                    <p className="text-xs leading-relaxed text-white/60">
-                      Your account email identifies the approved wholesale buyer and cannot be changed during checkout.
-                    </p>
-                  </div>
+                  <p className="flex items-center gap-2 text-[11px] text-white/40">
+                    <LockKeyhole className="h-3.5 w-3.5 shrink-0 text-[#82d6c5]" />
+                    Your verified account email is used for this order.
+                  </p>
                 </div>
               )}
 
@@ -390,8 +387,8 @@ export default function CheckoutPage() {
                 <div className="flex flex-col gap-7">
                   <div>
                     <h2 className="text-xl font-bold text-white">Delivery address</h2>
-                    <p className="mt-1 text-xs leading-relaxed text-white/50">
-                      Shipping is calculated after the request is reviewed by our team.
+                    <p className="mt-1 text-sm leading-relaxed text-white/50">
+                      Where should we prepare this order for delivery?
                     </p>
                   </div>
                   <AddressFields prefix="shipping" value={shippingAddress} onChange={setShippingAddress} />
@@ -417,11 +414,11 @@ export default function CheckoutPage() {
               )}
 
               {step === 2 && (
-                <div className="flex flex-col gap-7">
+                <div className="flex flex-col gap-5">
                   <div>
                     <h2 className="text-xl font-bold text-white">Review and confirm</h2>
-                    <p className="mt-1 text-xs leading-relaxed text-white/50">
-                      This is the final step. Your order is created only after you confirm below.
+                    <p className="mt-1 text-sm leading-relaxed text-white/50">
+                      Check the details below, then submit your request.
                     </p>
                   </div>
 
@@ -446,25 +443,24 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  <ProductRecommendations
-                    eyebrow="Order bump"
-                    title="Complete your order"
-                    description="Frequently purchased products you can add before confirming the order."
-                    variant="checkout"
-                    limit={2}
-                  />
-
                   {hasBackorderItems && <StockBackorderNotice />}
 
-                  <div className="flex items-start gap-3 rounded-sm border border-[#268072]/30 bg-[#268072]/10 p-4">
-                    <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-[#82d6c5]" />
-                    <p className="text-xs leading-relaxed text-white/65">
-                      No online payment is taken. Sacred Connection will contact you to confirm stock,
-                      calculate shipping, and arrange payment.
-                    </p>
+                  <div className="flex items-start gap-3 rounded-lg border border-[#268072]/25 bg-[#268072]/10 p-4">
+                    <MessageCircleMore className="mt-0.5 h-4 w-4 shrink-0 text-[#82d6c5]" />
+                    <div>
+                      <h3 className="text-xs font-bold text-white">What happens next?</h3>
+                      <p className="mt-1 text-xs leading-relaxed text-white/55">
+                        Our team reviews availability and freight, then contacts you to confirm
+                        payment and shipping. Nothing is charged now.
+                      </p>
+                    </div>
                   </div>
 
-                  <label className="flex cursor-pointer items-start gap-3 rounded-sm border border-white/10 p-4">
+                  <label className={`flex cursor-pointer items-start gap-3 rounded-lg border p-4 transition-colors ${
+                    confirmed
+                      ? "border-[#82d6c5]/45 bg-[#268072]/10"
+                      : "border-white/10 bg-[#131313]"
+                  }`}>
                     <input
                       type="checkbox"
                       checked={confirmed}
@@ -472,11 +468,11 @@ export default function CheckoutPage() {
                         setConfirmed(event.target.checked);
                         setError("");
                       }}
-                      className="mt-0.5 h-4 w-4 accent-[#268072]"
+                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#268072]"
                     />
                     <span className="text-xs leading-relaxed text-white/65">
-                      I confirm that the contact, delivery, and order details are correct and understand
-                      that the displayed total excludes shipping and remains subject to final confirmation.
+                      I have reviewed my contact, delivery, and order details. I understand that
+                      shipping is calculated separately and availability is confirmed by the team.
                       {hasBackorderItems
                         ? " I also understand that out-of-stock items may take about one month before they are ready to ship."
                         : ""}
@@ -485,7 +481,7 @@ export default function CheckoutPage() {
                 </div>
               )}
 
-              <div className="mt-8 flex flex-col-reverse gap-3 border-t border-white/10 pt-6 sm:flex-row sm:justify-between">
+              <div className="mt-7 flex flex-col-reverse gap-4 border-t border-white/10 pt-6 sm:flex-row sm:items-start sm:justify-between">
                 {step > 0 ? (
                   <button
                     type="button"
@@ -494,45 +490,61 @@ export default function CheckoutPage() {
                       setStep((current) => current - 1);
                     }}
                     disabled={isSubmitting}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm border border-white/10 bg-white/5 px-6 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-white/10 disabled:opacity-50"
+                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm border border-white/10 bg-transparent px-5 text-xs font-bold text-white/55 transition-colors hover:border-white/20 hover:text-white disabled:opacity-50"
                   >
                     <ArrowLeft className="h-4 w-4" /> Back
                   </button>
                 ) : <span />}
 
-                {step < STEPS.length - 1 ? (
-                  <button
-                    type="button"
-                    onClick={goForward}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#EC2300] px-7 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#c51d00]"
-                  >
-                    Continue <ArrowRight className="h-4 w-4" />
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={submitOrder}
-                    disabled={isSubmitting || !confirmed || !meetsMinimumWeight}
-                    aria-busy={isSubmitting}
-                    className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#EC2300] px-7 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#c51d00] disabled:cursor-not-allowed disabled:opacity-45"
-                  >
-                    {isSubmitting ? (
-                      <>Placing order <Loader2 className="h-4 w-4 animate-spin" /></>
-                    ) : (
-                      <>Place wholesale order <PackageCheck className="h-4 w-4" /></>
-                    )}
-                  </button>
-                )}
+                <div className="flex flex-col gap-2 sm:min-w-64">
+                  {step < STEPS.length - 1 ? (
+                    <button
+                      type="button"
+                      onClick={goForward}
+                      className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#EC2300] px-7 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[#EC2300]/15 transition-colors hover:bg-[#c51d00]"
+                    >
+                      {step === 0 ? "Continue to delivery" : "Review order"}
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <>
+                      <button
+                        type="button"
+                        onClick={submitOrder}
+                        disabled={isSubmitting || !confirmed || !meetsMinimumWeight}
+                        aria-busy={isSubmitting}
+                        className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#EC2300] px-7 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[#EC2300]/15 transition-colors hover:bg-[#c51d00] disabled:cursor-not-allowed disabled:opacity-45"
+                      >
+                        {isSubmitting ? (
+                          <>Submitting order <Loader2 className="h-4 w-4 animate-spin" /></>
+                        ) : (
+                          <>Submit order request <PackageCheck className="h-4 w-4" /></>
+                        )}
+                      </button>
+                      <p className="flex items-center justify-center gap-1.5 text-[10px] text-white/35">
+                        <LockKeyhole className="h-3 w-3 text-[#82d6c5]" />
+                        No payment is collected online
+                      </p>
+                    </>
+                  )}
+                </div>
               </div>
             </section>
 
-            <aside className="rounded-xl border border-white/10 bg-[#171717] shadow-2xl lg:sticky lg:top-28">
+            <aside className="rounded-xl border border-white/10 bg-[#171717] shadow-xl shadow-black/15 lg:sticky lg:top-24">
               <div className="flex items-center gap-3 border-b border-white/10 px-5 py-4">
                 <ShoppingBag className="h-4 w-4 text-[#82d6c5]" />
                 <h2 className="text-sm font-bold text-white">Order summary</h2>
-                <span className="ml-auto text-xs text-white/45">{cartTotalItems} items</span>
+                <span className="ml-auto text-xs text-white/40">{cartTotalItems} items</span>
+                <button
+                  type="button"
+                  onClick={() => setIsCartOpen(true)}
+                  className="border-0 bg-transparent text-[10px] font-bold uppercase tracking-wider text-[#82d6c5] transition-colors hover:text-white"
+                >
+                  Edit
+                </button>
               </div>
-              <div className="max-h-72 divide-y divide-white/5 overflow-y-auto px-5">
+              <div className="max-h-64 divide-y divide-white/5 overflow-y-auto px-5">
                 {cart.map((item) => (
                   <div key={item.cartKey} className="flex gap-3 py-4">
                     <div className="h-11 w-11 shrink-0 overflow-hidden rounded border border-white/10 bg-white/5">
@@ -565,19 +577,16 @@ export default function CheckoutPage() {
                   <span className="font-bold uppercase tracking-wider text-white">Estimated total</span>
                   <span className="text-2xl font-black text-[#82d6c5]">${finalTotal.toFixed(2)}</span>
                 </div>
-                <div className="mt-3 flex items-center gap-2 text-[10px] leading-relaxed text-white/35">
-                  <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#82d6c5]" />
-                  Final freight and availability are confirmed by our team.
+                <div className="mt-3 flex items-start gap-2 rounded-sm bg-white/[0.03] px-3 py-2.5 text-[10px] leading-relaxed text-white/40">
+                  <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#82d6c5]" />
+                  No payment now. Final shipping and availability are confirmed by our team.
                 </div>
-                {hasBackorderItems && <StockBackorderNotice compact className="mt-2" />}
               </div>
             </aside>
           </div>
         )}
       </main>
 
-      <Footer />
-      <LoginModal isOpen={isLoginOpen} onClose={() => setIsLoginOpen(false)} />
     </div>
   );
 }
