@@ -1,4 +1,5 @@
 import HomeClient from "@/components/HomeClient";
+import { SITE_URL } from "@/lib/site-config";
 
 export const metadata = {
   title: "Sacred Connection Wholesale | B2B Portal",
@@ -20,7 +21,7 @@ export const metadata = {
     type: "website",
     locale: "en_US",
     siteName: "Sacred Connection Wholesale",
-    url: "https://wholesale.sacredconnection.com",
+    url: SITE_URL,
     images: [
       {
         url: "/banner/hero-banner.webp",
@@ -45,10 +46,10 @@ export default function Page() {
     {
       "@context": "https://schema.org",
       "@type": "Organization",
-      "@id": "https://wholesale.sacredconnection.com/#organization",
+      "@id": `${SITE_URL}/#organization`,
       "name": "Sacred Connection Wholesale",
-      "url": "https://wholesale.sacredconnection.com",
-      "logo": "https://wholesale.sacredconnection.com/logo.svg",
+      "url": SITE_URL,
+      "logo": `${SITE_URL}/logo.svg`,
       "description": "Direct fair-trade sourcing of traditional Amazonian botanical products. Access our verified B2B wholesale platform.",
       "contactPoint": {
         "@type": "ContactPoint",
@@ -59,9 +60,9 @@ export default function Page() {
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "@id": "https://wholesale.sacredconnection.com/#website",
+      "@id": `${SITE_URL}/#website`,
       "name": "Sacred Connection Wholesale | B2B Portal",
-      "url": "https://wholesale.sacredconnection.com"
+      "url": SITE_URL
     }
   ];
 

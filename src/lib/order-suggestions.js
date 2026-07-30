@@ -11,22 +11,34 @@ export const SUGGESTED_BLEND_RECIPES = [
     preferredWeight: 100,
   },
   {
-    id: "indigenous-discovery",
-    title: "Indigenous Discovery",
-    eyebrow: "Lineage variety",
+    id: "yawanawa-lineage",
+    title: "Yawanawá Lineage",
+    eyebrow: "Single-nation focus",
     description:
-      "A varied selection drawn from indigenous and tribe-led product families.",
-    terms: ["indigenous", "tribe", "rapé indigenous", "rape indigenous"],
+      "A focused assortment built only from products explicitly associated with the Yawanawá nation.",
+    terms: ["yawanawa"],
     preferredWeight: 50,
+    strict: true,
+  },
+  {
+    id: "mixed-indigenous-nations",
+    title: "Mixed Indigenous Nations",
+    eyebrow: "Cross-lineage assortment",
+    description:
+      "A varied selection across distinct indigenous nations, with lineage diversity prioritized.",
+    terms: ["indigenous"],
+    preferredWeight: 50,
+    strict: true,
   },
   {
     id: "tobacco-free",
     title: "Tobacco-Free Discovery",
     eyebrow: "Alternative assortment",
     description:
-      "A focused mix selected from tobacco-free, fusion, and nootropic catalog groups.",
-    terms: ["tobacco free", "tobacco-free", "fusion", "nootropic"],
+      "A focused mix containing only products explicitly classified as tobacco-free in the live catalog.",
+    terms: ["tobacco free", "tobacco-free", "tobaccofree"],
     preferredWeight: 100,
+    strict: true,
   },
   {
     id: "traditional-heritage",
@@ -49,7 +61,17 @@ export const normalizeSuggestionText = (value) =>
 
 const productSearchText = (product) =>
   normalizeSuggestionText(
-    [product?.name, product?.category, product?.tribe].filter(Boolean).join(" ")
+    [
+      product?.name,
+      product?.category,
+      product?.tribe,
+      ...(product?.attributes || []).flatMap((attribute) => [
+        attribute.name,
+        ...(attribute.values || []),
+      ]),
+    ]
+      .filter(Boolean)
+      .join(" ")
   );
 
 export const recipeScore = (product, recipe) => {

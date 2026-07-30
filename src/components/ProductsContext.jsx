@@ -1,7 +1,6 @@
 "use client";
 
-// Preloads the Sacred Connection catalog as soon as authentication is restored.
-// Keeping this provider above the pages lets /catalog reuse the loaded data.
+// Preloads the public catalog and upgrades it with partner pricing after login.
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/components/AuthContext";
@@ -21,9 +20,12 @@ export function ProductsProvider({ children }) {
   const reload = useCallback(() => setReloadKey((key) => key + 1), []);
 
   const resolveProduct = useCallback(async (product) => {
-    if (!product || product.optionsLoaded) return product;
-    if (productRequests.current.has(product.id)) {
-      return productRequests.current.get(product.id);
+    const hasCorrectPricing =
+      !isLoggedIn || product?.pricingVisible === true;
+    if (!product || (product.optionsLoaded && hasCorrectPricing)) return product;
+    const requestKey = `${isLoggedIn ? "partner" : "public"}:${product.id}`;
+    if (productRequests.current.has(requestKey)) {
+      return productRequests.current.get(requestKey);
     }
 
     const request = (async () => {
@@ -48,32 +50,24 @@ export function ProductsProvider({ children }) {
         }
         throw loadError;
       } finally {
-        productRequests.current.delete(product.id);
+        productRequests.current.delete(requestKey);
       }
     })();
 
-    productRequests.current.set(product.id, request);
+    productRequests.current.set(requestKey, request);
     return request;
-  }, [invalidateSession]);
+  }, [invalidateSession, isLoggedIn]);
 
   useEffect(() => {
     let cancelled = false;
 
     if (authLoading) return () => {};
-    if (!isLoggedIn) {
-      const clearTimer = window.setTimeout(() => {
-        setProducts([]);
-        setError("");
-        setWarning("");
-        setLoading(false);
-      }, 0);
-      return () => window.clearTimeout(clearTimer);
-    }
-
     async function loadCatalog() {
       setLoading(true);
+      setProducts([]);
       setError("");
       setWarning("");
+      productRequests.current.clear();
 
       try {
         const response = await fetch("/api/products", {

@@ -57,19 +57,13 @@ export default function ProductCard({
           : "h-[41.5rem] sm:h-[22rem] xl:h-[18rem]"
       }`}
     >
-      {isLoggedIn ? (
-        <Link
-          href={product.productUrl}
-          aria-label={`View ${product.name}`}
-          className="relative m-3 block h-56 overflow-hidden rounded-lg border border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:self-stretch"
-        >
-          {media}
-        </Link>
-      ) : (
-        <div className="relative m-3 block h-56 overflow-hidden rounded-lg border border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:self-stretch">
-          {media}
-        </div>
-      )}
+      <Link
+        href={product.productUrl}
+        aria-label={`View ${product.name}`}
+        className="relative m-3 block h-56 overflow-hidden rounded-lg border border-[#82d6c5]/25 bg-white sm:h-auto sm:min-h-0 xl:self-stretch"
+      >
+        {media}
+      </Link>
 
       <div className="flex min-w-0 flex-col p-4 sm:p-5 xl:p-4">
         <div className="mb-3 flex min-h-[4.25rem] min-w-0 items-start justify-between gap-3 xl:min-h-0">
@@ -77,17 +71,11 @@ export default function ProductCard({
             <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#82d6c5]">
               {product.category}
             </p>
-            {isLoggedIn ? (
-              <Link href={product.productUrl} className="block no-underline">
-                <h2 title={product.name} className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-[#82d6c5] sm:text-xl xl:truncate">
-                  {product.name}
-                </h2>
-              </Link>
-            ) : (
+            <Link href={product.productUrl} className="block no-underline">
               <h2 title={product.name} className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-[#82d6c5] sm:text-xl xl:truncate">
                 {product.name}
               </h2>
-            )}
+            </Link>
           </div>
           <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-white/25 transition-colors group-hover:text-[#82d6c5]" aria-hidden="true" />
         </div>

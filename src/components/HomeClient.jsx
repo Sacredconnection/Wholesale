@@ -13,7 +13,7 @@ import RetailRedirectSection from '@/components/RetailRedirectSection';
 import MayaWholesaleBanner from '@/components/MayaWholesaleBanner';
 import Footer from '@/components/Footer';
 import LoginModal from '@/components/LoginModal';
-import SuggestedBlends from '@/components/SuggestedBlends';
+import SuggestedBlendsPreview from '@/components/SuggestedBlendsPreview';
 
 export default function HomeClient() {
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -48,7 +48,7 @@ export default function HomeClient() {
         <div className="mx-auto flex w-full max-w-7xl flex-col gap-10 px-4 pb-10 pt-10 sm:gap-12 sm:px-6 sm:pb-12 sm:pt-12 lg:px-8">
           {!authLoading && isLoggedIn && (
             <section id="suggested-blends" className="scroll-mt-28">
-              <SuggestedBlends />
+              <SuggestedBlendsPreview />
             </section>
           )}
 

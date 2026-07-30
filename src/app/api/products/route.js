@@ -9,7 +9,12 @@ import {
   getRequiredCommerceStores,
   isCommerceStoreConfigured,
 } from "@/lib/commerce-stores";
-import { buildCategoryContext, isApprovedWholesaleCustomer, mapProductForRole } from "@/lib/wc-mappers";
+import {
+  buildCategoryContext,
+  isApprovedWholesaleCustomer,
+  mapProductForRole,
+  stripProductPricing,
+} from "@/lib/wc-mappers";
 import { securityError } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
@@ -18,7 +23,7 @@ const catalogCacheSeconds = (() => {
   const value = Number(process.env.WC_REVALIDATE_SECONDS);
   return Number.isFinite(value) && value >= 30 ? value : 300;
 })();
-async function loadStoreCatalog(storeId, storeName, role) {
+async function loadStoreCatalog(storeId, storeName, role, revealPricing) {
   const [wcProducts, categories] = await Promise.all([
     getAllProducts(storeId),
     getCategories(storeId),
@@ -26,14 +31,25 @@ async function loadStoreCatalog(storeId, storeName, role) {
   const categoryContext = buildCategoryContext(categories);
   const store = { id: storeId, name: storeName };
 
-  return wcProducts.map((product) =>
-    mapProductForRole(product, [], categoryContext, role, store)
-  );
+  return wcProducts.map((product) => {
+    const mapped = mapProductForRole(
+      product,
+      [],
+      categoryContext,
+      role,
+      store
+    );
+    const visible = revealPricing ? mapped : stripProductPricing(mapped);
+    return {
+      ...visible,
+      productUrl: `/product/${encodeURIComponent(mapped.slug)}`,
+    };
+  });
 }
 
 const getCachedStoreCatalog = unstable_cache(
   loadStoreCatalog,
-  ["sacred-connection-catalog-v1"],
+  ["sacred-connection-catalog-v2"],
   { revalidate: catalogCacheSeconds, tags: ["woocommerce-catalog"] }
 );
 
@@ -46,7 +62,6 @@ export async function GET(request) {
   });
   if (rateLimit) return rateLimit;
   const session = await getSession();
-  if (!session) return securityError("Authentication required.", 401);
 
   const requestedStoreId = new URL(request.url).searchParams.get("store");
   const allStores = getRequiredCommerceStores();
@@ -66,18 +81,33 @@ export async function GET(request) {
   }
 
   try {
-    const customer = await getCustomerByEmail(session.email);
-    if (!isApprovedWholesaleCustomer(customer) || customer.id !== session.customerId) {
-      return securityError("Authentication required.", 401);
-    }
+    const customer = session
+      ? await getCustomerByEmail(session.email)
+      : null;
+    const revealPricing = Boolean(
+      session &&
+        isApprovedWholesaleCustomer(customer) &&
+        customer.id === session.customerId
+    );
 
     const catalogs = await Promise.all(
-      stores.map((store) => getCachedStoreCatalog(store.id, store.name, customer.role))
+      stores.map((store) =>
+        getCachedStoreCatalog(
+          store.id,
+          store.name,
+          revealPricing ? customer.role : null,
+          revealPricing
+        )
+      )
     );
     const products = catalogs.flat().sort((a, b) => a.name.localeCompare(b.name));
 
     return Response.json(
-      { products, stores: stores.map(({ id, name }) => ({ id, name })) },
+      {
+        products,
+        stores: stores.map(({ id, name }) => ({ id, name })),
+        viewer: { authenticated: revealPricing },
+      },
       { headers: { "Cache-Control": "private, no-store" } }
     );
   } catch (err) {

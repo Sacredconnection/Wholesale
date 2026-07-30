@@ -261,7 +261,7 @@ export async function getAllProducts(storeId = PRIMARY_STORE_ID, { revalidate } 
     per_page: 100,
     status: "publish",
     ...(catalogLanguage ? { lang: catalogLanguage } : {}),
-    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data,catalog_visibility,stock_status,stock_quantity",
+    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data,catalog_visibility,stock_status,stock_quantity,date_modified_gmt",
   };
   const { data: firstPage, headers } = await wcFetch(storeId, "products", {
     revalidate,

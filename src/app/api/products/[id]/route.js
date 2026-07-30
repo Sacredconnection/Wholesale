@@ -6,7 +6,12 @@ import {
   WooCommerceApiError,
 } from "@/lib/woocommerce";
 import { getRequiredCommerceStores, isCommerceStoreConfigured } from "@/lib/commerce-stores";
-import { buildCategoryContext, isApprovedWholesaleCustomer, mapProductForRole } from "@/lib/wc-mappers";
+import {
+  buildCategoryContext,
+  isApprovedWholesaleCustomer,
+  mapProductForRole,
+  stripProductPricing,
+} from "@/lib/wc-mappers";
 import { securityError } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
@@ -30,7 +35,6 @@ export async function GET(request, { params }) {
   });
   if (rateLimit) return rateLimit;
   const session = await getSession();
-  if (!session) return securityError("Authentication required.", 401);
 
   const { id } = await params;
   const identity = parseProductIdentifier(id);
@@ -41,13 +45,15 @@ export async function GET(request, { params }) {
 
   try {
     const [customer, wcProduct] = await Promise.all([
-      getCustomerByEmail(session.email),
+      session ? getCustomerByEmail(session.email) : Promise.resolve(null),
       getProductBySlug(identity.slug, identity.store.id),
     ]);
-    if (!isApprovedWholesaleCustomer(customer) || customer.id !== session.customerId) {
-      return securityError("Authentication required.", 401);
-    }
     if (!wcProduct) return Response.json({ error: "Product not found." }, { status: 404 });
+    const revealPricing = Boolean(
+      session &&
+        isApprovedWholesaleCustomer(customer) &&
+        customer.id === session.customerId
+    );
 
     const [variations, categories] = await Promise.all([
       wcProduct.type === "variable"
@@ -55,15 +61,21 @@ export async function GET(request, { params }) {
         : [],
       getCategories(identity.store.id),
     ]);
-    return Response.json(
-      {
-        product: mapProductForRole(
+    const mapped = mapProductForRole(
           wcProduct,
           variations,
           buildCategoryContext(categories),
-          customer.role,
+          revealPricing ? customer.role : null,
           identity.store
-        ),
+        );
+    const product = revealPricing ? mapped : stripProductPricing(mapped);
+    return Response.json(
+      {
+        product: {
+          ...product,
+          productUrl: `/product/${encodeURIComponent(mapped.slug)}`,
+        },
+        viewer: { authenticated: revealPricing },
       },
       { headers: { "Cache-Control": "private, no-store" } }
     );

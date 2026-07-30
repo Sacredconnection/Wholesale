@@ -14,6 +14,7 @@ import {
   isApprovedWholesaleCustomer,
   mapProductForRole,
   mapStoreProduct,
+  stripProductPricing,
 } from "@/lib/wc-mappers";
 import { optionPriceForUser } from "@/lib/pricing";
 import { getSession } from "@/lib/session";
@@ -146,7 +147,7 @@ async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
         ...catalogProduct,
         priceMin: prices.length ? Math.min(...prices) : 0,
         priceMax: prices.length ? Math.max(...prices) : 0,
-        productUrl: `/product/${encodeURIComponent(catalogProduct.id)}`,
+        productUrl: `/product/${encodeURIComponent(catalogProduct.slug)}`,
       };
     }
   ).then((products) => products.filter(Boolean));
@@ -188,7 +189,7 @@ async function loadLocalCatalogSnapshot() {
         stockQuantity: null,
         priceMin: prices.length ? Math.min(...prices) : 0,
         priceMax: prices.length ? Math.max(...prices) : 0,
-        productUrl: `/product/${product.id}`,
+        productUrl: `/product/${encodeURIComponent(product.slug || String(product.id).split("~").pop())}`,
       };
     });
 }
@@ -255,7 +256,7 @@ export async function GET(request) {
           ...mapped,
           priceMin: prices.length ? Math.min(...prices) : 0,
           priceMax: prices.length ? Math.max(...prices) : 0,
-          productUrl: `/product/${encodeURIComponent(mapped.id)}`,
+          productUrl: `/product/${encodeURIComponent(mapped.slug)}`,
         };
       });
     } else {
@@ -272,10 +273,10 @@ export async function GET(request) {
       product.priceMin,
       product.priceMax,
     ]);
-    const priceBounds = {
+    const priceBounds = customer ? {
       min: allPrices.length ? Math.floor(Math.min(...allPrices)) : 0,
       max: allPrices.length ? Math.ceil(Math.max(...allPrices)) : 0,
-    };
+    } : null;
 
     const normalizedSearch = normalize(search);
     const normalizedCategory = normalize(category);
@@ -316,8 +317,10 @@ export async function GET(request) {
         ([key, value]) =>
           key === ignoreAttribute || productHasAttribute(product, key, value)
       );
-      const matchesMin = minPrice == null || product.priceMax >= minPrice;
-      const matchesMax = maxPrice == null || product.priceMin <= maxPrice;
+      const matchesMin =
+        !customer || minPrice == null || product.priceMax >= minPrice;
+      const matchesMax =
+        !customer || maxPrice == null || product.priceMin <= maxPrice;
       const matchesStock = !onlyInStock || product.inStock === true;
 
       return (
@@ -395,9 +398,12 @@ export async function GET(request) {
     const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
     const page = exportAll ? 1 : Math.min(requestedPage, totalPages);
     const start = (page - 1) * PAGE_SIZE;
-    const visibleProducts = exportAll
+    const visibleProductsWithPricing = exportAll
       ? filtered
       : filtered.slice(start, start + PAGE_SIZE);
+    const visibleProducts = customer
+      ? visibleProductsWithPricing
+      : visibleProductsWithPricing.map(stripProductPricing);
 
     return Response.json(
       {

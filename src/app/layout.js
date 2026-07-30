@@ -4,6 +4,7 @@ import { CartProvider } from "@/components/CartContext";
 import { ProductsProvider } from "@/components/ProductsContext";
 import CartDrawer from "@/components/CartDrawer";
 import BackToTop from "@/components/BackToTop";
+import { SITE_URL } from "@/lib/site-config";
 import "./globals.css";
 
 const roboto = Roboto({
@@ -25,11 +26,12 @@ const themeBootScript = `
 `;
 
 export const metadata = {
-  metadataBase: new URL("https://wholesale.sacredconnection.com"),
+  metadataBase: new URL(SITE_URL),
   title: "Sacred Connection Wholesale | B2B Portal",
   description:
     "Direct fair-trade sourcing of traditional Amazonian botanicals and responsibly produced goods for wholesale partners.",
   applicationName: "Sacred Connection Wholesale",
+  robots: { index: true, follow: true },
 };
 
 export default function RootLayout({ children }) {

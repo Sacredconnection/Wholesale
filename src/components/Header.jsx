@@ -78,8 +78,9 @@ export default function Header({ onOpenLogin }) {
           </Link>
           {isLoggedIn && (
             <Link
-              className="relative inline-flex items-center justify-center py-2 leading-none text-[#82d6c5] transition-all duration-300 ease-out after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-center after:scale-x-0 after:bg-[#82d6c5] after:transition-transform after:duration-300 after:content-[''] hover:-translate-y-0.5 hover:text-white hover:after:scale-x-100 motion-reduce:transform-none"
-              href="/#suggested-blends"
+              className={`${pathname === '/suggested-blends' ? 'text-white after:scale-x-100' : 'text-[#82d6c5] after:scale-x-0 hover:text-white hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:transition-transform after:duration-300 after:content-[''] hover:-translate-y-0.5 motion-reduce:transform-none`}
+              href="/suggested-blends"
+              aria-current={pathname === '/suggested-blends' ? 'page' : undefined}
             >
               Suggested Blends
             </Link>
@@ -98,6 +99,7 @@ export default function Header({ onOpenLogin }) {
           <ThemeToggle />
 
           {/* Cart Icon Trigger */}
+          {isLoggedIn && (
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
@@ -111,6 +113,7 @@ export default function Header({ onOpenLogin }) {
               </span>
             )}
           </button>
+          )}
 
           <Link
             className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5] hover:border-[#82d6c5] hover:bg-[#268072]/20 hover:text-white'} inline-flex items-center justify-center rounded-sm border px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-300`}
@@ -162,6 +165,7 @@ export default function Header({ onOpenLogin }) {
         <div className="flex items-center gap-2.5 sm:gap-3 lg:hidden">
           <ThemeToggle />
 
+          {isLoggedIn && (
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
@@ -175,6 +179,7 @@ export default function Header({ onOpenLogin }) {
               </span>
             )}
           </button>
+          )}
           
           <button 
             type="button"
@@ -220,8 +225,9 @@ export default function Header({ onOpenLogin }) {
           </Link>
           {isLoggedIn && (
             <Link
-              className="text-base font-medium text-[#82d6c5] transition-all duration-300 hover:translate-x-1.5 hover:text-white motion-reduce:transform-none"
-              href="/#suggested-blends"
+              className={`${pathname === '/suggested-blends' ? 'text-white' : 'text-[#82d6c5]'} text-base font-medium transition-all duration-300 hover:translate-x-1.5 hover:text-white motion-reduce:transform-none`}
+              href="/suggested-blends"
+              aria-current={pathname === '/suggested-blends' ? 'page' : undefined}
               onClick={() => setMobileMenuOpen(false)}
             >
               Suggested Blends

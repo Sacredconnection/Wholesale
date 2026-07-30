@@ -37,6 +37,7 @@ export default function CartDrawer() {
     initialFocusRef: closeButtonRef,
   });
 
+  if (!isLoggedIn) return null;
   if (!isCartOpen && !isLoginOpen) return null;
 
   const meetsMinimumWeight = cartTotalWeightGrams >= MIN_ORDER_GRAMS;

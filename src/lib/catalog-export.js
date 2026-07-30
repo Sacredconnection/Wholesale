@@ -164,7 +164,7 @@ function catalogRows(products, user) {
       category: product.category || "",
       option: option.name || "Single format",
       weight: Number(option.weightGrams) || null,
-      price: optionPriceForUser(option, user, product.category),
+      price: user ? optionPriceForUser(option, user, product.category) : null,
       description: "",
       productUrl: product.productUrl || "",
     }));
@@ -172,6 +172,7 @@ function catalogRows(products, user) {
 }
 
 export async function exportCatalogExcel({ products, user, includeLinks }) {
+  const includePricing = Boolean(user);
   const ExcelJS = await import("exceljs");
   const Workbook = ExcelJS.Workbook || ExcelJS.default?.Workbook;
   const workbook = new Workbook();
@@ -261,8 +262,8 @@ export async function exportCatalogExcel({ products, user, includeLinks }) {
     "Categoria",
     "Opcao",
     "Peso (g)",
-    "Preco unitario (USD)",
-    "Subtotal (USD)",
+    includePricing ? "Preco unitario (USD)" : "Partner price (login required)",
+    includePricing ? "Subtotal (USD)" : "Subtotal (login required)",
     "Produto no site",
   ];
   sheet.getRow(5).values = headers;
@@ -287,7 +288,9 @@ export async function exportCatalogExcel({ products, user, includeLinks }) {
       item.option,
       item.weight,
       item.price,
-      { formula: `IF(B${rowNumber}>0,B${rowNumber}*H${rowNumber},"")` },
+      includePricing
+        ? { formula: `IF(B${rowNumber}>0,B${rowNumber}*H${rowNumber},"")` }
+        : "",
       "",
     ];
     row.height = 24;
@@ -332,7 +335,9 @@ export async function exportCatalogExcel({ products, user, includeLinks }) {
   sheet.getCell(totalRow, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND_DARK } };
   sheet.getCell(totalRow, 2).value = { formula: `SUM(B${firstDataRow}:B${lastDataRow})` };
   sheet.getCell(totalRow, 2).font = { bold: true };
-  sheet.getCell(totalRow, 9).value = { formula: `SUM(I${firstDataRow}:I${lastDataRow})` };
+  sheet.getCell(totalRow, 9).value = includePricing
+    ? { formula: `SUM(I${firstDataRow}:I${lastDataRow})` }
+    : "LOGIN TO VIEW PRICING";
   sheet.getCell(totalRow, 9).font = { bold: true, color: { argb: BRAND_RED } };
   sheet.getCell(totalRow, 9).numFmt = '"$"#,##0.00';
   sheet.autoFilter = { from: "A5", to: `J${lastDataRow}` };

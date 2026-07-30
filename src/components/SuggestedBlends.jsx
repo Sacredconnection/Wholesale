@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { useCart } from "@/components/CartContext";
 import { useProducts } from "@/components/ProductsContext";
+import { useAuth } from "@/components/AuthContext";
 import {
   ensureWholesaleMinimum,
   findCatalogProduct,
@@ -50,7 +51,8 @@ const variedCandidates = (products, recipe) => {
     )
     .map(({ product }) => product);
 
-  const source = sorted.length >= RECIPE_LINE_COUNT ? sorted : products;
+  const source =
+    recipe.strict || sorted.length >= RECIPE_LINE_COUNT ? sorted : products;
   const diverse = [];
   const usedGroups = new Set();
   for (const product of source) {
@@ -71,6 +73,7 @@ function SuggestedOrderCard({
   personalized = false,
   isAdded,
   onAdd,
+  canOrder,
 }) {
   return (
     <article
@@ -149,7 +152,11 @@ function SuggestedOrderCard({
             ) : (
               <ShoppingBag className="h-4 w-4" aria-hidden="true" />
             )}
-            {isAdded ? "Added" : "Add order sheet"}
+            {isAdded
+              ? "Added"
+              : canOrder
+                ? "Add order sheet"
+                : "Sign in to order"}
           </button>
         </div>
       </div>
@@ -157,7 +164,10 @@ function SuggestedOrderCard({
   );
 }
 
-export default function SuggestedBlends({ orders: providedOrders }) {
+export default function SuggestedBlends({
+  orders: providedOrders,
+  onRequireLogin,
+}) {
   const {
     products,
     loading: productsLoading,
@@ -165,6 +175,7 @@ export default function SuggestedBlends({ orders: providedOrders }) {
     reload: reloadProducts,
     resolveProduct,
   } = useProducts();
+  const { isLoggedIn } = useAuth();
   const { addSelectionsToCart, setIsCartOpen } = useCart();
   const [fetchedOrders, setFetchedOrders] = useState([]);
   const [blends, setBlends] = useState([]);
@@ -178,7 +189,7 @@ export default function SuggestedBlends({ orders: providedOrders }) {
   const orders = providedOrders ?? fetchedOrders;
 
   useEffect(() => {
-    if (providedOrders !== undefined) return;
+    if (providedOrders !== undefined || !isLoggedIn) return;
     let active = true;
 
     async function loadOrderHistory() {
@@ -200,7 +211,7 @@ export default function SuggestedBlends({ orders: providedOrders }) {
     return () => {
       active = false;
     };
-  }, [providedOrders]);
+  }, [isLoggedIn, providedOrders]);
 
   const historyItems = useMemo(() => rankHistoricalItems(orders), [orders]);
   const catalogKey = useMemo(
@@ -224,7 +235,7 @@ export default function SuggestedBlends({ orders: providedOrders }) {
     const catalogProducts = products;
     if (!catalogProducts.length) return;
 
-    const preparationKey = `${catalogKey}:${historyKey}:${retryKey}`;
+    const preparationKey = `${isLoggedIn ? "partner" : "public"}:${catalogKey}:${historyKey}:${retryKey}`;
     if (preparedKeyRef.current === preparationKey) return;
     preparedKeyRef.current = preparationKey;
 
@@ -256,9 +267,7 @@ export default function SuggestedBlends({ orders: providedOrders }) {
           4,
           async (product) => {
             try {
-              const resolved = product.optionsLoaded
-                ? product
-                : await resolveProduct(product);
+              const resolved = await resolveProduct(product);
               return [product.id, resolved];
             } catch {
               return [product.id, null];
@@ -352,6 +361,7 @@ export default function SuggestedBlends({ orders: providedOrders }) {
     catalogKey,
     historyItems,
     historyKey,
+    isLoggedIn,
     products,
     productsLoading,
     resolveProduct,
@@ -359,6 +369,10 @@ export default function SuggestedBlends({ orders: providedOrders }) {
   ]);
 
   const addBlend = (blend) => {
+    if (!isLoggedIn) {
+      onRequireLogin?.();
+      return;
+    }
     const stockedSelections = blend.selections.filter(({ product, optionIndex }) =>
       isStockedOption(product.options?.[optionIndex])
     );
@@ -454,6 +468,7 @@ export default function SuggestedBlends({ orders: providedOrders }) {
             personalized
             isAdded={addedBlendId === personalizedBlend.id}
             onAdd={() => addBlend(personalizedBlend)}
+            canOrder={isLoggedIn}
           />
         </section>
       )}
@@ -470,6 +485,7 @@ export default function SuggestedBlends({ orders: providedOrders }) {
                 blend={blend}
                 isAdded={addedBlendId === blend.id}
                 onAdd={() => addBlend(blend)}
+                canOrder={isLoggedIn}
               />
             ))}
           </div>

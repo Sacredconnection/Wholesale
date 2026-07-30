@@ -8,10 +8,11 @@ const CartContext = createContext();
 const SACRED_STORE_ID = "sacred-connection";
 
 export function CartProvider({ children }) {
-  const { isLoggedIn, user } = useAuth();
+  const { isLoggedIn, user, loading: authLoading } = useAuth();
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const cartHydrated = useRef(false);
+  const [isCartHydrated, setIsCartHydrated] = useState(false);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -41,6 +42,7 @@ export function CartProvider({ children }) {
         setCart([]);
       } finally {
         cartHydrated.current = true;
+        setIsCartHydrated(true);
       }
     }, 0);
 
@@ -52,6 +54,16 @@ export function CartProvider({ children }) {
     if (!cartHydrated.current) return;
     localStorage.setItem('sc_wholesale_cart', JSON.stringify(cart));
   }, [cart]);
+
+  useEffect(() => {
+    if (authLoading || isLoggedIn || !isCartHydrated) return;
+    const clearTimer = window.setTimeout(() => {
+      setCart([]);
+      setIsCartOpen(false);
+      localStorage.removeItem("sc_wholesale_cart");
+    }, 0);
+    return () => window.clearTimeout(clearTimer);
+  }, [authLoading, isCartHydrated, isLoggedIn]);
 
   const cartItemFromSelection = (product, optionIndex, quantity) => {
     if (

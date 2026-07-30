@@ -296,6 +296,23 @@ export function mapOrder(order, store = { id: "sacred-connection", name: "Sacred
   };
 }
 
+export function stripProductPricing(product) {
+  const publicProduct = { ...(product || {}) };
+  delete publicProduct.priceMin;
+  delete publicProduct.priceMax;
+
+  return {
+    ...publicProduct,
+    pricingVisible: false,
+    options: (publicProduct.options || []).map((option) => {
+      const publicOption = { ...option };
+      delete publicOption.price;
+      delete publicOption.rolePrices;
+      return publicOption;
+    }),
+  };
+}
+
 export function mapProduct(
   product,
   variations = [],
@@ -361,6 +378,8 @@ export function mapProduct(
     storeId: store.id,
     storeName: store.name,
     wcId: product.id,
+    slug: product.slug,
+    dateModified: product.date_modified_gmt || null,
     productType: product.type,
     optionsLoaded: product.type !== "variable" || variations.length > 0,
     name: decodeHtmlEntities(product.name),
@@ -433,6 +452,8 @@ export function mapStoreProduct(
     storeId: store.id,
     storeName: store.name,
     wcId: product.id,
+    slug: product.slug,
+    dateModified: product.date_modified_gmt || null,
     productType: product.type,
     optionsLoaded: product.type !== "variable" || variations.length > 0,
     name: decodeHtmlEntities(product.name),
@@ -457,6 +478,7 @@ export function mapProductForRole(product, variations, categoryContext, role, st
   const mapped = mapProduct(product, variations, categoryContext, store);
   return {
     ...mapped,
+    pricingVisible: true,
     options: mapped.options.map((option) => ({
       ...option,
       rolePrices:
