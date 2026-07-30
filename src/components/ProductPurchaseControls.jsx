@@ -5,6 +5,7 @@ import { Loader2, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
 import { useProducts } from "@/components/ProductsContext";
+import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { optionPriceForUser } from "@/lib/pricing";
 
 export default function ProductPurchaseControls({
@@ -55,7 +56,7 @@ export default function ProductPurchaseControls({
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, activeProduct.category)
     : null;
-  const canAdd = Boolean(selectedOption && selectedOption.inStock !== false && !error);
+  const canAdd = Boolean(selectedOption && !error);
 
   const handleAdd = () => {
     if (!activeProduct || !canAdd) return;
@@ -86,7 +87,6 @@ export default function ProductPurchaseControls({
               <option
                 key={`${option.wcVariationId || option.sku}-${index}`}
                 value={index}
-                disabled={option.inStock === false}
               >
                 {option.name} · ${optionPriceForUser(option, user, activeProduct.category).toFixed(2)}
                 {option.inStock === false ? " · Out of stock" : ""}
@@ -95,6 +95,8 @@ export default function ProductPurchaseControls({
           )}
         </select>
       </label>
+
+      {selectedOption?.inStock === false && <StockBackorderNotice compact={compact} />}
 
       {error ? (
         <button

@@ -25,6 +25,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import ProductRecommendations from "@/components/ProductRecommendations";
+import StockBackorderNotice from "@/components/StockBackorderNotice";
 import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
@@ -203,6 +204,7 @@ export default function CheckoutPage() {
   const discountAmount = cartSubtotal * (discountPercentage / 100);
   const finalTotal = cartSubtotal - discountAmount;
   const meetsMinimumWeight = cartTotalWeightGrams >= MIN_ORDER_GRAMS;
+  const hasBackorderItems = cart.some((item) => item.inStock === false);
   const effectiveBillingAddress = billingMatchesShipping ? shippingAddress : billingAddress;
 
   const validateAddress = (address) =>
@@ -452,6 +454,8 @@ export default function CheckoutPage() {
                     limit={2}
                   />
 
+                  {hasBackorderItems && <StockBackorderNotice />}
+
                   <div className="flex items-start gap-3 rounded-sm border border-[#268072]/30 bg-[#268072]/10 p-4">
                     <PhoneCall className="mt-0.5 h-4 w-4 shrink-0 text-[#82d6c5]" />
                     <p className="text-xs leading-relaxed text-white/65">
@@ -473,6 +477,9 @@ export default function CheckoutPage() {
                     <span className="text-xs leading-relaxed text-white/65">
                       I confirm that the contact, delivery, and order details are correct and understand
                       that the displayed total excludes shipping and remains subject to final confirmation.
+                      {hasBackorderItems
+                        ? " I also understand that out-of-stock items may take about one month before they are ready to ship."
+                        : ""}
                     </span>
                   </label>
                 </div>
@@ -534,6 +541,11 @@ export default function CheckoutPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-bold text-white">{item.name}</p>
                       <p className="mt-1 text-[10px] text-white/40">{item.optionName} · Qty {item.quantity}</p>
+                      {item.inStock === false && (
+                        <p className="mt-1 text-[10px] font-bold text-amber-200">
+                          Out of stock · awaiting monthly restock
+                        </p>
+                      )}
                     </div>
                     <span className="shrink-0 text-xs font-bold text-white">${(item.price * item.quantity).toFixed(2)}</span>
                   </div>
@@ -557,6 +569,7 @@ export default function CheckoutPage() {
                   <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-[#82d6c5]" />
                   Final freight and availability are confirmed by our team.
                 </div>
+                {hasBackorderItems && <StockBackorderNotice compact className="mt-2" />}
               </div>
             </aside>
           </div>

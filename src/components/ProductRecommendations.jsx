@@ -24,7 +24,7 @@ export default function ProductRecommendations({
     const categories = new Set(cart.map((item) => item.category).filter(Boolean));
 
     return products
-      .filter((product) => product.inStock !== false && !productIds.has(product.id))
+      .filter((product) => !productIds.has(product.id))
       .sort((a, b) => {
         const categoryDifference =
           Number(categories.has(b.category)) - Number(categories.has(a.category));

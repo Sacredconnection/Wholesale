@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import AuthGate from "@/components/AuthGate";
+import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useProducts } from "@/components/ProductsContext";
 import { optionPriceForUser } from "@/lib/pricing";
 import { useCart } from "@/components/CartContext";
@@ -370,11 +371,14 @@ export default function ProductDetailPage() {
                     {product.options.map((opt, idx) => (
                       <option key={opt.sku} value={idx}>
                         {opt.name} (${optionPriceForUser(opt, user, product.category).toFixed(2)})
+                        {opt.inStock === false ? " · Out of stock" : ""}
                       </option>
                     ))}
                   </select>
                 </div>
               )}
+
+              {selectedOption?.inStock === false && <StockBackorderNotice />}
 
               {/* Purchase Box */}
               <div className="flex flex-col sm:flex-row sm:items-end gap-4 mt-1">
@@ -411,7 +415,11 @@ export default function ProductDetailPage() {
                     className="w-full bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-widest py-4 px-6 rounded shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/45 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
                   >
                     <ShoppingBag className="w-4 h-4" />
-                    {product.optionsLoaded ? "Add to Basket" : "Loading options..."}
+                    {product.optionsLoaded
+                      ? selectedOption?.inStock === false
+                        ? "Order for restock"
+                        : "Add to Basket"
+                      : "Loading options..."}
                   </button>
                 </div>
 

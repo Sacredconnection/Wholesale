@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
+import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 import { optionPriceForUser } from "@/lib/pricing";
 
@@ -111,10 +112,13 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
                 {resolvedProduct.options.map((option, index) => (
                   <option key={`${option.wcVariationId || option.sku}-${index}`} value={index}>
                     {option.name} (${optionPriceForUser(option, user, resolvedProduct.category).toFixed(2)})
+                    {option.inStock === false ? " · Out of stock" : ""}
                   </option>
                 ))}
               </select>
             </div>
+
+            {selectedOption?.inStock === false && <StockBackorderNotice />}
 
             <div className="flex flex-wrap items-end justify-between gap-4 rounded border border-white/5 bg-black/20 p-4">
               <div>

@@ -275,7 +275,11 @@ export function mapProduct(
   const options =
     product.type === "variable" && variations.length > 0
       ? variations
-          .filter((v) => v.purchasable !== false)
+          .filter(
+            (variation) =>
+              variation.purchasable !== false ||
+              variation.stock_status === "outofstock"
+          )
           .map(mapVariationToOption)
           .sort((a, b) => (a.weightGrams ?? Infinity) - (b.weightGrams ?? Infinity))
       : [
@@ -350,7 +354,11 @@ export function mapStoreProduct(
   const options =
     product.type === "variable" && variations.length > 0
       ? variations
-          .filter((variation) => variation.is_purchasable !== false)
+          .filter(
+            (variation) =>
+              variation.is_purchasable !== false ||
+              variation.is_in_stock === false
+          )
           .map(mapStoreVariationToOption)
           .sort((a, b) => (a.weightGrams ?? Infinity) - (b.weightGrams ?? Infinity))
       : [

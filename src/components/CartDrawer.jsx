@@ -8,6 +8,7 @@ import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
 import ProductRecommendations from './ProductRecommendations';
+import StockBackorderNotice from './StockBackorderNotice';
 import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, Scale } from 'lucide-react';
 import { MIN_ORDER_GRAMS, NEW_CUSTOMER_ROLE, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
 import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
@@ -39,6 +40,7 @@ export default function CartDrawer() {
   if (!isCartOpen && !isLoginOpen) return null;
 
   const meetsMinimumWeight = cartTotalWeightGrams >= MIN_ORDER_GRAMS;
+  const hasBackorderItems = cart.some((item) => item.inStock === false);
 
   // Progressive per-gram tiers applied to New Customer orders (by total
   // weight) — one rate per product line present in the cart.
@@ -145,6 +147,11 @@ export default function CartDrawer() {
                             <span className="break-all text-[10px] font-mono text-white/35">
                               {item.sku}
                             </span>
+                            {item.inStock === false && (
+                              <span className="rounded-sm border border-amber-300/30 bg-amber-300/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
+                                Out of stock · awaiting restock
+                              </span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -265,6 +272,8 @@ export default function CartDrawer() {
               </div>
 
               {/* Offline payment notice */}
+              {hasBackorderItems && <StockBackorderNotice compact />}
+
               <div className="bg-[#268072]/10 border border-[#268072]/25 rounded-sm px-4 py-3 flex items-start gap-3">
                 <PhoneCall className="w-4 h-4 text-[#82d6c5] shrink-0 mt-0.5" />
                 <p className="text-[11px] text-white/70 leading-relaxed">

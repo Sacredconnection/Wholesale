@@ -69,7 +69,11 @@ export function CartProvider({ children }) {
         // Update existing item quantity immutably
         return prevCart.map((item, idx) => {
           if (idx === existingItemIndex) {
-            return { ...item, quantity: item.quantity + quantity };
+            return {
+              ...item,
+              quantity: item.quantity + quantity,
+              inStock: selectedOption.inStock !== false,
+            };
           }
           return item;
         });
@@ -95,7 +99,8 @@ export function CartProvider({ children }) {
             // WooCommerce ids (present when the item came from the live
             // catalog) — used to register the order via /api/orders.
             wcProductId: product.wcId || null,
-            wcVariationId: selectedOption.wcVariationId || null
+            wcVariationId: selectedOption.wcVariationId || null,
+            inStock: selectedOption.inStock !== false,
           }
         ];
       }
