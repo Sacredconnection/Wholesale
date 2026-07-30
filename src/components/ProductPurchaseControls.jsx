@@ -6,7 +6,10 @@ import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
 import { useProducts } from "@/components/ProductsContext";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
-import { optionPriceForUser } from "@/lib/pricing";
+import {
+  optionPriceForUser,
+  quantityStepForWeight,
+} from "@/lib/pricing";
 
 export default function ProductPurchaseControls({
   product,
@@ -22,7 +25,14 @@ export default function ProductPurchaseControls({
     const firstAvailable = product.options?.findIndex((option) => option.inStock !== false);
     return firstAvailable >= 0 ? firstAvailable : 0;
   });
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState(() => {
+    const firstAvailable = product.options?.find(
+      (option) => option.inStock !== false
+    );
+    return quantityStepForWeight(
+      firstAvailable?.weightGrams || product.options?.[0]?.weightGrams
+    );
+  });
   const [error, setError] = useState("");
   const [retryKey, setRetryKey] = useState(0);
 
@@ -40,7 +50,13 @@ export default function ProductPurchaseControls({
         const firstAvailable = loadedProduct.options.findIndex(
           (option) => option.inStock !== false
         );
-        setSelectedOptionIndex(firstAvailable >= 0 ? firstAvailable : 0);
+        const nextIndex = firstAvailable >= 0 ? firstAvailable : 0;
+        setSelectedOptionIndex(nextIndex);
+        setQuantity(
+          quantityStepForWeight(
+            loadedProduct.options[nextIndex]?.weightGrams
+          )
+        );
       })
       .catch((loadError) => {
         if (!cancelled) setError(loadError.message || "Could not load product options.");
@@ -53,6 +69,7 @@ export default function ProductPurchaseControls({
 
   const activeProduct = product.optionsLoaded ? product : resolvedProduct;
   const selectedOption = activeProduct?.options[selectedOptionIndex];
+  const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, activeProduct.category)
     : null;
@@ -61,7 +78,7 @@ export default function ProductPurchaseControls({
   const handleAdd = () => {
     if (!activeProduct || !canAdd) return;
     addToCart(activeProduct, selectedOptionIndex, quantity);
-    setQuantity(1);
+    setQuantity(quantityStep);
     onAdded?.(activeProduct, selectedOptionIndex);
   };
 
@@ -73,7 +90,15 @@ export default function ProductPurchaseControls({
         </span>
         <select
           value={selectedOptionIndex}
-          onChange={(event) => setSelectedOptionIndex(Number(event.target.value))}
+          onChange={(event) => {
+            const nextIndex = Number(event.target.value);
+            setSelectedOptionIndex(nextIndex);
+            setQuantity(
+              quantityStepForWeight(
+                activeProduct?.options[nextIndex]?.weightGrams
+              )
+            );
+          }}
           disabled={!activeProduct || Boolean(error)}
           aria-label={`Select an option for ${product.name}`}
           className={`w-full rounded-sm border border-white/10 bg-[#131313] text-white outline-none transition-colors focus:border-[#268072] disabled:cursor-wait disabled:opacity-60 ${
@@ -97,6 +122,12 @@ export default function ProductPurchaseControls({
       </label>
 
       {selectedOption?.inStock === false && <StockBackorderNotice compact={compact} />}
+      {quantityStep > 1 && selectedOption && (
+        <p className="text-[9px] font-semibold leading-relaxed text-[#82d6c5]">
+          This {Math.round(selectedOption.weightGrams)}g tin is sold in multiples
+          of {quantityStep} units.
+        </p>
+      )}
 
       {error ? (
         <button
@@ -123,7 +154,11 @@ export default function ProductPurchaseControls({
           <div className="flex shrink-0 items-center rounded-sm border border-white/10 bg-[#131313]">
             <button
               type="button"
-              onClick={() => setQuantity((value) => Math.max(1, value - 1))}
+              onClick={() =>
+                setQuantity((value) =>
+                  Math.max(quantityStep, value - quantityStep)
+                )
+              }
               aria-label={`Decrease quantity of ${product.name}`}
               className={`${compact ? "p-2" : "p-2.5"} cursor-pointer border-0 bg-transparent text-white/55 hover:text-white`}
             >
@@ -132,7 +167,9 @@ export default function ProductPurchaseControls({
             <span className="w-7 text-center text-xs font-bold text-white">{quantity}</span>
             <button
               type="button"
-              onClick={() => setQuantity((value) => value + 1)}
+              onClick={() =>
+                setQuantity((value) => value + quantityStep)
+              }
               aria-label={`Increase quantity of ${product.name}`}
               className={`${compact ? "p-2" : "p-2.5"} cursor-pointer border-0 bg-transparent text-white/55 hover:text-white`}
             >

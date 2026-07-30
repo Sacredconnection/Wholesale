@@ -1,4 +1,10 @@
-import { MIN_ORDER_GRAMS } from "@/lib/pricing";
+import {
+  cartUnitPrice,
+  MIN_ORDER_AMOUNT,
+  normalizeQuantityForWeight,
+  optionPriceForUser,
+  quantityStepForWeight,
+} from "@/lib/pricing";
 
 export const SUGGESTED_BLEND_RECIPES = [
   {
@@ -139,7 +145,15 @@ export const findOptionIndex = (product, item) => {
 export const preferredStockedOptionIndex = (product, preferredWeight = 100) => {
   const candidates = (product.options || [])
     .map((option, optionIndex) => ({ option, optionIndex }))
-    .filter(({ option }) => isStockedOption(option) && Number(option.weightGrams) > 0)
+    .filter(({ option }) => {
+      const quantityStep = quantityStepForWeight(option.weightGrams);
+      return (
+        isStockedOption(option) &&
+        Number(option.weightGrams) > 0 &&
+        (option.stockQuantity == null ||
+          Number(option.stockQuantity) >= quantityStep)
+      );
+    })
     .sort((a, b) => {
       const aDistance = Math.abs(Number(a.option.weightGrams) - preferredWeight);
       const bDistance = Math.abs(Number(b.option.weightGrams) - preferredWeight);
@@ -148,40 +162,125 @@ export const preferredStockedOptionIndex = (product, preferredWeight = 100) => {
   return candidates[0]?.optionIndex ?? -1;
 };
 
-export const ensureWholesaleMinimum = (selections) => {
-  const adjusted = selections.map((selection) => ({
-    ...selection,
-    quantity: Math.max(1, Math.floor(Number(selection.quantity) || 1)),
-  }));
+export const ensureWholesaleMinimum = (selections, user = null) => {
+  const adjusted = selections.flatMap((selection) => {
+    const option = selection.product.options[selection.optionIndex];
+    if (!option) return [];
+    const quantityStep = quantityStepForWeight(option.weightGrams);
+    const normalized = normalizeQuantityForWeight(
+      selection.quantity,
+      option.weightGrams
+    );
+    const maxQuantity =
+      option.stockQuantity == null
+        ? null
+        : Math.floor(Number(option.stockQuantity) / quantityStep) *
+          quantityStep;
+    if (maxQuantity != null && maxQuantity < quantityStep) return [];
+    return [{
+      ...selection,
+      quantity: maxQuantity == null
+        ? normalized
+        : Math.min(normalized, maxQuantity),
+    }];
+  });
   const selectionWeight = (selection) =>
     Number(selection.product.options[selection.optionIndex]?.weightGrams) || 0;
-  let totalWeight = adjusted.reduce(
-    (total, selection) => total + selectionWeight(selection) * selection.quantity,
-    0
-  );
+  const calculateTotals = () => {
+    const totalWeight = adjusted.reduce(
+      (total, selection) =>
+        total + selectionWeight(selection) * selection.quantity,
+      0
+    );
+    const subtotal = adjusted.reduce((total, selection) => {
+      const option = selection.product.options[selection.optionIndex];
+      const capturedPrice = optionPriceForUser(
+        option,
+        user,
+        selection.product.category
+      );
+      const unitPrice = cartUnitPrice(
+        {
+          ...option,
+          price: capturedPrice,
+          category: selection.product.category,
+        },
+        user,
+        totalWeight
+      );
+      return total + unitPrice * selection.quantity;
+    }, 0);
+    const discountRate = Math.min(
+      100,
+      Math.max(0, Number(user?.discountRate) || 0)
+    );
+    return {
+      totalWeight,
+      totalAmount: subtotal * (1 - discountRate / 100),
+    };
+  };
+
+  let { totalWeight, totalAmount } = calculateTotals();
+  if (!user) {
+    return {
+      selections: adjusted,
+      totalWeight,
+      totalAmount: null,
+      meetsMinimum: adjusted.length > 0,
+    };
+  }
+  const hasPricedSelection = adjusted.some((selection) => {
+    const option = selection.product.options[selection.optionIndex];
+    return (
+      optionPriceForUser(option, user, selection.product.category) > 0
+    );
+  });
+  if (!hasPricedSelection) {
+    return {
+      selections: adjusted,
+      totalWeight,
+      totalAmount,
+      meetsMinimum: false,
+    };
+  }
   let guard = 0;
 
-  while (totalWeight < MIN_ORDER_GRAMS && guard < 1000) {
+  while (totalAmount < MIN_ORDER_AMOUNT && guard < 1000) {
     const eligible = adjusted
       .filter((selection) => {
         const option = selection.product.options[selection.optionIndex];
+        const quantityStep = quantityStepForWeight(option.weightGrams);
         return (
           selectionWeight(selection) > 0 &&
           (option.stockQuantity == null ||
-            selection.quantity < Number(option.stockQuantity))
+            selection.quantity + quantityStep <= Number(option.stockQuantity))
         );
       })
-      .sort((a, b) => selectionWeight(b) - selectionWeight(a));
+      .sort((a, b) => {
+        const aOption = a.product.options[a.optionIndex];
+        const bOption = b.product.options[b.optionIndex];
+        const aValue =
+          optionPriceForUser(aOption, user, a.product.category) *
+          quantityStepForWeight(aOption.weightGrams);
+        const bValue =
+          optionPriceForUser(bOption, user, b.product.category) *
+          quantityStepForWeight(bOption.weightGrams);
+        return bValue - aValue;
+      });
     if (eligible.length === 0) break;
-    eligible[guard % eligible.length].quantity += 1;
-    totalWeight += selectionWeight(eligible[guard % eligible.length]);
+    const selected = eligible[guard % eligible.length];
+    selected.quantity += quantityStepForWeight(
+      selected.product.options[selected.optionIndex].weightGrams
+    );
+    ({ totalWeight, totalAmount } = calculateTotals());
     guard += 1;
   }
 
   return {
     selections: adjusted,
     totalWeight,
-    meetsMinimum: totalWeight >= MIN_ORDER_GRAMS,
+    totalAmount,
+    meetsMinimum: totalAmount >= MIN_ORDER_AMOUNT,
   };
 };
 

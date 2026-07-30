@@ -9,8 +9,8 @@ import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
 import ProductRecommendations from './ProductRecommendations';
 import StockBackorderNotice from './StockBackorderNotice';
-import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, Scale } from 'lucide-react';
-import { MIN_ORDER_GRAMS, NEW_CUSTOMER_ROLE, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
+import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, CircleDollarSign } from 'lucide-react';
+import { MIN_ORDER_AMOUNT, NEW_CUSTOMER_ROLE, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
 import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
 export default function CartDrawer() {
@@ -40,8 +40,11 @@ export default function CartDrawer() {
   if (!isLoggedIn) return null;
   if (!isCartOpen && !isLoginOpen) return null;
 
-  const meetsMinimumWeight = cartTotalWeightGrams >= MIN_ORDER_GRAMS;
   const hasBackorderItems = cart.some((item) => item.inStock === false);
+  const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
+  const discountAmount = cartSubtotal * (discountPercentage / 100);
+  const finalTotal = cartSubtotal - discountAmount;
+  const meetsMinimumAmount = finalTotal >= MIN_ORDER_AMOUNT;
 
   // Progressive per-gram tiers applied to New Customer orders (by total
   // weight) — one rate per product line present in the cart.
@@ -61,15 +64,11 @@ export default function CartDrawer() {
       setIsLoginOpen(true);
       return;
     }
-    if (!meetsMinimumWeight) return;
+    if (!meetsMinimumAmount) return;
 
     setIsCartOpen(false);
     router.push("/checkout");
   };
-
-  const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
-  const discountAmount = cartSubtotal * (discountPercentage / 100);
-  const finalTotal = cartSubtotal - discountAmount;
 
   return (
     <>
@@ -148,6 +147,11 @@ export default function CartDrawer() {
                             <span className="break-all text-[10px] font-mono text-white/35">
                               {item.sku}
                             </span>
+                            {item.quantityStep > 1 && (
+                              <span className="text-[10px] font-semibold text-[#82d6c5]">
+                                Multiples of {item.quantityStep}
+                              </span>
+                            )}
                             {item.inStock === false && (
                               <span className="rounded-sm border border-amber-300/30 bg-amber-300/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
                                 Out of stock · awaiting restock
@@ -228,7 +232,7 @@ export default function CartDrawer() {
                 </div>
                 <div className="flex justify-between items-center text-xs text-white/50 font-mono">
                   <span>EST. WEIGHT</span>
-                  <span className={`font-bold font-mono ${meetsMinimumWeight ? "text-white" : "text-yellow-400"}`}>
+                  <span className="font-bold font-mono text-white">
                     {cartTotalWeightGrams >= 1000
                       ? `${(cartTotalWeightGrams / 1000).toFixed(2)} kg`
                       : `${Math.round(cartTotalWeightGrams)} g`
@@ -243,13 +247,13 @@ export default function CartDrawer() {
                   </div>
                 ))}
 
-                {/* Minimum order weight indicator */}
-                {cart.length > 0 && !meetsMinimumWeight && (
+                {/* Minimum order value indicator */}
+                {cart.length > 0 && !meetsMinimumAmount && (
                   <div className="flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/25 text-yellow-400 text-[11px] px-3 py-2.5 rounded-sm mt-1">
-                    <Scale className="w-3.5 h-3.5 shrink-0" />
+                    <CircleDollarSign className="w-3.5 h-3.5 shrink-0" />
                     <span>
-                      Minimum wholesale order is <strong>{MIN_ORDER_GRAMS}g</strong>; add{" "}
-                      {Math.ceil(MIN_ORDER_GRAMS - cartTotalWeightGrams)}g more to submit.
+                      Minimum wholesale order is <strong>${MIN_ORDER_AMOUNT.toFixed(2)}</strong>; add{" "}
+                      ${(MIN_ORDER_AMOUNT - finalTotal).toFixed(2)} more to submit.
                     </span>
                   </div>
                 )}
@@ -286,7 +290,7 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={handleCheckout}
-                disabled={cart.length === 0 || (isLoggedIn && !meetsMinimumWeight)}
+                disabled={cart.length === 0 || (isLoggedIn && !meetsMinimumAmount)}
                 className="w-full bg-[#EC2300] hover:bg-[#c51d00] disabled:opacity-40 disabled:hover:bg-[#EC2300] text-white text-xs font-bold uppercase tracking-widest py-5 rounded-sm transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 flex items-center justify-center gap-3 cursor-pointer disabled:cursor-not-allowed border-0"
               >
                 {isLoggedIn ? (

@@ -1,9 +1,33 @@
 // Client-safe pricing helpers (no secrets here). Also imported server-side by
 // /api/orders so the order totals use exactly the same rules as the UI.
 
-// Minimum wholesale order weight, enforced in the cart UI and re-validated
-// server-side when the order is registered.
-export const MIN_ORDER_GRAMS = 250;
+// Minimum wholesale order value in USD. The storefront uses USD throughout,
+// and the same threshold is enforced again when an order is registered.
+export const MIN_ORDER_AMOUNT = 500;
+
+// Small tins are packed in wholesale cases. Quantities must follow these
+// increments everywhere: product controls, cart updates, suggestions, and API.
+export function quantityStepForWeight(weightGrams) {
+  const weight = Math.round(Number(weightGrams) || 0);
+  if (weight === 5 || weight === 10) return 10;
+  if (weight === 20 || weight === 50) return 5;
+  return 1;
+}
+
+export function normalizeQuantityForWeight(quantity, weightGrams) {
+  const step = quantityStepForWeight(weightGrams);
+  const requested = Math.max(1, Math.floor(Number(quantity) || step));
+  return Math.max(step, Math.ceil(requested / step) * step);
+}
+
+export function isValidQuantityForWeight(quantity, weightGrams) {
+  const step = quantityStepForWeight(weightGrams);
+  return (
+    Number.isSafeInteger(quantity) &&
+    quantity >= step &&
+    quantity % step === 0
+  );
+}
 
 // ── Progressive weight-based pricing (New Customer level) ───────────────────
 // For the "New Customer" access level the price is per gram and the rate

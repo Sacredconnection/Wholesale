@@ -4,7 +4,10 @@ import { useEffect, useRef, useState } from "react";
 import { Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
-import { optionPriceForUser } from "@/lib/pricing";
+import {
+  optionPriceForUser,
+  quantityStepForWeight,
+} from "@/lib/pricing";
 
 export default function ProductOptionsModal({ product, user, onClose, onAddToCart }) {
   const [resolvedProduct, setResolvedProduct] = useState(null);
@@ -32,7 +35,13 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
         });
         const data = await response.json().catch(() => ({}));
         if (!response.ok) throw new Error(data.error || "Could not load product options.");
-        if (!cancelled) setResolvedProduct(data.product);
+        if (!cancelled) {
+          setResolvedProduct(data.product);
+          setSelectedOptionIndex(0);
+          setQuantity(
+            quantityStepForWeight(data.product.options?.[0]?.weightGrams)
+          );
+        }
       } catch (loadError) {
         if (!cancelled) {
           setError(loadError.name === "TimeoutError"
@@ -49,6 +58,7 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
   if (!product) return null;
 
   const selectedOption = resolvedProduct?.options[selectedOptionIndex];
+  const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, resolvedProduct.category)
     : null;
@@ -106,7 +116,15 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
               <select
                 id="modal-product-option"
                 value={selectedOptionIndex}
-                onChange={(event) => setSelectedOptionIndex(Number(event.target.value))}
+                onChange={(event) => {
+                  const nextIndex = Number(event.target.value);
+                  setSelectedOptionIndex(nextIndex);
+                  setQuantity(
+                    quantityStepForWeight(
+                      resolvedProduct.options[nextIndex]?.weightGrams
+                    )
+                  );
+                }}
                 className="w-full rounded-sm border border-white/10 bg-[#101010] px-4 py-3 text-sm text-white outline-none focus:border-[#268072]"
               >
                 {resolvedProduct.options.map((option, index) => (
@@ -119,6 +137,12 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
             </div>
 
             {selectedOption?.inStock === false && <StockBackorderNotice />}
+            {quantityStep > 1 && selectedOption && (
+              <p className="text-[10px] font-semibold text-[#82d6c5]">
+                This {Math.round(selectedOption.weightGrams)}g tin is sold in
+                multiples of {quantityStep} units.
+              </p>
+            )}
 
             <div className="flex flex-wrap items-end justify-between gap-4 rounded border border-white/5 bg-black/20 p-4">
               <div>
@@ -126,9 +150,9 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
                 <strong className="text-2xl text-[#82d6c5]">${price?.toFixed(2)}</strong>
               </div>
               <div className="flex items-center rounded-sm border border-white/10 bg-[#101010]">
-                <button type="button" onClick={() => setQuantity((value) => Math.max(1, value - 1))} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Decrease quantity"><Minus className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setQuantity((value) => Math.max(quantityStep, value - quantityStep))} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Decrease quantity"><Minus className="h-4 w-4" /></button>
                 <span className="w-10 text-center text-sm font-bold text-white">{quantity}</span>
-                <button type="button" onClick={() => setQuantity((value) => value + 1)} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setQuantity((value) => value + quantityStep)} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
               </div>
             </div>
 

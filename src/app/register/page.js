@@ -11,7 +11,8 @@ import {
   AlertCircle, 
   Loader2, 
   ChevronDown,
-  ChevronLeft
+  ChevronLeft,
+  MessageCircle,
 } from "lucide-react";
 
 export default function RegisterPage() {
@@ -20,6 +21,8 @@ export default function RegisterPage() {
 
   const [form, setForm] = useState({
     username: "",
+    company: "",
+    ein: "",
     email: "",
     password: "",
     address: "",
@@ -46,7 +49,11 @@ export default function RegisterPage() {
   };
 
   const validate = () => {
-    if (!form.username.trim()) return "Username / Contact Name is required.";
+    if (!form.username.trim()) return "Authorized contact name is required.";
+    if (!form.company.trim()) return "Registered business name is required.";
+    if (!/^\d{2}-?\d{7}$/.test(form.ein.trim())) {
+      return "Enter a valid 9-digit EIN, for example 12-3456789.";
+    }
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "A valid email address is required.";
     if (!form.password || form.password.length < 12 || form.password.length > 128) {
       return "Password must contain between 12 and 128 characters.";
@@ -79,9 +86,9 @@ export default function RegisterPage() {
         email: form.email.trim().toLowerCase(),
         phone: form.phone.trim(),
         country: form.country,
-        company: `${form.username} Wholesale`,
-        businessType: "Wholesale Partner",
-        taxId: "PENDING-B2B",
+        company: form.company.trim(),
+        businessType: "Registered Business",
+        taxId: form.ein.trim(),
         monthlyVolume: "Under $1,000",
         website: "",
         avatar: null,
@@ -159,10 +166,10 @@ export default function RegisterPage() {
 
               <div className="flex flex-col gap-4">
                 
-                {/* Username */}
+                {/* Authorized contact */}
                 <div className="flex flex-col gap-1.5">
                   <label htmlFor="register-name" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
-                    Username
+                    Authorized Contact Name
                   </label>
                   <input 
                     id="register-name"
@@ -172,10 +179,53 @@ export default function RegisterPage() {
                     maxLength={160}
                     value={form.username} 
                     onChange={set("username")}
-                    placeholder="e.g. johndoe"
+                    placeholder="e.g. John Doe"
                     className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors w-full"
                     required
                   />
+                </div>
+
+                {/* Registered Company */}
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="register-company" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                    Registered Business Name
+                  </label>
+                  <input
+                    id="register-company"
+                    name="company"
+                    type="text"
+                    autoComplete="organization"
+                    maxLength={120}
+                    value={form.company}
+                    onChange={set("company")}
+                    placeholder="e.g. Forest Botanicals LLC"
+                    className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors w-full"
+                    required
+                  />
+                </div>
+
+                {/* EIN */}
+                <div className="flex flex-col gap-1.5">
+                  <label htmlFor="register-ein" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
+                    EIN
+                  </label>
+                  <input
+                    id="register-ein"
+                    name="ein"
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={10}
+                    value={form.ein}
+                    onChange={set("ein")}
+                    placeholder="12-3456789"
+                    pattern="\d{2}-?\d{7}"
+                    aria-describedby="register-ein-help"
+                    className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors w-full"
+                    required
+                  />
+                  <p id="register-ein-help" className="text-[10px] leading-relaxed text-white/35">
+                    Wholesale registration is available only to registered businesses.
+                  </p>
                 </div>
 
                 {/* Email */}
@@ -379,8 +429,12 @@ export default function RegisterPage() {
 
               <div className="bg-[#131313] border border-white/5 rounded-lg p-4 w-full flex flex-col gap-2 font-mono text-left max-w-sm">
                 <div className="flex flex-col gap-1 text-xs sm:flex-row sm:justify-between">
-                  <span className="text-white/40">USERNAME:</span>
+                  <span className="text-white/40">CONTACT:</span>
                   <span className="break-all text-[#82d6c5] font-bold sm:text-right">{form.username}</span>
+                </div>
+                <div className="flex flex-col gap-1 text-xs sm:flex-row sm:justify-between">
+                  <span className="text-white/40">COMPANY:</span>
+                  <span className="break-all text-white font-bold sm:text-right">{form.company}</span>
                 </div>
                 <div className="flex flex-col gap-1 text-xs sm:flex-row sm:justify-between">
                   <span className="text-white/40">EMAIL:</span>
@@ -400,6 +454,30 @@ export default function RegisterPage() {
               </Link>
             </div>
           )}
+
+          <aside className="mt-5 rounded-xl border border-[#25D366]/25 bg-[#25D366]/10 p-5 shadow-lg shadow-black/10">
+            <div className="flex items-start gap-3">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#25D366] text-[#071b0f]">
+                <MessageCircle className="h-5 w-5" aria-hidden="true" />
+              </div>
+              <div className="min-w-0">
+                <h2 className="text-sm font-bold text-white">
+                  Need help with business registration?
+                </h2>
+                <p className="mt-1 text-xs leading-relaxed text-white/55">
+                  Contact our sales team on WhatsApp before submitting your application.
+                </p>
+                <a
+                  href="https://wa.me/5522992242069?text=Hello%2C%20I%20need%20help%20with%20Sacred%20Connection%20wholesale%20registration."
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-3 inline-flex items-center gap-2 text-xs font-black text-[#72e49b] no-underline transition-colors hover:text-white"
+                >
+                  WhatsApp Sales: +55 22 99224-2069
+                </a>
+              </div>
+            </div>
+          </aside>
         </div>
       </div>
     </div>

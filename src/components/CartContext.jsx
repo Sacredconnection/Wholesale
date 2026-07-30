@@ -2,7 +2,12 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from './AuthContext';
-import { optionPriceForUser, cartUnitPrice } from '@/lib/pricing';
+import {
+  cartUnitPrice,
+  normalizeQuantityForWeight,
+  optionPriceForUser,
+  quantityStepForWeight,
+} from '@/lib/pricing';
 
 const CartContext = createContext();
 const SACRED_STORE_ID = "sacred-connection";
@@ -27,14 +32,22 @@ export function CartProvider({ children }) {
                   (item) =>
                     !item.storeId || item.storeId === SACRED_STORE_ID
                 )
-                .map((item) => ({
-                  ...item,
-                  storeId: SACRED_STORE_ID,
-                  storeName: "Sacred Connection",
-                  cartKey:
-                    item.cartKey ||
-                    `${SACRED_STORE_ID}:${item.sku}`,
-                }))
+                .map((item) => {
+                  const quantityStep = quantityStepForWeight(item.weightGrams);
+                  return {
+                    ...item,
+                    storeId: SACRED_STORE_ID,
+                    storeName: "Sacred Connection",
+                    cartKey:
+                      item.cartKey ||
+                      `${SACRED_STORE_ID}:${item.sku}`,
+                    quantityStep,
+                    quantity: normalizeQuantityForWeight(
+                      item.quantity,
+                      item.weightGrams
+                    ),
+                  };
+                })
             : []
         );
       } catch (e) {
@@ -76,6 +89,7 @@ export function CartProvider({ children }) {
     }
     const selectedOption = product.options?.[optionIndex];
     if (!selectedOption) return null;
+    const quantityStep = quantityStepForWeight(selectedOption.weightGrams);
     const storeId = product.storeId || SACRED_STORE_ID;
     if (storeId !== SACRED_STORE_ID) return null;
 
@@ -90,7 +104,11 @@ export function CartProvider({ children }) {
       category: product.category || "",
       price: optionPriceForUser(selectedOption, user, product.category),
       weightGrams: selectedOption.weightGrams,
-      quantity,
+      quantityStep,
+      quantity: normalizeQuantityForWeight(
+        quantity,
+        selectedOption.weightGrams
+      ),
       image: product.image,
       wcProductId: product.wcId || null,
       wcVariationId: selectedOption.wcVariationId || null,
@@ -133,8 +151,15 @@ export function CartProvider({ children }) {
       prevCart
         .map((item) => {
           if (item.cartKey === cartKey) {
-            const nextQty = item.quantity + change;
-            return { ...item, quantity: Math.max(1, nextQty) };
+            const quantityStep =
+              item.quantityStep || quantityStepForWeight(item.weightGrams);
+            const direction = change < 0 ? -1 : 1;
+            const nextQty = item.quantity + direction * quantityStep;
+            return {
+              ...item,
+              quantityStep,
+              quantity: Math.max(quantityStep, nextQty),
+            };
           }
           return item;
         })

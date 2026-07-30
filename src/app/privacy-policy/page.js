@@ -49,7 +49,7 @@ export default function PrivacyPolicyPage() {
       <EditorialSection id="information-collected" number="02" title="Information we collect">
         <p>Depending on how you interact with us, we may collect:</p>
         <ul>
-          <li><strong>Contact and business details</strong>, such as your name, company, role, email address, telephone number, billing address, and delivery address.</li>
+          <li><strong>Contact and business details</strong>, such as your name, company, role, EIN or other business tax identifier, email address, telephone number, billing address, and delivery address.</li>
           <li><strong>Account information</strong>, including login details and information provided during wholesale registration.</li>
           <li><strong>Transaction information</strong>, such as ordered products, quantities, invoice details, payment status, shipment details, and order history.</li>
           <li><strong>Communications</strong>, including enquiries, support requests, preferences, and other messages you send to us.</li>

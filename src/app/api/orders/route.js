@@ -21,7 +21,8 @@ import {
   toWcAddress,
 } from "@/lib/wc-mappers";
 import {
-  MIN_ORDER_GRAMS,
+  isValidQuantityForWeight,
+  MIN_ORDER_AMOUNT,
   NEW_CUSTOMER_ROLE,
   progressivePerGramRate,
   progressiveTableKeyFor,
@@ -405,16 +406,48 @@ export async function POST(request) {
         { status: 422 }
       );
     }
-    if (totalWeightGrams < MIN_ORDER_GRAMS) {
+    const invalidCaseQuantities = resolved.filter(
+      (entry) =>
+        !isValidQuantityForWeight(entry.quantity, entry.weightGrams)
+    );
+    if (invalidCaseQuantities.length > 0) {
       return Response.json(
         {
-          error: `Minimum wholesale order is ${MIN_ORDER_GRAMS}g; this order sheet totals ${Math.round(totalWeightGrams)}g.`,
+          error:
+            "Invalid case quantity. 5g and 10g tins must be ordered in multiples of 10; 20g and 50g tins must be ordered in multiples of 5.",
         },
         { status: 422 }
       );
     }
 
     const isProgressive = role === NEW_CUSTOMER_ROLE;
+    const estimatedSubtotal = resolved.reduce((total, entry) => {
+      const rate = isProgressive
+        ? progressivePerGramRate(totalWeightGrams, entry.tableKey)
+        : null;
+      const unitPrice =
+        rate != null && entry.weightGrams > 0
+          ? entry.weightGrams * rate
+          : entry.rolePrice != null
+            ? entry.rolePrice
+            : entry.basePrice;
+      return total + unitPrice * entry.quantity;
+    }, 0);
+    const discountRate = Math.min(
+      100,
+      Math.max(0, Number(customer.discountRate) || 0)
+    );
+    const estimatedPartnerTotal =
+      estimatedSubtotal * (1 - discountRate / 100);
+    if (estimatedPartnerTotal < MIN_ORDER_AMOUNT) {
+      return Response.json(
+        {
+          error: `Minimum wholesale order is $${MIN_ORDER_AMOUNT.toFixed(2)}; this order sheet totals $${estimatedPartnerTotal.toFixed(2)} after partner discounts.`,
+        },
+        { status: 422 }
+      );
+    }
+
     const entriesByStore = new Map();
     for (const entry of resolved) {
       if (!entriesByStore.has(entry.store.id)) entriesByStore.set(entry.store.id, []);
@@ -490,7 +523,11 @@ export async function POST(request) {
                 ? entry.rolePrice
                 : entry.basePrice;
           if (rate != null && entry.weightGrams > 0) appliedRates[entry.tableKey] = rate;
-          const lineTotal = (unitPrice * entry.quantity).toFixed(2);
+          const lineTotal = (
+            unitPrice *
+            entry.quantity *
+            (1 - discountRate / 100)
+          ).toFixed(2);
           return {
             product_id: entry.productId,
             ...(entry.variationId ? { variation_id: entry.variationId } : {}),

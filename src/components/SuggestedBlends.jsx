@@ -175,7 +175,7 @@ export default function SuggestedBlends({
     reload: reloadProducts,
     resolveProduct,
   } = useProducts();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const { addSelectionsToCart, setIsCartOpen } = useCart();
   const [fetchedOrders, setFetchedOrders] = useState([]);
   const [blends, setBlends] = useState([]);
@@ -235,7 +235,9 @@ export default function SuggestedBlends({
     const catalogProducts = products;
     if (!catalogProducts.length) return;
 
-    const preparationKey = `${isLoggedIn ? "partner" : "public"}:${catalogKey}:${historyKey}:${retryKey}`;
+    const preparationKey =
+      `${isLoggedIn ? "partner" : "public"}:${user?.role || "none"}:` +
+      `${user?.discountRate || 0}:${catalogKey}:${historyKey}:${retryKey}`;
     if (preparedKeyRef.current === preparationKey) return;
     preparedKeyRef.current = preparationKey;
 
@@ -291,7 +293,7 @@ export default function SuggestedBlends({
             })
             .slice(0, RECIPE_LINE_COUNT);
           if (selections.length < 2) return [];
-          const weighted = ensureWholesaleMinimum(selections);
+          const weighted = ensureWholesaleMinimum(selections, user);
           return weighted.meetsMinimum
             ? [{ ...recipe, ...weighted }]
             : [];
@@ -317,7 +319,7 @@ export default function SuggestedBlends({
           .slice(0, 5);
         const weightedPersonalized =
           personalizedSelections.length > 0
-            ? ensureWholesaleMinimum(personalizedSelections)
+            ? ensureWholesaleMinimum(personalizedSelections, user)
             : null;
 
         if (
@@ -366,6 +368,7 @@ export default function SuggestedBlends({
     productsLoading,
     resolveProduct,
     retryKey,
+    user,
   ]);
 
   const addBlend = (blend) => {

@@ -23,7 +23,7 @@ import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
 import { COUNTRIES } from "@/lib/countries";
-import { MIN_ORDER_GRAMS } from "@/lib/pricing";
+import { MIN_ORDER_AMOUNT } from "@/lib/pricing";
 
 const EMPTY_ADDRESS = {
   street: "",
@@ -396,7 +396,7 @@ export default function CheckoutPage() {
   const discountPercentage = user.discountRate || 0;
   const discountAmount = cartSubtotal * (discountPercentage / 100);
   const finalTotal = cartSubtotal - discountAmount;
-  const meetsMinimumWeight = cartTotalWeightGrams >= MIN_ORDER_GRAMS;
+  const meetsMinimumAmount = finalTotal >= MIN_ORDER_AMOUNT;
   const hasBackorderItems = cart.some((item) => item.inStock === false);
   const effectiveBillingAddress = billingMatchesShipping ? shippingAddress : billingAddress;
 
@@ -737,7 +737,7 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={submitOrder}
-                        disabled={isSubmitting || !confirmed || !meetsMinimumWeight}
+                        disabled={isSubmitting || !confirmed || !meetsMinimumAmount}
                         aria-busy={isSubmitting}
                         className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#EC2300] px-7 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[#EC2300]/15 transition-colors hover:bg-[#c51d00] disabled:cursor-not-allowed disabled:opacity-45"
                       >
@@ -803,6 +803,13 @@ export default function CheckoutPage() {
                   <span className="font-bold uppercase tracking-wider text-white">Estimated total</span>
                   <span className="text-2xl font-black text-[#82d6c5]">${finalTotal.toFixed(2)}</span>
                 </div>
+                {!meetsMinimumAmount && (
+                  <div className="mt-2 rounded-sm border border-yellow-400/25 bg-yellow-400/10 px-3 py-2.5 text-[10px] font-semibold leading-relaxed text-yellow-300">
+                    Minimum wholesale order: ${MIN_ORDER_AMOUNT.toFixed(2)}.
+                    Add ${(MIN_ORDER_AMOUNT - finalTotal).toFixed(2)} more
+                    before submitting.
+                  </div>
+                )}
                 <div className="mt-3 flex items-start gap-2 rounded-sm bg-white/[0.03] px-3 py-2.5 text-[10px] leading-relaxed text-white/40">
                   <LockKeyhole className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#82d6c5]" />
                   No payment now. Final shipping and availability are confirmed by our team.

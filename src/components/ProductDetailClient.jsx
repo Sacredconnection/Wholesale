@@ -10,7 +10,10 @@ import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useProducts } from "@/components/ProductsContext";
-import { optionPriceForUser } from "@/lib/pricing";
+import {
+  optionPriceForUser,
+  quantityStepForWeight,
+} from "@/lib/pricing";
 import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
 import {
@@ -42,6 +45,10 @@ export default function ProductDetailClient({ initialProduct }) {
   const catalogProduct = liveProduct || initialProduct;
   const [resolvedProduct, setResolvedProduct] = useState(null);
   const [productLoadError, setProductLoadError] = useState("");
+  const [selectedOptIdx, setSelectedOptIdx] = useState(0);
+  const [quantity, setQuantity] = useState(() =>
+    quantityStepForWeight(initialProduct?.options?.[0]?.weightGrams)
+  );
   const resolvedPricingMatches =
     resolvedProduct?.id === catalogProduct?.id &&
     (isLoggedIn
@@ -69,7 +76,13 @@ export default function ProductDetailClient({ initialProduct }) {
         if (!response.ok) {
           throw new Error(data.error || "Could not load this product's options.");
         }
-        if (!cancelled) setResolvedProduct(data.product);
+        if (!cancelled) {
+          setResolvedProduct(data.product);
+          setSelectedOptIdx(0);
+          setQuantity(
+            quantityStepForWeight(data.product.options?.[0]?.weightGrams)
+          );
+        }
       } catch (error) {
         if (!cancelled) {
           setProductLoadError(
@@ -94,8 +107,6 @@ export default function ProductDetailClient({ initialProduct }) {
   }, [product, products]);
 
   // States
-  const [selectedOptIdx, setSelectedOptIdx] = useState(0);
-  const [quantity, setQuantity] = useState(1);
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [imgError, setImgError] = useState(false);
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
@@ -143,6 +154,9 @@ export default function ProductDetailClient({ initialProduct }) {
     };
   }, [isLoggedIn, relatedProducts.length, product?.id]);
 
+  const activeQuantityStep = quantityStepForWeight(
+    product?.options?.[selectedOptIdx]?.weightGrams
+  );
   // Product not in the static catalog yet — it may exist only in WooCommerce,
   // so hold off on "not found" until the live catalog finishes loading.
   if (!product && productsLoading) {
@@ -182,6 +196,7 @@ export default function ProductDetailClient({ initialProduct }) {
   }
 
   const selectedOption = product.options[selectedOptIdx];
+  const quantityStep = activeQuantityStep;
   const canPurchase = Boolean(
     isLoggedIn &&
       user &&
@@ -398,7 +413,15 @@ export default function ProductDetailClient({ initialProduct }) {
                   </label>
                   <select
                     value={selectedOptIdx}
-                    onChange={(e) => setSelectedOptIdx(parseInt(e.target.value))}
+                    onChange={(event) => {
+                      const nextIndex = Number(event.target.value);
+                      setSelectedOptIdx(nextIndex);
+                      setQuantity(
+                        quantityStepForWeight(
+                          product.options[nextIndex]?.weightGrams
+                        )
+                      );
+                    }}
                     className="bg-[#1a1a1a] border border-white/10 text-sm text-white rounded px-4 py-3.5 focus:border-[#268072] outline-none w-full"
                   >
                     {product.options.map((opt, idx) => (
@@ -415,6 +438,12 @@ export default function ProductDetailClient({ initialProduct }) {
               )}
 
               {selectedOption?.inStock === false && <StockBackorderNotice />}
+              {quantityStep > 1 && selectedOption && (
+                <p className="text-[10px] font-semibold text-[#82d6c5]">
+                  This {Math.round(selectedOption.weightGrams)}g tin is sold in
+                  multiples of {quantityStep} units.
+                </p>
+              )}
 
               {/* Purchase Box */}
               {canPurchase ? (
@@ -426,7 +455,11 @@ export default function ProductDetailClient({ initialProduct }) {
                   </span>
                   <div className="flex items-center justify-between sm:justify-start bg-[#1a1a1a] border border-white/10 rounded">
                     <button
-                      onClick={() => setQuantity(prev => Math.max(1, prev - 1))}
+                      onClick={() =>
+                        setQuantity((previous) =>
+                          Math.max(quantityStep, previous - quantityStep)
+                        )
+                      }
                       className="p-3 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
                     >
                       <Minus className="w-4 h-4" />
@@ -435,7 +468,9 @@ export default function ProductDetailClient({ initialProduct }) {
                       {quantity}
                     </span>
                     <button
-                      onClick={() => setQuantity(prev => prev + 1)}
+                      onClick={() =>
+                        setQuantity((previous) => previous + quantityStep)
+                      }
                       className="p-3 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
                     >
                       <Plus className="w-4 h-4" />
