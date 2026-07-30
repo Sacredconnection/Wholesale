@@ -18,6 +18,7 @@ import { useCart } from "@/components/CartContext";
 import { useAuth } from "@/components/AuthContext";
 import {
   ArrowLeft,
+  Check,
   ChevronLeft,
   ChevronRight,
   ShoppingBag,
@@ -31,7 +32,7 @@ export default function ProductDetailClient({ initialProduct }) {
   const searchParams = useSearchParams();
   const fromPage = searchParams.get("fromPage") || "1";
 
-  const { addToCart, setIsCartOpen } = useCart();
+  const { addToCart } = useCart();
   const { isLoggedIn, user } = useAuth();
   const { products, loading: productsLoading } = useProducts();
 
@@ -49,6 +50,7 @@ export default function ProductDetailClient({ initialProduct }) {
   const [quantity, setQuantity] = useState(() =>
     quantityStepForWeight(initialProduct?.options?.[0]?.weightGrams)
   );
+  const [addedAt, setAddedAt] = useState(0);
   const resolvedPricingMatches =
     resolvedProduct?.id === catalogProduct?.id &&
     (isLoggedIn
@@ -113,6 +115,12 @@ export default function ProductDetailClient({ initialProduct }) {
   const [relatedProducts, setRelatedProducts] = useState([]);
   const relatedCarouselRef = useRef(null);
   const [relatedControls, setRelatedControls] = useState({ previous: false, next: false });
+
+  useEffect(() => {
+    if (!addedAt) return undefined;
+    const timer = window.setTimeout(() => setAddedAt(0), 1800);
+    return () => window.clearTimeout(timer);
+  }, [addedAt]);
 
   useEffect(() => {
     const frame = requestAnimationFrame(() => {
@@ -227,7 +235,7 @@ export default function ProductDetailClient({ initialProduct }) {
       return;
     }
     addToCart(product, selectedOptIdx, quantity);
-    setIsCartOpen(true);
+    setAddedAt(Date.now());
   };
 
   const scrollRelatedProducts = (direction) => {
@@ -430,6 +438,7 @@ export default function ProductDetailClient({ initialProduct }) {
                     onChange={(event) => {
                       const nextIndex = Number(event.target.value);
                       setSelectedOptIdx(nextIndex);
+                      setAddedAt(0);
                       setQuantity(
                         quantityStepForWeight(
                           product.options[nextIndex]?.weightGrams
@@ -510,8 +519,14 @@ export default function ProductDetailClient({ initialProduct }) {
                     disabled={!product.optionsLoaded}
                     className="w-full bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-widest py-4 px-6 rounded shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/45 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
                   >
-                    <ShoppingBag className="w-4 h-4" />
-                    {product.optionsLoaded
+                    {addedAt ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <ShoppingBag className="w-4 h-4" />
+                    )}
+                    {addedAt
+                      ? "Added to order"
+                      : product.optionsLoaded
                       ? selectedOption?.inStock === false
                         ? "Order for restock"
                         : "Add to Basket"

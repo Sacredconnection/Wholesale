@@ -60,7 +60,7 @@ export default function MyAccountPage() {
     loading: productsLoading,
     resolveProduct,
   } = useProducts();
-  const { addSelectionsToCart, setIsCartOpen } = useCart();
+  const { addSelectionsToCart } = useCart();
   const router = useRouter();
   const avatarInputRef = useRef(null);
   const [avatarMessage, setAvatarMessage] = useState("");
@@ -412,7 +412,6 @@ export default function MyAccountPage() {
           ? `${selections.length} products were added. ${missing.length} discontinued or changed product could not be matched.`
           : `Order #${order.number} was added to your current order sheet.`
       );
-      setIsCartOpen(true);
     } catch (repeatError) {
       setReorderError(repeatError.message || "This order could not be added again.");
     } finally {

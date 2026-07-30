@@ -176,7 +176,7 @@ export default function SuggestedBlends({
     resolveProduct,
   } = useProducts();
   const { isLoggedIn, user } = useAuth();
-  const { addSelectionsToCart, setIsCartOpen } = useCart();
+  const { addSelectionsToCart } = useCart();
   const [fetchedOrders, setFetchedOrders] = useState([]);
   const [blends, setBlends] = useState([]);
   const [personalizedBlend, setPersonalizedBlend] = useState(null);
@@ -385,7 +385,6 @@ export default function SuggestedBlends({
     }
     addSelectionsToCart(stockedSelections);
     setAddedBlendId(blend.id);
-    setIsCartOpen(true);
   };
 
   if (error || productsError) {

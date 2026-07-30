@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Loader2, Minus, Plus, ShoppingBag } from "lucide-react";
+import { Check, Loader2, Minus, Plus, ShoppingBag } from "lucide-react";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
 import { useProducts } from "@/components/ProductsContext";
@@ -35,6 +35,13 @@ export default function ProductPurchaseControls({
   });
   const [error, setError] = useState("");
   const [retryKey, setRetryKey] = useState(0);
+  const [addedAt, setAddedAt] = useState(0);
+
+  useEffect(() => {
+    if (!addedAt) return undefined;
+    const timer = window.setTimeout(() => setAddedAt(0), 1800);
+    return () => window.clearTimeout(timer);
+  }, [addedAt]);
 
   useEffect(() => {
     let cancelled = false;
@@ -83,6 +90,7 @@ export default function ProductPurchaseControls({
     if (!activeProduct || !canAdd) return;
     addToCart(activeProduct, selectedOptionIndex, quantity);
     setQuantity(quantityStep);
+    setAddedAt(Date.now());
     onAdded?.(activeProduct, selectedOptionIndex);
   };
 
@@ -97,6 +105,7 @@ export default function ProductPurchaseControls({
           onChange={(event) => {
             const nextIndex = Number(event.target.value);
             setSelectedOptionIndex(nextIndex);
+            setAddedAt(0);
             setQuantity(
               quantityStepForWeight(
                 activeProduct?.options[nextIndex]?.weightGrams
@@ -217,10 +226,12 @@ export default function ProductPurchaseControls({
           >
             {!activeProduct ? (
               <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : addedAt ? (
+              <Check className="h-3.5 w-3.5" />
             ) : (
               <ShoppingBag className="h-3.5 w-3.5" />
             )}
-            {buttonLabel}
+            {addedAt ? "Added" : buttonLabel}
           </button>
         </div>
       )}

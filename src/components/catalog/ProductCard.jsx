@@ -2,9 +2,9 @@
 
 /* eslint-disable @next/next/no-img-element -- Product images are remote WooCommerce media. */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, LockKeyhole, ShoppingBag } from "lucide-react";
+import { ArrowUpRight, Check, LockKeyhole, ShoppingBag } from "lucide-react";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
 
 export default function ProductCard({
@@ -14,6 +14,13 @@ export default function ProductCard({
   onRequireLogin,
 }) {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
+  const [addedAt, setAddedAt] = useState(0);
+
+  useEffect(() => {
+    if (!addedAt) return undefined;
+    const timer = window.setTimeout(() => setAddedAt(0), 1800);
+    return () => window.clearTimeout(timer);
+  }, [addedAt]);
   const selectedOption = product.options[0];
   const description =
     product.description || "Wholesale product from the Sacred Connection collection.";
@@ -146,11 +153,20 @@ export default function ProductCard({
           {isLoggedIn ? (
             <button
               type="button"
-              onClick={() => onAddToCart(product, 0)}
-              className="inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-0 bg-[#EC2300] px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#c51d00] sm:col-span-2 xl:col-span-1 xl:min-w-48"
+              onClick={() => {
+                onAddToCart(product, 0);
+                setAddedAt(Date.now());
+              }}
+              className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-0 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors sm:col-span-2 xl:col-span-1 xl:min-w-48 ${
+                addedAt ? "bg-[#268072]" : "bg-[#EC2300] hover:bg-[#c51d00]"
+              }`}
             >
-              <ShoppingBag className="h-4 w-4" aria-hidden="true" />
-              Add to order
+              {addedAt ? (
+                <Check className="h-4 w-4" aria-hidden="true" />
+              ) : (
+                <ShoppingBag className="h-4 w-4" aria-hidden="true" />
+              )}
+              {addedAt ? "Added" : "Add to order"}
             </button>
           ) : (
             <button

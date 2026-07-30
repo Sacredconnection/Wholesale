@@ -38,7 +38,7 @@ export default function ProductRecommendations({
   const isDrawer = variant === "drawer";
 
   return (
-    <section className={`${isDrawer ? "rounded-xl border border-[#82d6c5]/20 bg-[#102c27] p-4 shadow-inner shadow-black/20" : "rounded-lg border border-[#268072]/25 bg-[#102c27]/45 p-4 sm:p-5"}`}>
+    <section className={`${isDrawer ? "border-y border-[#82d6c5]/20 bg-[#102c27] px-5 py-5 shadow-inner shadow-black/20 sm:px-8 sm:py-6" : "rounded-lg border border-[#268072]/25 bg-[#102c27]/45 p-4 sm:p-5"}`}>
       <div className="mb-4">
         {eyebrow && (
           <span className="mb-1 flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-[0.16em] text-[#82d6c5]">

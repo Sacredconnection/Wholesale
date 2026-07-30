@@ -30,10 +30,8 @@ import {
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 
 const EMPTY_FILTERS = {
-  search: "",
   category: "",
   tribe: "",
-  attributes: {},
 };
 
 const EMPTY_PAGINATION = {
@@ -60,12 +58,6 @@ function pageList(currentPage, totalPages) {
   });
 }
 
-function appendAttributeFilters(params, attributes) {
-  Object.entries(attributes || {}).forEach(([key, value]) => {
-    if (value) params.append("attribute", `${key}:${value}`);
-  });
-}
-
 function isIndigenousRapeCategory(category) {
   return String(category || "")
     .normalize("NFD")
@@ -79,12 +71,10 @@ export default function CatalogPage() {
   const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
-  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(1);
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [tribes, setTribes] = useState([]);
-  const [attributes, setAttributes] = useState([]);
   const [pagination, setPagination] = useState(EMPTY_PAGINATION);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -107,13 +97,6 @@ export default function CatalogPage() {
   });
 
   useEffect(() => {
-    const timer = window.setTimeout(() => {
-      setDebouncedSearch(filters.search.trim());
-    }, 250);
-    return () => window.clearTimeout(timer);
-  }, [filters.search]);
-
-  useEffect(() => {
     const controller = new AbortController();
 
     async function loadCatalog() {
@@ -121,10 +104,8 @@ export default function CatalogPage() {
       setError("");
 
       const params = new URLSearchParams({ page: String(page) });
-      if (debouncedSearch) params.set("q", debouncedSearch);
       if (filters.category) params.set("category", filters.category);
       if (filters.tribe) params.set("tribe", filters.tribe);
-      appendAttributeFilters(params, filters.attributes);
       try {
         const response = await fetch(`/api/catalog?${params.toString()}`, {
           credentials: "same-origin",
@@ -139,7 +120,6 @@ export default function CatalogPage() {
         setProducts(Array.isArray(data.products) ? data.products : []);
         setCategories(data.filters?.categories || []);
         setTribes(data.filters?.tribes || []);
-        setAttributes(data.filters?.attributes || []);
         setPagination(data.pagination || EMPTY_PAGINATION);
         if (data.pagination?.page && data.pagination.page !== page) {
           setPage(data.pagination.page);
@@ -163,24 +143,20 @@ export default function CatalogPage() {
     return () => controller.abort();
   }, [
     page,
-    debouncedSearch,
     filters.category,
     filters.tribe,
-    filters.attributes,
     isLoggedIn,
     reloadKey,
   ]);
 
   useEffect(() => {
     const params = new URLSearchParams();
-    if (debouncedSearch) params.set("q", debouncedSearch);
     if (filters.category) params.set("category", filters.category);
     if (filters.tribe) params.set("tribe", filters.tribe);
-    appendAttributeFilters(params, filters.attributes);
     if (page > 1) params.set("page", String(page));
     const query = params.toString();
     window.history.replaceState(null, "", query ? `/digital-catalog?${query}` : "/digital-catalog");
-  }, [debouncedSearch, filters, page]);
+  }, [filters, page]);
 
   useEffect(
     () => () => {
@@ -194,10 +170,8 @@ export default function CatalogPage() {
     [pagination.page, pagination.totalPages]
   );
   const hasActiveExportFilters = Boolean(
-    debouncedSearch ||
     filters.category ||
-    filters.tribe ||
-    Object.values(filters.attributes).some(Boolean)
+    filters.tribe
   );
 
   const handleFiltersChange = (nextFilters) => {
@@ -207,21 +181,17 @@ export default function CatalogPage() {
 
   const clearFilters = () => {
     setFilters(EMPTY_FILTERS);
-    setDebouncedSearch("");
     setPage(1);
   };
 
   const handleAddToCart = (product, optionIndex) => {
     addToCart(product, optionIndex, 1);
-    setIsCartOpen(true);
   };
 
   const loadExportProducts = async () => {
     const params = new URLSearchParams({ export: "true" });
-    if (debouncedSearch) params.set("q", debouncedSearch);
     if (filters.category) params.set("category", filters.category);
     if (filters.tribe) params.set("tribe", filters.tribe);
-    appendAttributeFilters(params, filters.attributes);
     const response = await fetch(`/api/catalog?${params.toString()}`, {
       credentials: "same-origin",
       cache: "no-store",
@@ -238,7 +208,6 @@ export default function CatalogPage() {
 
   const filterLabel = () => {
     const labels = [];
-    if (debouncedSearch) labels.push(`Search: ${debouncedSearch}`);
     if (filters.category) labels.push(`Category: ${filters.category}`);
     if (filters.tribe) {
       labels.push(
@@ -249,18 +218,14 @@ export default function CatalogPage() {
         }: ${filters.tribe}`
       );
     }
-    attributes.forEach((attribute) => {
-      const value = filters.attributes[attribute.key];
-      if (value) labels.push(`${attribute.name}: ${value}`);
-    });
     return labels.length ? labels.join(" | ") : "Complete catalog";
   };
 
   const currentPdfOptions = () => ({
-    search: debouncedSearch,
+    search: "",
     category: filters.category,
     tribe: filters.tribe,
-    attributes: filters.attributes,
+    attributes: {},
     filterLabel: filterLabel(),
   });
 
@@ -431,7 +396,7 @@ export default function CatalogPage() {
               Wholesale Digital Catalog
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-              Explore Sacred Connection products, then refine the catalog by category, product type or indigenous tribe, and product attributes.
+              Explore Sacred Connection products, then refine the catalog by category and product type or indigenous tribe.
             </p>
           </div>
 
@@ -447,7 +412,7 @@ export default function CatalogPage() {
                     Customize your PDF catalog
                   </h2>
                   <p className="mt-1 text-sm leading-6 text-white/65">
-                    To include every Sacred Connection product, leave the search field empty and clear all filters. To create a personalized catalog, combine any available filters before selecting Generate PDF.
+                    To include every Sacred Connection product, clear the category filters. To create a personalized catalog, choose a category and subcategory before selecting Generate PDF.
                   </p>
                   <div className="mt-3 flex flex-wrap items-center gap-3">
                     <span
@@ -541,7 +506,6 @@ export default function CatalogPage() {
             filters={filters}
             categories={categories}
             tribes={tribes}
-            attributes={attributes}
             onChange={handleFiltersChange}
             onClear={clearFilters}
             disabled={loading}

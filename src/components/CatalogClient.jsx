@@ -66,10 +66,8 @@ export default function CatalogClient({ initialProducts = [] }) {
   const [pdfExportError, setPdfExportError] = useState("");
 
   // Filter States
-  const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [tribe, setTribe] = useState("All");
-  const [attributeFilters, setAttributeFilters] = useState({});
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(1);
@@ -163,113 +161,32 @@ export default function CatalogClient({ initialProducts = [] }) {
 
   // Filtered Products – accent-insensitive matching, sorted A–Z
   const filteredProducts = useMemo(() => {
-    const normSearch  = normalizeStr(search);
     const normCat     = normalizeStr(category);
     const normTribe   = normalizeStr(tribe);
 
     return products
       .filter((product) => {
-        const matchesSearch =
-          normalizeStr(product.name).includes(normSearch) ||
-          normalizeStr(product.sku).includes(normSearch);
         const matchesCategory =
           category === "All" || normalizeStr(product.category) === normCat;
         const matchesTribe =
           tribe === "All" || normalizeStr(product.tribe) === normTribe;
-        return matchesSearch && matchesCategory && matchesTribe;
+        return matchesCategory && matchesTribe;
       })
       .sort((a, b) => normalizeStr(a.name).localeCompare(normalizeStr(b.name)));
-  }, [products, search, category, tribe]);
-
-  const { availableAttributes, compoundFilteredProducts } = useMemo(() => {
-    const selectedAttributes = Object.fromEntries(
-      Object.entries(attributeFilters).filter(([, value]) => value)
-    );
-    const productHasAttribute = (product, key, value) =>
-      (product.attributes || []).some(
-        (attribute) =>
-          attribute.key === key &&
-          (attribute.values || []).some(
-            (attributeValue) =>
-              normalizeStr(attributeValue) === normalizeStr(value)
-          )
-      );
-    const matchesAttributes = (product, ignoredKey = "") =>
-      Object.entries(selectedAttributes).every(
-        ([key, value]) =>
-          key === ignoredKey || productHasAttribute(product, key, value)
-      );
-    const attributeDefinitions = new Map();
-
-    products.forEach((product) => {
-      (product.attributes || []).forEach((attribute) => {
-        if (!attributeDefinitions.has(attribute.key)) {
-          attributeDefinitions.set(attribute.key, attribute.name);
-        }
-      });
-    });
-
-    const facets = [...attributeDefinitions.entries()]
-      .map(([key, name]) => {
-        const counts = new Map();
-        filteredProducts
-          .filter((product) => matchesAttributes(product, key))
-          .forEach((product) => {
-            const attribute = (product.attributes || []).find(
-              (item) => item.key === key
-            );
-            const valuesOnProduct = new Map();
-            (attribute?.values || []).forEach((value) => {
-              const normalizedValue = normalizeStr(value);
-              if (normalizedValue && !valuesOnProduct.has(normalizedValue)) {
-                valuesOnProduct.set(normalizedValue, value);
-              }
-            });
-            valuesOnProduct.forEach((value, normalizedValue) => {
-              const current = counts.get(normalizedValue);
-              counts.set(normalizedValue, {
-                value: current?.value || value,
-                count: (current?.count || 0) + 1,
-              });
-            });
-          });
-
-        return {
-          key,
-          name,
-          options: [...counts.values()].sort((a, b) =>
-            normalizeStr(a.value).localeCompare(normalizeStr(b.value))
-          ),
-        };
-      })
-      .filter(
-        (attribute) =>
-          attribute.options.length > 0 || selectedAttributes[attribute.key]
-      )
-      .sort((a, b) =>
-        normalizeStr(a.name).localeCompare(normalizeStr(b.name))
-      );
-
-    return {
-      availableAttributes: facets,
-      compoundFilteredProducts: filteredProducts.filter((product) =>
-        matchesAttributes(product)
-      ),
-    };
-  }, [products, filteredProducts, attributeFilters]);
+  }, [products, category, tribe]);
 
 
   // Paginated Products
   const paginatedProducts = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
-    return compoundFilteredProducts.slice(
+    return filteredProducts.slice(
       startIndex,
       startIndex + itemsPerPage
     );
-  }, [compoundFilteredProducts, currentPage]);
+  }, [filteredProducts, currentPage]);
 
   const totalPages =
-    Math.ceil(compoundFilteredProducts.length / itemsPerPage) || 1;
+    Math.ceil(filteredProducts.length / itemsPerPage) || 1;
 
   const mobilePageNumbers = useMemo(() => {
     if (totalPages <= 3) {
@@ -291,10 +208,8 @@ export default function CatalogClient({ initialProducts = [] }) {
 
   // Handle clear filters
   const handleClearFilters = () => {
-    setSearch("");
     setCategory("All");
     setTribe("All");
-    setAttributeFilters({});
     setCurrentPage(1);
   };
 
@@ -409,16 +324,13 @@ export default function CatalogClient({ initialProducts = [] }) {
         )}
 
         <FilterSidebar
-          filters={{ search, category, tribe, attributes: attributeFilters }}
+          filters={{ category, tribe }}
           categories={categories.slice(1)}
           tribes={tribes}
-          attributes={availableAttributes}
           allValue="All"
           onChange={(nextFilters) => {
-            setSearch(nextFilters.search);
             setCategory(nextFilters.category);
             setTribe(nextFilters.tribe);
-            setAttributeFilters(nextFilters.attributes || {});
             setCurrentPage(1);
           }}
           onClear={handleClearFilters}
@@ -517,7 +429,6 @@ export default function CatalogClient({ initialProducts = [] }) {
                       {isLoggedIn && product.pricingVisible === true ? (
                         <ProductPurchaseControls
                           product={product}
-                          onAdded={() => setIsCartOpen(true)}
                         />
                       ) : (
                         <div className="flex flex-col gap-3 rounded-lg border border-[#82d6c5]/20 bg-[#102c27]/55 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">

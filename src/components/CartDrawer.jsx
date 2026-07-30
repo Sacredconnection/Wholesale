@@ -8,8 +8,7 @@ import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
 import ProductRecommendations from './ProductRecommendations';
-import StockBackorderNotice from './StockBackorderNotice';
-import { ShoppingBag, X, Minus, Plus, ArrowRight, PhoneCall, CircleDollarSign } from 'lucide-react';
+import { ShoppingBag, X, Minus, Plus, ArrowRight, CircleDollarSign } from 'lucide-react';
 import { MIN_ORDER_AMOUNT, NEW_CUSTOMER_ROLE, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
 import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
@@ -40,7 +39,6 @@ export default function CartDrawer() {
   if (!isLoggedIn) return null;
   if (!isCartOpen && !isLoginOpen) return null;
 
-  const hasBackorderItems = cart.some((item) => item.inStock === false);
   const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
   const discountAmount = cartSubtotal * (discountPercentage / 100);
   const finalTotal = cartSubtotal - discountAmount;
@@ -111,10 +109,10 @@ export default function CartDrawer() {
             </div>
 
             {/* Body: Cart Items */}
-            <div className="flex-grow overflow-y-auto px-5 sm:px-8 py-5 sm:py-6 flex flex-col gap-5 sm:gap-6 scrollbar-none">
+            <div className="flex-grow overflow-y-auto scrollbar-none">
               {cart.length > 0 ? (
-                <div className="flex flex-col gap-6">
-                  <div className="flex flex-col gap-5 divide-y divide-white/5">
+                <div className="flex flex-col">
+                  <div className="flex flex-col gap-5 divide-y divide-white/5 px-5 py-5 sm:px-8 sm:py-6">
                     {cart.map((item, index) => (
                     <div key={item.cartKey} className={`flex flex-col items-start justify-between gap-4 sm:flex-row ${index > 0 ? "pt-5" : ""}`}>
                       <div className="flex w-full min-w-0 flex-grow gap-3">
@@ -209,7 +207,7 @@ export default function CartDrawer() {
                   />
                 </div>
               ) : (
-                <div className="flex flex-col items-center justify-center h-64 text-center gap-4 text-white/30">
+                <div className="flex h-64 flex-col items-center justify-center gap-4 px-5 text-center text-white/30 sm:px-8">
                   <ShoppingBag className="w-12 h-12 stroke-[1.5]" />
                   <p className="text-sm font-semibold">Your B2B order sheet is currently empty.</p>
                   <button
@@ -274,17 +272,6 @@ export default function CartDrawer() {
                     ${(isLoggedIn && user ? finalTotal : cartSubtotal).toFixed(2)}
                   </span>
                 </div>
-              </div>
-
-              {/* Offline payment notice */}
-              {hasBackorderItems && <StockBackorderNotice compact />}
-
-              <div className="bg-[#268072]/10 border border-[#268072]/25 rounded-sm px-4 py-3 flex items-start gap-3">
-                <PhoneCall className="w-4 h-4 text-[#82d6c5] shrink-0 mt-0.5" />
-                <p className="text-[11px] text-white/70 leading-relaxed">
-                  No online payment is taken. Once submitted, your order is registered
-                  and a member of our team will contact you to arrange payment and shipping.
-                </p>
               </div>
 
               <button
