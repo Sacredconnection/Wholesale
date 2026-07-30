@@ -53,59 +53,67 @@ export function CartProvider({ children }) {
     localStorage.setItem('sc_wholesale_cart', JSON.stringify(cart));
   }, [cart]);
 
-  // Add to cart helper
-  const addToCart = (product, optionIndex, quantity = 1) => {
-    if (quantity <= 0) return;
-    const selectedOption = product.options[optionIndex];
-    if (!selectedOption) return;
+  const cartItemFromSelection = (product, optionIndex, quantity) => {
+    if (
+      !product ||
+      !Number.isInteger(optionIndex) ||
+      !Number.isSafeInteger(quantity) ||
+      quantity <= 0
+    ) {
+      return null;
+    }
+    const selectedOption = product.options?.[optionIndex];
+    if (!selectedOption) return null;
+    const storeId = product.storeId || SACRED_STORE_ID;
+    if (storeId !== SACRED_STORE_ID) return null;
+
+    return {
+      id: product.id,
+      cartKey: `${storeId}:${selectedOption.sku}`,
+      storeId,
+      storeName: product.storeName || "Sacred Connection",
+      name: product.name,
+      sku: selectedOption.sku,
+      optionName: selectedOption.name,
+      category: product.category || "",
+      price: optionPriceForUser(selectedOption, user, product.category),
+      weightGrams: selectedOption.weightGrams,
+      quantity,
+      image: product.image,
+      wcProductId: product.wcId || null,
+      wcVariationId: selectedOption.wcVariationId || null,
+      inStock: selectedOption.inStock !== false,
+    };
+  };
+
+  const addSelectionsToCart = (selections) => {
+    const incomingItems = (Array.isArray(selections) ? selections : [])
+      .map(({ product, optionIndex, quantity = 1 }) =>
+        cartItemFromSelection(product, optionIndex, Number(quantity))
+      )
+      .filter(Boolean);
+    if (incomingItems.length === 0) return 0;
 
     setCart((prevCart) => {
-      const storeId = product.storeId || SACRED_STORE_ID;
-      if (storeId !== SACRED_STORE_ID) return prevCart;
-      const cartKey = `${storeId}:${selectedOption.sku}`;
-      const existingItemIndex = prevCart.findIndex((item) => item.cartKey === cartKey);
-      
-      if (existingItemIndex > -1) {
-        // Update existing item quantity immutably
-        return prevCart.map((item, idx) => {
-          if (idx === existingItemIndex) {
-            return {
-              ...item,
-              quantity: item.quantity + quantity,
-              inStock: selectedOption.inStock !== false,
-            };
-          }
-          return item;
-        });
-      } else {
-        // Add new item
-        return [
-          ...prevCart,
-          {
-            id: product.id,
-            cartKey,
-            storeId,
-            storeName: product.storeName || "Sacred Connection",
-            name: product.name,
-            sku: selectedOption.sku,
-            optionName: selectedOption.name,
-            // Category picks the progressive tier table (indigenous/shamanic)
-            category: product.category || "",
-            // Price for the buyer's access level (role-based pricing)
-            price: optionPriceForUser(selectedOption, user, product.category),
-            weightGrams: selectedOption.weightGrams,
-            quantity: quantity,
-            image: product.image,
-            // WooCommerce ids (present when the item came from the live
-            // catalog) — used to register the order via /api/orders.
-            wcProductId: product.wcId || null,
-            wcVariationId: selectedOption.wcVariationId || null,
-            inStock: selectedOption.inStock !== false,
-          }
-        ];
+      const nextCart = prevCart.map((item) => ({ ...item }));
+      for (const incoming of incomingItems) {
+        const existingItem = nextCart.find((item) => item.cartKey === incoming.cartKey);
+        if (existingItem) {
+          existingItem.quantity += incoming.quantity;
+          existingItem.inStock = incoming.inStock;
+        } else {
+          nextCart.push(incoming);
+        }
       }
+      return nextCart;
     });
+
+    return incomingItems.length;
   };
+
+  // Add to cart helper
+  const addToCart = (product, optionIndex, quantity = 1) =>
+    addSelectionsToCart([{ product, optionIndex, quantity }]);
 
   // Update item quantity
   const updateQuantity = (cartKey, change) => {
@@ -164,6 +172,7 @@ export function CartProvider({ children }) {
       isCartOpen,
       setIsCartOpen,
       addToCart,
+      addSelectionsToCart,
       updateQuantity,
       removeFromCart,
       clearCart,

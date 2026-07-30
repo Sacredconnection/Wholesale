@@ -143,6 +143,7 @@ export function mapVariationToOption(variation) {
     weightGrams: extractWeightGrams(name, variation.weight),
     wcVariationId: variation.id,
     inStock: variation.stock_status !== "outofstock",
+    stockStatus: variation.stock_status || "instock",
     stockQuantity:
       variation.stock_quantity == null ? null : Number(variation.stock_quantity),
   };
@@ -174,6 +175,7 @@ const mapStoreVariationToOption = (variation) => {
     weightGrams: extractWeightGrams(name, null),
     wcVariationId: variation.id,
     inStock: variation.is_in_stock !== false,
+    stockStatus: variation.is_in_stock === false ? "outofstock" : "instock",
     stockQuantity: null,
   };
 };
@@ -284,6 +286,8 @@ export function mapOrder(order, store = { id: "sacred-connection", name: "Sacred
     paymentMethodTitle: order.payment_method_title,
     customerNote: order.customer_note,
     items: (order.line_items || []).map((li) => ({
+      productId: li.product_id || null,
+      variationId: li.variation_id || null,
       name: li.name,
       sku: li.sku,
       quantity: li.quantity,
@@ -319,6 +323,7 @@ export function mapProduct(
             weightGrams: extractWeightGrams(product.name, product.weight),
             wcVariationId: null,
             inStock: product.stock_status !== "outofstock",
+            stockStatus: product.stock_status || "instock",
             stockQuantity:
               product.stock_quantity == null ? null : Number(product.stock_quantity),
           },
@@ -403,6 +408,7 @@ export function mapStoreProduct(
             weightGrams: extractWeightGrams(product.name, null),
             wcVariationId: null,
             inStock: product.is_in_stock !== false,
+            stockStatus: product.is_in_stock === false ? "outofstock" : "instock",
             stockQuantity: null,
           },
         ];
