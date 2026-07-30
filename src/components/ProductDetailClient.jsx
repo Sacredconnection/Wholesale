@@ -216,6 +216,10 @@ export default function ProductDetailClient({ initialProduct }) {
     basePrice == null ? null : basePrice * (discountPercentage / 100);
   const finalPrice =
     basePrice == null ? null : basePrice - discountAmount;
+  const minimumPackTotal =
+    finalPrice == null ? null : finalPrice * quantityStep;
+  const selectedTotal =
+    finalPrice == null ? null : finalPrice * quantity;
 
   const handleAddToCartClick = () => {
     if (!canPurchase || !product.optionsLoaded) {
@@ -345,6 +349,16 @@ export default function ProductDetailClient({ initialProduct }) {
                         </span>
                       )}
                     </div>
+                    {quantityStep > 1 && minimumPackTotal != null && (
+                      <div className="mt-3 border-t border-white/10 pt-3">
+                        <span className="block text-[10px] font-mono uppercase text-white/45">
+                          Minimum pack · {quantityStep} units
+                        </span>
+                        <strong className="mt-1 block text-xl font-black text-[#82d6c5]">
+                          ${minimumPackTotal.toFixed(2)}
+                        </strong>
+                      </div>
+                    )}
                   </div>
                   <span className="rounded-sm border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 font-mono">
                     Partner {user.discountRate}% Off
@@ -447,7 +461,18 @@ export default function ProductDetailClient({ initialProduct }) {
 
               {/* Purchase Box */}
               {canPurchase ? (
-              <div className="flex flex-col sm:flex-row sm:items-end gap-4 mt-1">
+              <div className="flex flex-col gap-3 mt-1">
+                {quantityStep > 1 && selectedTotal != null && (
+                  <div className="flex items-center justify-between rounded border border-white/5 bg-black/15 px-3 py-2 text-[10px]">
+                    <span className="font-mono uppercase tracking-wider text-white/45">
+                      Selected total · {quantity} units
+                    </span>
+                    <strong className="text-sm text-[#82d6c5]">
+                      ${selectedTotal.toFixed(2)}
+                    </strong>
+                  </div>
+                )}
+                <div className="flex flex-col sm:flex-row sm:items-end gap-4">
                 {/* Quantity select */}
                 <div className="flex flex-col gap-1.5 sm:shrink-0">
                   <span className="text-[10px] font-mono text-white/45 uppercase tracking-wider font-label-sm">
@@ -494,6 +519,7 @@ export default function ProductDetailClient({ initialProduct }) {
                   </button>
                 </div>
 
+                </div>
               </div>
               ) : !isLoggedIn ? (
                 <button

@@ -73,6 +73,10 @@ export default function ProductPurchaseControls({
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, activeProduct.category)
     : null;
+  const minimumPackTotal =
+    price == null ? null : price * quantityStep;
+  const selectedTotal =
+    price == null ? null : price * quantity;
   const canAdd = Boolean(selectedOption && !error);
 
   const handleAdd = () => {
@@ -146,9 +150,35 @@ export default function ProductPurchaseControls({
             <span className="block truncate text-[9px] uppercase tracking-wider text-white/35">
               {selectedOption?.sku || (activeProduct ? "SKU unavailable" : "Loading price")}
             </span>
-            <strong className={`block text-[#82d6c5] ${compact ? "text-sm" : "text-base"}`}>
-              {price == null ? "—" : `$${price.toFixed(2)}`}
-            </strong>
+            {quantityStep > 1 && price != null ? (
+              <div className="mt-1 flex flex-wrap items-end gap-x-3 gap-y-1">
+                <div>
+                  <span className="block text-[8px] font-bold uppercase tracking-wider text-white/40">
+                    Unit price
+                  </span>
+                  <strong className={`block text-white ${compact ? "text-xs" : "text-sm"}`}>
+                    ${price.toFixed(2)}
+                  </strong>
+                </div>
+                <div className="border-l border-white/10 pl-3">
+                  <span className="block text-[8px] font-bold uppercase tracking-wider text-white/40">
+                    {quantityStep} units
+                  </span>
+                  <strong className={`block text-[#82d6c5] ${compact ? "text-sm" : "text-base"}`}>
+                    ${minimumPackTotal.toFixed(2)}
+                  </strong>
+                </div>
+                {quantity > quantityStep && (
+                  <span className="w-full text-[8px] font-semibold text-white/45">
+                    {quantity} selected: ${selectedTotal.toFixed(2)}
+                  </span>
+                )}
+              </div>
+            ) : (
+              <strong className={`block text-[#82d6c5] ${compact ? "text-sm" : "text-base"}`}>
+                {price == null ? "—" : `$${price.toFixed(2)}`}
+              </strong>
+            )}
           </div>
 
           <div className="flex shrink-0 items-center rounded-sm border border-white/10 bg-[#131313]">

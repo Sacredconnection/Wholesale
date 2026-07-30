@@ -62,6 +62,10 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, resolvedProduct.category)
     : null;
+  const minimumPackTotal =
+    price == null ? null : price * quantityStep;
+  const selectedTotal =
+    price == null ? null : price * quantity;
 
   const handleAdd = () => {
     if (resolvedProduct && selectedOption) {
@@ -145,15 +149,33 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
             )}
 
             <div className="flex flex-wrap items-end justify-between gap-4 rounded border border-white/5 bg-black/20 p-4">
-              <div>
-                <span className="block text-[10px] font-mono uppercase tracking-wider text-white/40">Unit price</span>
-                <strong className="text-2xl text-[#82d6c5]">${price?.toFixed(2)}</strong>
+              <div className="flex flex-wrap items-end gap-5">
+                <div>
+                  <span className="block text-[10px] font-mono uppercase tracking-wider text-white/40">Unit price</span>
+                  <strong className="text-xl text-white">${price?.toFixed(2)}</strong>
+                </div>
+                {quantityStep > 1 && minimumPackTotal != null && (
+                  <div className="border-l border-white/10 pl-5">
+                    <span className="block text-[10px] font-mono uppercase tracking-wider text-white/40">
+                      Pack of {quantityStep}
+                    </span>
+                    <strong className="text-2xl text-[#82d6c5]">
+                      ${minimumPackTotal.toFixed(2)}
+                    </strong>
+                  </div>
+                )}
               </div>
               <div className="flex items-center rounded-sm border border-white/10 bg-[#101010]">
                 <button type="button" onClick={() => setQuantity((value) => Math.max(quantityStep, value - quantityStep))} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Decrease quantity"><Minus className="h-4 w-4" /></button>
                 <span className="w-10 text-center text-sm font-bold text-white">{quantity}</span>
                 <button type="button" onClick={() => setQuantity((value) => value + quantityStep)} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
               </div>
+              {quantityStep > 1 && quantity > quantityStep && selectedTotal != null && (
+                <p className="w-full border-t border-white/5 pt-3 text-right text-[10px] font-semibold text-white/50">
+                  {quantity} units selected:{" "}
+                  <strong className="text-white">${selectedTotal.toFixed(2)}</strong>
+                </p>
+              )}
             </div>
 
             <button type="button" onClick={handleAdd} className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm border-0 bg-[#EC2300] px-6 py-4 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-[#c51d00]">
