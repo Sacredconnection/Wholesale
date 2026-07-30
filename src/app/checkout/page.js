@@ -258,20 +258,31 @@ export default function CheckoutPage() {
           },
         }),
       });
-      const data = await response.json();
+      const data = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (!data.uncertain) {
+          orderIdempotencyKey.current = "";
+        }
         throw new Error(data.error || "Order submission failed. Please try again.");
       }
-      orderIdempotencyKey.current = "";
 
       const completedStoreIds = (data.orders || []).map((order) => order.storeId);
       if (data.failures?.length) {
         removeItemsByStore(completedStoreIds);
+        const uncertainStores = data.failures
+          .filter((failure) => failure.uncertain)
+          .map((failure) => failure.storeName);
+        if (uncertainStores.length === 0) {
+          orderIdempotencyKey.current = "";
+        }
         throw new Error(
-          `Orders were created for ${data.orders.map((order) => order.storeName).join(", ")}, but failed for ${data.failures.map((failure) => failure.storeName).join(", ")}. The remaining items are still in your cart.`
+          uncertainStores.length
+            ? `Orders were confirmed for ${data.orders.map((order) => order.storeName).join(", ")}, but confirmation is still uncertain for ${uncertainStores.join(", ")}. Check My Account before submitting again.`
+            : `Orders were created for ${data.orders.map((order) => order.storeName).join(", ")}, but failed for ${data.failures.map((failure) => failure.storeName).join(", ")}. The remaining items are still in your cart.`
         );
       }
 
+      orderIdempotencyKey.current = "";
       clearCart();
       const orderSummary = data.orders
         .map((order) => `${order.storeName} #${order.number}`)

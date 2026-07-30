@@ -26,6 +26,7 @@ import {
   progressivePerGramRate,
   progressiveTableKeyFor,
 } from "@/lib/pricing";
+import { createHash } from "node:crypto";
 import {
   cleanText,
   isSameOrigin,
@@ -68,6 +69,14 @@ const missingBackendsResponse = () => {
 
 const orderErrorStatus = (err) =>
   err instanceof WooCommerceApiError && err.status >= 400 ? 502 : 500;
+
+const orderMetaValue = (order, key) => {
+  const entries = order?.meta_data || [];
+  for (let index = entries.length - 1; index >= 0; index -= 1) {
+    if (entries[index]?.key === key) return String(entries[index].value || "");
+  }
+  return "";
+};
 
 const sanitizedAddress = (address) => {
   if (!address || typeof address !== "object" || Array.isArray(address)) return null;
@@ -356,6 +365,10 @@ export async function POST(request) {
     };
 
     const storesInOrder = stores.filter((store) => entriesByStore.has(store.id));
+    const requestReference = createHash("sha256")
+      .update(`${session.customerId}:${idempotencyKey}`)
+      .digest("hex")
+      .slice(0, 32);
     const reservation = await reserveIdempotency({
       namespace: "order-create",
       identity: `${session.customerId}:${session.email}`,
@@ -409,38 +422,66 @@ export async function POST(request) {
           };
         });
 
-        const order = await createOrder(
-          {
-            status: "on-hold",
-            set_paid: false,
-            payment_method: "sc_offline",
-            payment_method_title: "Offline: Sacred Connection team will contact you to arrange payment",
-            billing,
-            shipping,
-            line_items: lineItems,
-            customer_note: orderCustomerNote(),
-            meta_data: [
-              { key: "sc_channel", value: "wholesale-portal" },
-              { key: "sc_source_store", value: store.id },
-              { key: "sc_access_level", value: role || "none (base prices)" },
-              { key: "sc_total_weight_grams", value: String(Math.round(totalWeightGrams)) },
-              ...(Object.keys(appliedRates).length > 0
-                ? [{
-                    key: "sc_per_gram_rate",
-                    value: Object.entries(appliedRates)
-                      .map(([table, rate]) => `${table}: $${rate.toFixed(2)}/g`)
-                      .join(" · "),
-                  }]
-                : []),
-              ...(customer.accountId ? [{ key: "sc_account_id", value: String(customer.accountId) }] : []),
-              ...(customer.discountRate
-                ? [{ key: "sc_discount_rate", value: String(customer.discountRate) }]
-                : []),
-            ],
-          },
-          store.id
-        );
-        return mapOrder(order, store);
+        const orderPayload = {
+          status: "on-hold",
+          set_paid: false,
+          customer_id: wcCustomer.id,
+          payment_method: "sc_offline",
+          payment_method_title: "Offline: Sacred Connection team will contact you to arrange payment",
+          billing,
+          shipping,
+          line_items: lineItems,
+          customer_note: orderCustomerNote(),
+          meta_data: [
+            { key: "sc_channel", value: "wholesale-portal" },
+            { key: "sc_source_store", value: store.id },
+            { key: "sc_request_reference", value: requestReference },
+            { key: "sc_access_level", value: role || "none (base prices)" },
+            { key: "sc_total_weight_grams", value: String(Math.round(totalWeightGrams)) },
+            ...(Object.keys(appliedRates).length > 0
+              ? [{
+                  key: "sc_per_gram_rate",
+                  value: Object.entries(appliedRates)
+                    .map(([table, rate]) => `${table}: $${rate.toFixed(2)}/g`)
+                    .join(" · "),
+                }]
+              : []),
+            ...(customer.accountId
+              ? [{ key: "sc_account_id", value: String(customer.accountId) }]
+              : []),
+            ...(customer.discountRate
+              ? [{ key: "sc_discount_rate", value: String(customer.discountRate) }]
+              : []),
+          ],
+        };
+
+        try {
+          const order = await createOrder(orderPayload, store.id);
+          return mapOrder(order, store);
+        } catch (creationError) {
+          // WooCommerce can commit an order and then time out while returning
+          // the response. Reconcile by the unique request marker before
+          // reporting a failure or allowing another checkout attempt.
+          try {
+            const recentOrders = await getOrdersByEmail(customer.email, store.id);
+            const recoveredOrder = recentOrders.find(
+              (order) =>
+                orderMetaValue(order, "sc_request_reference") === requestReference
+            );
+            if (recoveredOrder) {
+              console.warn(
+                `Recovered WooCommerce order ${recoveredOrder.id} after an uncertain create response.`
+              );
+              return mapOrder(recoveredOrder, store);
+            }
+          } catch (reconciliationError) {
+            console.error(
+              `Order reconciliation failed for ${store.id}:`,
+              reconciliationError
+            );
+          }
+          throw creationError;
+        }
       })
     );
 
@@ -451,16 +492,30 @@ export async function POST(request) {
       if (result.status === "fulfilled") return [];
       const store = storesInOrder[index];
       console.error(`POST /api/orders failed for ${store.id}:`, result.reason);
-      return [{ storeId: store.id, storeName: store.name }];
+      return [{
+        storeId: store.id,
+        storeName: store.name,
+        uncertain:
+          !(result.reason instanceof WooCommerceApiError) ||
+          result.reason.status >= 500,
+      }];
     });
 
     if (orders.length === 0) {
+      const uncertain = failures.some((failure) => failure.uncertain);
       const responseBody = {
-        error: "Failed to register the order in the configured WooCommerce stores.",
+        error: uncertain
+          ? "We could not confirm the order response. Check My Account before submitting it again."
+          : "Failed to register the order in the configured WooCommerce stores.",
         orders,
         failures,
+        uncertain,
       };
-      await completeIdempotency(idempotencyHandle, { status: 502, body: responseBody });
+      if (uncertain) {
+        await completeIdempotency(idempotencyHandle, { status: 502, body: responseBody });
+      } else {
+        await releaseIdempotency(idempotencyHandle);
+      }
       return Response.json(responseBody, {
         status: 502,
         headers: { "Cache-Control": "no-store" },
