@@ -216,10 +216,8 @@ export async function GET(request) {
   try {
     let customer = null;
     let products = null;
-    let source = "snapshot";
 
     if (isWooCommerceConfigured()) {
-      source = "woocommerce-rest";
       customer = await resolveCustomer();
       const configuredStores = getRequiredCommerceStores().filter((store) =>
         isCommerceStoreConfigured(store.id)
@@ -231,7 +229,6 @@ export async function GET(request) {
       );
       products = catalogs.flat();
     } else if (isWooCommerceStoreConfigured()) {
-      source = "woocommerce-store";
       const storeCatalog = await getPublicStoreCatalog(
         PRIMARY_STORE_ID,
         catalogFetchOptions
@@ -265,7 +262,7 @@ export async function GET(request) {
       products = await loadLocalCatalogSnapshot();
       if (!products) {
         return Response.json(
-          { error: "Catalog backend unavailable." },
+          { error: "Catalog service unavailable." },
           { status: 503 }
         );
       }
@@ -404,7 +401,6 @@ export async function GET(request) {
 
     return Response.json(
       {
-        source,
         products: visibleProducts,
         pagination: {
           page,

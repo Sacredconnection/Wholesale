@@ -68,7 +68,7 @@ export async function POST(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
-  if (!isWooCommerceConfigured()) return securityError("Account backend unavailable.", 503);
+  if (!isWooCommerceConfigured()) return securityError("Account service unavailable.", 503);
   if (!isWordPressMediaUploadConfigured()) {
     return securityError("Profile image storage is not configured.", 503);
   }
@@ -155,7 +155,7 @@ export async function DELETE(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
-  if (!isWooCommerceConfigured()) return securityError("Account backend unavailable.", 503);
+  if (!isWooCommerceConfigured()) return securityError("Account service unavailable.", 503);
 
   try {
     const customer = await authenticatedCustomer();

@@ -19,7 +19,7 @@ export async function GET(request) {
       { headers: { "Cache-Control": "private, no-store" } }
     );
   }
-  if (!isWooCommerceConfigured()) return securityError("Authentication backend unavailable.", 503);
+  if (!isWooCommerceConfigured()) return securityError("Sign-in service unavailable.", 503);
 
   try {
     const customer = await getCustomerByEmail(session.email);
@@ -37,6 +37,6 @@ export async function GET(request) {
     );
   } catch (err) {
     console.error("GET /api/auth/session failed:", err);
-    return securityError("Authentication backend unavailable.", 502);
+    return securityError("Sign-in service unavailable.", 502);
   }
 }

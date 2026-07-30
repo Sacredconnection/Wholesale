@@ -35,6 +35,30 @@ const EMPTY_ADDRESS = {
 };
 
 const STEPS = ["Contact", "Delivery", "Review"];
+const ORDER_SUBMISSION_STAGES = [
+  {
+    title: "Securing your order request",
+    detail: "Protecting this submission against duplicates.",
+  },
+  {
+    title: "Validating customer and delivery",
+    detail: "Confirming your wholesale account and delivery details.",
+  },
+  {
+    title: "Checking products and quantities",
+    detail: "Verifying current catalog items and wholesale pricing.",
+  },
+  {
+    title: "Registering your order",
+    detail: "Saving your request securely in our order system.",
+  },
+  {
+    title: "Waiting for final confirmation",
+    detail: "Our order service is taking a little longer to respond.",
+  },
+];
+const ORDER_STAGE_DELAYS = [1_200, 3_200, 6_500, 11_000];
+const ORDER_STAGE_PROGRESS = [18, 38, 60, 82, 92];
 
 const addressLine = (address) =>
   [
@@ -58,6 +82,114 @@ function Field({ id, label, className = "", ...props }) {
         className="w-full rounded-sm border border-white/10 bg-[#131313] px-4 py-3 text-sm text-white outline-none transition-colors placeholder:text-white/25 focus:border-[#82d6c5] disabled:cursor-not-allowed disabled:opacity-60"
         {...props}
       />
+    </div>
+  );
+}
+
+function OrderSubmissionOverlay({ stage }) {
+  const activeStage = ORDER_SUBMISSION_STAGES[stage] || ORDER_SUBMISSION_STAGES.at(-1);
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] grid place-items-center overflow-y-auto bg-[#07120f]/90 px-4 py-8 backdrop-blur-md"
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="order-progress-title"
+      aria-describedby="order-progress-description"
+    >
+      <div className="w-full max-w-lg overflow-hidden rounded-2xl border border-[#82d6c5]/25 bg-[#151817] shadow-2xl shadow-black/60">
+        <div className="relative overflow-hidden border-b border-white/10 bg-[#102c27] px-6 py-7 text-center sm:px-8">
+          <div className="pointer-events-none absolute inset-0 opacity-30 [background:radial-gradient(circle_at_top,#268072_0,transparent_62%)]" />
+          <div className="relative mx-auto mb-4 grid h-16 w-16 place-items-center rounded-full border border-[#82d6c5]/35 bg-[#268072]/20">
+            <span className="absolute inset-1 animate-ping rounded-full border border-[#82d6c5]/20 motion-reduce:animate-none" />
+            <PackageCheck className="h-7 w-7 text-[#82d6c5]" />
+          </div>
+          <div className="relative">
+            <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#82d6c5]">
+              Secure order submission
+            </p>
+            <h2 id="order-progress-title" className="mt-2 text-2xl font-black text-white">
+              We&apos;re confirming your order
+            </h2>
+            <p
+              id="order-progress-description"
+              className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-white/60"
+            >
+              This may take a moment while we securely validate and record every item.
+            </p>
+          </div>
+        </div>
+
+        <div className="px-6 py-6 sm:px-8">
+          <div
+            className="h-1.5 overflow-hidden rounded-full bg-white/10"
+            role="progressbar"
+            aria-label="Order confirmation progress"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            aria-valuenow={ORDER_STAGE_PROGRESS[stage]}
+          >
+            <div
+              className="h-full rounded-full bg-[#82d6c5] transition-[width] duration-700 ease-out"
+              style={{ width: `${ORDER_STAGE_PROGRESS[stage]}%` }}
+            />
+          </div>
+
+          <p className="sr-only" aria-live="polite">
+            {activeStage.title}. {activeStage.detail}
+          </p>
+
+          <ol className="mt-6 space-y-1">
+            {ORDER_SUBMISSION_STAGES.map((item, index) => {
+              const complete = index < stage;
+              const active = index === stage;
+              return (
+                <li
+                  key={item.title}
+                  className={`flex gap-3 rounded-lg px-3 py-2.5 transition-colors ${
+                    active ? "bg-[#268072]/12" : ""
+                  }`}
+                >
+                  <span
+                    className={`mt-0.5 grid h-6 w-6 shrink-0 place-items-center rounded-full border ${
+                      complete
+                        ? "border-[#82d6c5] bg-[#268072] text-white"
+                        : active
+                          ? "border-[#82d6c5]/60 text-[#82d6c5]"
+                          : "border-white/15 text-white/25"
+                    }`}
+                  >
+                    {complete ? (
+                      <Check className="h-3.5 w-3.5" />
+                    ) : active ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin motion-reduce:animate-none" />
+                    ) : (
+                      <span className="h-1.5 w-1.5 rounded-full bg-current" />
+                    )}
+                  </span>
+                  <div>
+                    <p className={`text-xs font-bold ${active || complete ? "text-white" : "text-white/30"}`}>
+                      {item.title}
+                    </p>
+                    {active && (
+                      <p className="mt-1 text-[11px] leading-relaxed text-white/50">
+                        {item.detail}
+                      </p>
+                    )}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+
+          <div className="mt-5 flex items-start gap-2.5 rounded-lg border border-white/8 bg-white/[0.025] px-4 py-3">
+            <LockKeyhole className="mt-0.5 h-4 w-4 shrink-0 text-[#82d6c5]" />
+            <p className="text-[11px] leading-relaxed text-white/45">
+              Please keep this page open and avoid submitting again. No payment is being collected.
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
@@ -173,6 +305,7 @@ export default function CheckoutPage() {
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submissionStage, setSubmissionStage] = useState(0);
 
   useEffect(() => {
     if (!user || initializedForUser.current === user.email) return;
@@ -187,6 +320,14 @@ export default function CheckoutPage() {
     setShippingAddress({ ...EMPTY_ADDRESS, ...(user.shippingAddress || {}) });
     setBillingAddress({ ...EMPTY_ADDRESS, ...(user.billingAddress || {}) });
   }, [user]);
+
+  useEffect(() => {
+    if (!isSubmitting) return undefined;
+    const timers = ORDER_STAGE_DELAYS.map((delay, index) =>
+      window.setTimeout(() => setSubmissionStage(index + 1), delay)
+    );
+    return () => timers.forEach((timer) => window.clearTimeout(timer));
+  }, [isSubmitting]);
 
   if (loading || !isLoggedIn || !user) return <AuthGate loading={loading} />;
 
@@ -226,6 +367,8 @@ export default function CheckoutPage() {
       setError("Confirm that the order details are correct before placing the order.");
       return;
     }
+    let navigationStarted = false;
+    setSubmissionStage(0);
     setIsSubmitting(true);
     setError("");
 
@@ -291,10 +434,11 @@ export default function CheckoutPage() {
       router.push(
         `/order-received?orders=${encodeURIComponent(orderSummary)}&total=${encodeURIComponent(orderTotal.toFixed(2))}`
       );
+      navigationStarted = true;
     } catch (submissionError) {
       setError(submissionError.message || "Order submission failed. Please try again.");
     } finally {
-      setIsSubmitting(false);
+      if (!navigationStarted) setIsSubmitting(false);
     }
   };
 
@@ -305,6 +449,7 @@ export default function CheckoutPage() {
 
   return (
     <div id="top" className="site-background-page min-h-screen bg-[#23403B] text-[#e5e2e1]">
+      {isSubmitting && <OrderSubmissionOverlay stage={submissionStage} />}
       <CheckoutHeader />
 
       <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-8 lg:px-8">

@@ -51,7 +51,7 @@ export async function POST(request) {
   });
   if (rateLimit) return rateLimit;
   if (!isWooCommerceConfigured()) {
-    return securityError("Account backend unavailable.", 503);
+    return securityError("Account service unavailable.", 503);
   }
 
   let body;

@@ -36,7 +36,7 @@ export async function GET(request, { params }) {
   const identity = parseProductIdentifier(id);
   if (!identity) return securityError("Invalid product identifier.", 400);
   if (!isCommerceStoreConfigured(identity.store.id)) {
-    return securityError(`${identity.store.name} catalog backend unavailable.`, 503);
+    return securityError(`${identity.store.name} catalog is temporarily unavailable.`, 503);
   }
 
   try {

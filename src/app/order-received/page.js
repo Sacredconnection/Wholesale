@@ -48,7 +48,7 @@ function OrderReceivedContent() {
           </span>
         </div>
         <p className="font-body-md text-sm text-white/70 leading-relaxed">
-          Your wholesale order has been registered in the corresponding store backend. <strong className="text-white">No payment
+          Your wholesale order has been registered successfully. <strong className="text-white">No payment
           has been taken yet.</strong> A member of the Sacred Connection team will contact
           you within 24 hours to confirm availability, calculate shipping, and arrange payment.
         </p>

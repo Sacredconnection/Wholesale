@@ -60,7 +60,7 @@ const missingBackendsResponse = () => {
   return missingStores.length > 0
     ? Response.json(
         {
-          error: `WooCommerce backends are not configured: ${missingStores.map((store) => store.name).join(", ")}.`,
+          error: "The order service is temporarily unavailable.",
         },
         { status: 503 }
       )
@@ -151,7 +151,7 @@ export async function GET(request) {
       }
     });
     return Response.json(
-      { error: "Failed to load orders from the configured WooCommerce stores." },
+      { error: "We could not load your order history. Please try again." },
       { status: 502 }
     );
   }
@@ -506,7 +506,7 @@ export async function POST(request) {
       const responseBody = {
         error: uncertain
           ? "We could not confirm the order response. Check My Account before submitting it again."
-          : "Failed to register the order in the configured WooCommerce stores.",
+          : "We could not register your order. Please try again.",
         orders,
         failures,
         uncertain,
@@ -532,7 +532,7 @@ export async function POST(request) {
   } catch (err) {
     console.error("POST /api/orders failed before order creation:", err);
     const status = orderErrorStatus(err);
-    const responseBody = { error: "Failed to validate the order against WooCommerce." };
+    const responseBody = { error: "We could not validate your order. Please try again." };
     if (idempotencyHandle) {
       if (orderCreationStarted) {
         await completeIdempotency(idempotencyHandle, { status, body: responseBody });

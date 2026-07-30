@@ -59,7 +59,7 @@ export async function GET(request) {
   if (missingStores.length > 0) {
     return Response.json(
       {
-        error: `Catalog backends are not configured: ${missingStores.map((store) => store.name).join(", ")}.`,
+        error: "The catalog is temporarily unavailable.",
       },
       { status: 503 }
     );
@@ -90,7 +90,7 @@ export async function GET(request) {
     const storeNames = stores.map((store) => store.name).join(" and ");
     const errorMessage =
       upstreamStatus === 401
-        ? `${storeNames} rejected its WooCommerce API credentials.`
+        ? `The ${storeNames} catalog is temporarily unavailable.`
         : `The ${storeNames} catalog took too long or could not be loaded.`;
     return Response.json(
       { error: errorMessage },

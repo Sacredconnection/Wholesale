@@ -20,7 +20,7 @@ export async function POST(request) {
     windowSeconds: 15 * 60,
   });
   if (ipLimit) return ipLimit;
-  if (!isWooCommerceConfigured()) return securityError("Authentication backend unavailable.", 503);
+  if (!isWooCommerceConfigured()) return securityError("Sign-in service unavailable.", 503);
 
   let body;
   try {
@@ -63,6 +63,6 @@ export async function POST(request) {
     return Response.json({ user }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     console.error(`POST /api/auth/login failed during ${authenticationStage}:`, err);
-    return securityError("Could not reach the authentication backend. Please try again.", 502);
+    return securityError("The sign-in service is unavailable. Please try again.", 502);
   }
 }

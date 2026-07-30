@@ -39,7 +39,7 @@ export async function POST(request) {
     identity: rateLimitIdentity(request),
   });
   if (ipLimit) return ipLimit;
-  if (!isWooCommerceConfigured()) return securityError("Registration backend unavailable.", 503);
+  if (!isWooCommerceConfigured()) return securityError("Registration service unavailable.", 503);
 
   let body;
   try {
