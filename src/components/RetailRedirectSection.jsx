@@ -31,7 +31,7 @@ export default function RetailRedirectSection() {
               href="https://sacred-snuff.com/"
               target="_blank"
               rel="noopener noreferrer"
-              aria-label="Explore the Sacred Snuff Retail Store in a new tab"
+              aria-label="Explore Retail Store — opens in a new tab"
               className="absolute inset-x-4 bottom-6 mt-0 inline-flex items-center justify-center gap-2 rounded-lg border border-white bg-white px-6 py-3.5 font-label-sm text-xs font-bold uppercase tracking-[0.14em] text-[#131313] shadow-[0_10px_30px_rgba(0,0,0,0.55)] transition-[color,background-color,transform,box-shadow] duration-300 active:scale-[0.98] hover:bg-white hover:text-black focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-[#82d6c5] sm:static sm:mt-8 sm:w-auto sm:border-white/40 sm:bg-transparent sm:text-white sm:shadow-none sm:active:scale-100"
             >
               Explore Retail Store

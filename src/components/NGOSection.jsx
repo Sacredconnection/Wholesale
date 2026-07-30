@@ -138,7 +138,7 @@ export default function NGOSection() {
                   <Shield className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-headline-md text-base font-bold text-white mb-1">Self-Determination</h4>
+                  <h3 className="font-headline-md text-base font-bold text-white mb-1">Self-Determination</h3>
                   <p className="font-body-md text-xs text-white/50 leading-relaxed">
                     Strengthening indigenous leadership and autonomous territory management.
                   </p>
@@ -151,7 +151,7 @@ export default function NGOSection() {
                   <Leaf className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-headline-md text-base font-bold text-white mb-1">Cultural Preservation</h4>
+                  <h3 className="font-headline-md text-base font-bold text-white mb-1">Cultural Preservation</h3>
                   <p className="font-body-md text-xs text-white/50 leading-relaxed">
                     Safeguarding traditional songs, forest medicine, and sacred lineages.
                   </p>
@@ -164,7 +164,7 @@ export default function NGOSection() {
                   <Droplets className="w-5 h-5" />
                 </div>
                 <div>
-                  <h4 className="font-headline-md text-base font-bold text-white mb-1">Impact Projects</h4>
+                  <h3 className="font-headline-md text-base font-bold text-white mb-1">Impact Projects</h3>
                   <p className="font-body-md text-xs text-white/50 leading-relaxed">
                     Concrete actions in clean water access, sustainability, and basic infrastructure.
                   </p>

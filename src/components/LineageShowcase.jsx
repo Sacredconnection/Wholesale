@@ -269,7 +269,6 @@ export default function LineageShowcase() {
                 }}
                 onFocus={() => { isHovered.current = true; }}
                 onBlur={() => { isHovered.current = false; }}
-                aria-label={`View details about the ${tribe.name} people`}
                 aria-haspopup="dialog"
                 data-tribe-id={tribe.id}
                 aria-hidden={isDuplicate || undefined}
@@ -280,12 +279,14 @@ export default function LineageShowcase() {
                   '--ethnicity-readable': readableAccentColor,
                 }}
               >
+                <span className="sr-only">View details for </span>
                 {/* Image Overlay */}
                 <Image
                   src={tribe.image}
                   alt=""
                   fill
                   sizes="320px"
+                  quality={60}
                   className="object-cover object-center opacity-60 mix-blend-luminosity transition-transform duration-700 group-hover:scale-105 group-hover:mix-blend-normal"
                   draggable={false}
                 />

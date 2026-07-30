@@ -74,9 +74,9 @@ export default function TrustBar() {
               </span>
             </div>
             <div>
-              <h3 className="text-base font-bold leading-snug tracking-tight text-white font-headline-md lg:text-lg">
+              <h2 className="text-base font-bold leading-snug tracking-tight text-white font-headline-md lg:text-lg">
                 Expand your business with premium, sustainably harvested products from the HEART OF AMAZON.
-              </h3>
+              </h2>
               <p className="mt-3 text-xs leading-relaxed text-white/50 font-body-md sm:text-sm">
                 Sacred Connection partners directly with indigenous tribes and artisans to bring you high-quality rapés, incenses, and herbal remedies rooted in tradition. Experience the perfect balance of unmatched quality, ethical sourcing, and competitive pricing with us.
               </p>
@@ -94,9 +94,9 @@ export default function TrustBar() {
               </span>
             </div>
             <div>
-              <h3 className="text-base font-bold leading-snug text-white font-headline-md lg:text-lg">
+              <h2 className="text-base font-bold leading-snug text-white font-headline-md lg:text-lg">
                 Why Sacred Connection Wholesale?
-              </h3>
+              </h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-xs leading-relaxed text-white/50 font-body-md marker:text-[#82d6c5] sm:text-sm">
                 <li>Authentic products sourced from indigenous communities.</li>
                 <li>Direct partnerships with Amazonian artisans.</li>
@@ -116,7 +116,8 @@ export default function TrustBar() {
               </span>
             </div>
             <div className="inline-flex w-fit items-center">
-              <span ref={metricRef} className="inline-flex items-baseline text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-white font-headline-lg tabular-nums" aria-label="More than fourteen thousand batches delivered">
+              <span ref={metricRef} className="inline-flex items-baseline text-3xl sm:text-4xl lg:text-5xl font-black tracking-tighter text-white font-headline-lg tabular-nums">
+                <span className="sr-only">More than fourteen thousand batches delivered</span>
                 <span aria-hidden="true">+</span>
                 <span className="inline-flex min-w-[1.45ch] justify-end overflow-hidden" aria-hidden="true">
                   <span key={batchCount} className="inline-block animate-number-rise">
@@ -129,7 +130,7 @@ export default function TrustBar() {
             <span className="text-sm font-medium text-white/50 tracking-wide uppercase font-label-sm">
               Global batches delivered to verified retail partners.
             </span>
-            <div className="flex -space-x-2 opacity-90 mt-1" aria-label="Partner countries">
+            <div className="flex -space-x-2 opacity-90 mt-1" role="group" aria-label="Partner countries">
               {COUNTRY_FLAGS.map((country) => (
                 <div
                   key={country.name}

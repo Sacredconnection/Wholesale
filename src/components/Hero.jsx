@@ -43,6 +43,8 @@ export default function Hero() {
             <img
               src={banner.desktopSrc}
               alt={banner.alt}
+              width="1920"
+              height="1080"
               loading={idx === 0 ? "eager" : "lazy"}
               fetchPriority={idx === 0 ? "high" : "low"}
               decoding="async"
@@ -87,7 +89,7 @@ export default function Hero() {
           <div className="hidden w-full max-w-sm flex-col items-stretch gap-4 pt-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center md:flex md:pt-4">
             <Link 
               href="/register"
-              className="bg-[#EC2300] hover:bg-[#c51d00] text-white text-sm font-bold tracking-wide px-7 sm:px-10 py-4 sm:py-5 rounded-sm shadow-lg shadow-[#EC2300]/10 hover:shadow-[#EC2300]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase no-underline cursor-pointer border-0"
+              className="bg-[#d02000] hover:bg-[#b71a00] text-white text-sm font-bold tracking-wide px-7 sm:px-10 py-4 sm:py-5 rounded-sm shadow-lg shadow-[#d02000]/10 hover:shadow-[#d02000]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase no-underline cursor-pointer border-0"
             >
               Register B2B Account
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
@@ -101,7 +103,7 @@ export default function Hero() {
       <div className="absolute inset-x-4 bottom-14 z-20 sm:bottom-16 md:hidden">
         <Link
           href="/register"
-          className="mx-auto flex w-full max-w-xs items-center justify-center gap-3 rounded-sm border-0 bg-[#EC2300] px-7 py-4 text-sm font-bold uppercase tracking-wide text-white no-underline shadow-lg shadow-[#EC2300]/10 transition-all duration-300 hover:bg-[#c51d00] hover:shadow-[#EC2300]/20 font-label-sm"
+          className="mx-auto flex w-full max-w-xs items-center justify-center gap-3 rounded-sm border-0 bg-[#d02000] px-7 py-4 text-sm font-bold uppercase tracking-wide text-white no-underline shadow-lg shadow-[#d02000]/10 transition-all duration-300 hover:bg-[#b71a00] hover:shadow-[#d02000]/20 font-label-sm"
         >
           Register B2B Account
           <ArrowRight className="h-4 w-4" />

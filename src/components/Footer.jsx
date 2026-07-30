@@ -48,9 +48,9 @@ export default function Footer() {
 
         {/* Column 2: Resources */}
         <div className="flex flex-col gap-6">
-          <h5 className="font-label-sm text-xs font-bold text-white uppercase tracking-widest">
+          <h2 className="font-label-sm text-xs font-bold text-white uppercase tracking-widest">
             Resources
-          </h5>
+          </h2>
           <nav className="flex flex-col gap-4">
             <Link className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/about">
               About
@@ -66,9 +66,9 @@ export default function Footer() {
 
         {/* Column 3: Legal */}
         <div className="flex flex-col gap-6">
-          <h5 className="font-label-sm text-xs font-bold text-white uppercase tracking-widest">
+          <h2 className="font-label-sm text-xs font-bold text-white uppercase tracking-widest">
             Legal
-          </h5>
+          </h2>
           <nav className="flex flex-col gap-4">
             <Link className="font-body-md text-base text-white/60 hover:text-[#82d6c5] transition-colors" href="/shipping-and-returns-policy">
               Shipping and Returns Policy
@@ -88,9 +88,9 @@ export default function Footer() {
             Absolute Chemical Purity &amp; Cultural Authenticity
           </p>
           <div className="flex gap-6 text-white/30">
-            <Leaf className="w-5 h-5 hover:text-[#82d6c5] transition-colors" />
-            <Globe className="w-5 h-5 hover:text-[#82d6c5] transition-colors" />
-            <Users className="w-5 h-5 hover:text-[#82d6c5] transition-colors" />
+            <Leaf className="w-5 h-5 hover:text-[#82d6c5] transition-colors" aria-hidden="true" />
+            <Globe className="w-5 h-5 hover:text-[#82d6c5] transition-colors" aria-hidden="true" />
+            <Users className="w-5 h-5 hover:text-[#82d6c5] transition-colors" aria-hidden="true" />
           </div>
         </div>
       </div>

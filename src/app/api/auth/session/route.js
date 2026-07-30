@@ -5,7 +5,12 @@ import { securityError } from "@/lib/request-security";
 
 export async function GET() {
   const session = await getSession();
-  if (!session) return securityError("Authentication required.", 401);
+  if (!session) {
+    return Response.json(
+      { user: null },
+      { headers: { "Cache-Control": "private, no-store" } }
+    );
+  }
   if (!isWooCommerceConfigured()) return securityError("Authentication backend unavailable.", 503);
 
   try {
