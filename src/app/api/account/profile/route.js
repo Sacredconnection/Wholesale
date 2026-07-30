@@ -13,6 +13,7 @@ import {
   RequestBodyError,
   securityError,
 } from "@/lib/request-security";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 
 const DISPLAY_NAME_META_KEY = "sc_display_name";
 
@@ -42,6 +43,13 @@ export async function POST(request) {
   if (!isSameOrigin(request)) {
     return securityError("Cross-origin request rejected.", 403);
   }
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: "account-profile-update",
+    limit: 30,
+    windowSeconds: 60 * 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   if (!isWooCommerceConfigured()) {
     return securityError("Account backend unavailable.", 503);
   }

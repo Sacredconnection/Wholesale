@@ -9,6 +9,7 @@ import { getRequiredCommerceStores, isCommerceStoreConfigured } from "@/lib/comm
 import { buildCategoryContext, isApprovedWholesaleCustomer, mapProductForRole } from "@/lib/wc-mappers";
 import { securityError } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 
 function parseProductIdentifier(identifier) {
   if (typeof identifier !== "string" || identifier.length > 240) return null;
@@ -21,6 +22,13 @@ function parseProductIdentifier(identifier) {
 }
 
 export async function GET(request, { params }) {
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: "product-read",
+    limit: 120,
+    windowSeconds: 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   const session = await getSession();
   if (!session) return securityError("Authentication required.", 401);
 

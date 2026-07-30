@@ -3,8 +3,13 @@ import "server-only";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { cookies } from "next/headers";
 
-const COOKIE_NAME = "sc_wholesale_session";
+const LEGACY_COOKIE_NAME = "sc_wholesale_session";
+const COOKIE_NAME =
+  process.env.NODE_ENV === "production"
+    ? "__Host-sc_wholesale_session"
+    : LEGACY_COOKIE_NAME;
 const SESSION_MAX_AGE_SECONDS = 8 * 60 * 60;
+const MAX_SESSION_COOKIE_LENGTH = 4096;
 
 function sessionSecret() {
   const secret = process.env.SESSION_SECRET;
@@ -24,7 +29,13 @@ function encodeSession(payload) {
 }
 
 function decodeSession(value) {
-  if (!value || typeof value !== "string") return null;
+  if (
+    !value ||
+    typeof value !== "string" ||
+    value.length > MAX_SESSION_COOKIE_LENGTH
+  ) {
+    return null;
+  }
 
   const [encodedPayload, suppliedSignature, extra] = value.split(".");
   if (!encodedPayload || !suppliedSignature || extra) return null;
@@ -38,6 +49,9 @@ function decodeSession(value) {
     const payload = JSON.parse(Buffer.from(encodedPayload, "base64url").toString("utf8"));
     if (
       typeof payload.email !== "string" ||
+      payload.email.length > 254 ||
+      !Number.isInteger(payload.customerId) ||
+      payload.customerId <= 0 ||
       !Number.isInteger(payload.expiresAt) ||
       payload.expiresAt <= Date.now()
     ) {
@@ -50,10 +64,13 @@ function decodeSession(value) {
 }
 
 export async function createSession({ email, customerId }) {
+  if (!Number.isInteger(customerId) || customerId <= 0) {
+    throw new Error("A valid customer ID is required to create a session.");
+  }
   const expiresAt = Date.now() + SESSION_MAX_AGE_SECONDS * 1000;
   const value = encodeSession({
     email: email.toLowerCase(),
-    customerId: Number.isInteger(customerId) ? customerId : null,
+    customerId,
     expiresAt,
   });
 
@@ -76,4 +93,7 @@ export async function getSession() {
 export async function deleteSession() {
   const cookieStore = await cookies();
   cookieStore.delete(COOKIE_NAME);
+  if (COOKIE_NAME !== LEGACY_COOKIE_NAME) {
+    cookieStore.delete(LEGACY_COOKIE_NAME);
+  }
 }

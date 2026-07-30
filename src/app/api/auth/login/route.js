@@ -1,6 +1,7 @@
 import { verifyWpCredentials } from "@/lib/wp-auth";
 import { getCustomerByEmail, isWooCommerceConfigured } from "@/lib/woocommerce";
-import { mapCustomerToUser } from "@/lib/wc-mappers";
+import { isApprovedWholesaleCustomer, mapCustomerToUser } from "@/lib/wc-mappers";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 import {
   cleanText,
   isSameOrigin,
@@ -11,10 +12,14 @@ import {
 } from "@/lib/request-security";
 import { createSession } from "@/lib/session";
 
-const PENDING_ROLES = ["pending", "customer"];
-
 export async function POST(request) {
   if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
+  const ipLimit = await enforceRateLimit(request, {
+    namespace: "auth-login-ip",
+    limit: 10,
+    windowSeconds: 15 * 60,
+  });
+  if (ipLimit) return ipLimit;
   if (!isWooCommerceConfigured()) return securityError("Authentication backend unavailable.", 503);
 
   let body;
@@ -30,6 +35,13 @@ export async function POST(request) {
   if (!isValidEmail(email) || !password || password.length > 256) {
     return securityError("A valid email and password are required.", 400);
   }
+  const accountLimit = await enforceRateLimit(request, {
+    namespace: "auth-login-account",
+    limit: 6,
+    windowSeconds: 15 * 60,
+    identity: email,
+  });
+  if (accountLimit) return accountLimit;
 
   let authenticationStage = "WordPress credential verification";
   try {
@@ -38,7 +50,7 @@ export async function POST(request) {
 
     authenticationStage = "WooCommerce customer lookup";
     const customer = await getCustomerByEmail(email);
-    if (!customer || PENDING_ROLES.includes((customer.role || "").toLowerCase())) {
+    if (!isApprovedWholesaleCustomer(customer)) {
       return securityError(
         "Your wholesale account is pending approval by the administration.",
         403

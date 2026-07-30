@@ -90,6 +90,15 @@ The catalog is sourced exclusively from Sacred Connection. Configuration is enti
 | `TRANSACTIONAL_EMAIL_REPLY_TO` | Reply-to address for partner emails |
 | `PORTAL_URL` | Public portal origin used by email action buttons |
 | `SESSION_SECRET` | Required random secret (minimum 32 characters) used to sign authentication cookies |
+| `ORDER_CUSTOMER_NOTE` | Server-only payment/shipping instructions added to new orders |
+| `WHOLESALE_ALLOWED_ROLES` | Comma-separated allowlist of WordPress roles authorized for wholesale access |
+| `RATE_LIMIT_REDIS_REST_URL` | Recommended HTTPS Redis REST endpoint for distributed rate limits and order idempotency |
+| `RATE_LIMIT_REDIS_REST_TOKEN` | Secret token for the Redis REST endpoint |
+
+When Upstash is connected through the Vercel Marketplace with the
+`RATE_LIMIT_REDIS_REST` custom prefix, the generated
+`RATE_LIMIT_REDIS_REST_KV_REST_API_URL` and
+`RATE_LIMIT_REDIS_REST_KV_REST_API_TOKEN` variables are accepted directly.
 
 *   **Local dev:** copy `.env.example` to `.env.local` and fill in the Sacred Connection keys (WP Admin → WooCommerce → Settings → Advanced → REST API).
 *   **Vercel:** add all variables for Production and Preview, then redeploy.

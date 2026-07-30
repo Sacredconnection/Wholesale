@@ -22,6 +22,7 @@ import {
   isCommerceStoreConfigured,
   PRIMARY_STORE_ID,
 } from "@/lib/commerce-stores";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 
 const PAGE_SIZE = 30;
 const VARIATION_FETCH_CONCURRENCY = 8;
@@ -202,6 +203,13 @@ export async function GET(request) {
   const maxPrice = positiveNumber(searchParams.get("maxPrice"));
   const onlyInStock = searchParams.get("inStock") === "true";
   const exportAll = searchParams.get("export") === "true";
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: exportAll ? "catalog-export" : "catalog-read",
+    limit: exportAll ? 5 : 120,
+    windowSeconds: exportAll ? 5 * 60 : 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   const requestedPage = pageNumber(searchParams.get("page"));
   const catalogFetchOptions = { revalidate: exportAll ? 0 : undefined };
 

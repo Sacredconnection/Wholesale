@@ -93,6 +93,7 @@ export async function setWpUserRole(userId, role) {
       },
       body: JSON.stringify({ roles: [role] }),
       cache: "no-store",
+      signal: AbortSignal.timeout(15_000),
     });
     if (!res.ok) {
       console.error(`setWpUserRole(${userId}, ${role}) failed with HTTP ${res.status}`);
@@ -123,6 +124,7 @@ export async function verifyWpCredentials(usernameOrEmail, password) {
     headers: { "Content-Type": "text/xml" },
     body,
     cache: "no-store",
+    signal: AbortSignal.timeout(15_000),
   });
 
   const text = await res.text();

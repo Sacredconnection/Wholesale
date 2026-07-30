@@ -11,6 +11,8 @@ import {
   isWordPressMediaUploadConfigured,
   uploadWordPressMedia,
 } from "@/lib/wp-auth";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
+import sharp from "sharp";
 
 export const runtime = "nodejs";
 
@@ -59,6 +61,13 @@ async function authenticatedCustomer() {
 
 export async function POST(request) {
   if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: "account-avatar-upload",
+    limit: 12,
+    windowSeconds: 60 * 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   if (!isWooCommerceConfigured()) return securityError("Account backend unavailable.", 503);
   if (!isWordPressMediaUploadConfigured()) {
     return securityError("Profile image storage is not configured.", 503);
@@ -67,8 +76,15 @@ export async function POST(request) {
     return securityError("Expected a profile image upload.", 415);
   }
 
-  const contentLength = Number(request.headers.get("content-length"));
-  if (Number.isFinite(contentLength) && contentLength > MAX_AVATAR_BYTES + 64 * 1024) {
+  const contentLengthHeader = request.headers.get("content-length");
+  if (!contentLengthHeader) {
+    return securityError("A Content-Length header is required for image uploads.", 411);
+  }
+  const contentLength = Number(contentLengthHeader);
+  if (!Number.isSafeInteger(contentLength) || contentLength <= 0) {
+    return securityError("Invalid upload size.", 400);
+  }
+  if (contentLength > MAX_AVATAR_BYTES + 64 * 1024) {
     return securityError("The profile image must be 4 MB or smaller.", 413);
   }
 
@@ -89,10 +105,24 @@ export async function POST(request) {
     const format = imageFormat(bytes);
     if (!format) return securityError("Choose a valid JPG, PNG, or WEBP image.", 415);
 
+    let normalizedImage;
+    try {
+      normalizedImage = await sharp(bytes, {
+        failOn: "warning",
+        limitInputPixels: 20_000_000,
+      })
+        .rotate()
+        .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
+        .webp({ quality: 82, effort: 5 })
+        .toBuffer();
+    } catch {
+      return securityError("The uploaded file is not a safe, valid image.", 415);
+    }
+
     const media = await uploadWordPressMedia({
-      bytes,
-      contentType: format.contentType,
-      filename: `sacred-profile-${customer.id}-${Date.now()}.${format.extension}`,
+      bytes: normalizedImage,
+      contentType: "image/webp",
+      filename: `sacred-profile-${customer.id}-${Date.now()}.webp`,
       altText: `${customer.first_name || customer.username || "Partner"} profile photo`,
     });
     const updatedCustomer = await updateCustomer(customer.id, {
@@ -118,6 +148,13 @@ export async function POST(request) {
 
 export async function DELETE(request) {
   if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: "account-avatar-delete",
+    limit: 20,
+    windowSeconds: 60 * 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   if (!isWooCommerceConfigured()) return securityError("Account backend unavailable.", 503);
 
   try {

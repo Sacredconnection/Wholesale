@@ -1,5 +1,35 @@
 // Maps WooCommerce REST payloads to the internal product shape used by the UI.
 
+import "server-only";
+
+const DEFAULT_APPROVED_WHOLESALE_ROLES = [
+  "new customer",
+  "special customer",
+  "old customer",
+  "wholesale customer",
+  "wholesale buyer",
+  "shop manager",
+  "administrator",
+];
+
+const normalizeRole = (role) =>
+  String(role || "")
+    .normalize("NFKC")
+    .trim()
+    .toLowerCase()
+    .replace(/[_-]+/g, " ")
+    .replace(/\s+/g, " ");
+
+const approvedWholesaleRoles = () => {
+  const configured = String(process.env.WHOLESALE_ALLOWED_ROLES || "")
+    .split(",")
+    .map(normalizeRole)
+    .filter(Boolean);
+  return new Set(
+    configured.length > 0 ? configured : DEFAULT_APPROVED_WHOLESALE_ROLES
+  );
+};
+
 const decodeHtmlEntities = (value) =>
   String(value || "")
     .replace(/&#(\d+);/g, (_, code) => String.fromCodePoint(Number(code)))
@@ -201,7 +231,7 @@ const customerMeta = (customer, key) => {
 
 export function isApprovedWholesaleCustomer(customer) {
   return Boolean(
-    customer && !["pending", "customer"].includes((customer.role || "").toLowerCase())
+    customer && approvedWholesaleRoles().has(normalizeRole(customer.role))
   );
 }
 
@@ -228,9 +258,7 @@ export function mapCustomerToUser(customer) {
     // Access level (WP role) — drives role-based pricing, e.g. "New Customer",
     // "Special Customer", "Old Customer".
     role: customer.role || null,
-    status: ["pending", "customer"].includes((customer.role || "").toLowerCase())
-      ? "PENDING"
-      : "ACTIVE",
+    status: isApprovedWholesaleCustomer(customer) ? "ACTIVE" : "PENDING",
     discountRate: Number(customerMeta(customer, "sc_discount_rate")) || 0,
     avatar:
       profileAvatar === "__none__"

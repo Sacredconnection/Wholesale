@@ -12,6 +12,7 @@ import {
   sendApplicationApprovedEmail,
   sendApplicationReceivedEmail,
 } from "@/lib/transactional-email";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 
 export const runtime = "nodejs";
 
@@ -29,6 +30,24 @@ const CUSTOMER_TOPICS = new Set([
   CUSTOMER_ROLE_APPROVED_TOPIC,
 ]);
 const MAX_WEBHOOK_BYTES = 2 * 1024 * 1024;
+
+async function readWebhookBody(request) {
+  if (!request.body) return Buffer.alloc(0);
+  const reader = request.body.getReader();
+  const chunks = [];
+  let totalBytes = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    totalBytes += value.byteLength;
+    if (totalBytes > MAX_WEBHOOK_BYTES) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(Buffer.from(value));
+  }
+  return Buffer.concat(chunks, totalBytes);
+}
 
 const customerMeta = (customer, key) => {
   const entries = customer.meta_data || [];
@@ -105,6 +124,13 @@ function isWooCommercePing(request, body, signature) {
 }
 
 export async function POST(request) {
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: "woocommerce-webhook",
+    limit: 600,
+    windowSeconds: 5 * 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   const secret = process.env.WC_WEBHOOK_SECRET;
   if (!secret) {
     return Response.json(
@@ -121,8 +147,8 @@ export async function POST(request) {
     );
   }
 
-  const body = Buffer.from(await request.arrayBuffer());
-  if (body.byteLength > MAX_WEBHOOK_BYTES) {
+  const body = await readWebhookBody(request);
+  if (!body) {
     return Response.json(
       { error: "Webhook payload is too large." },
       { status: 413, headers: { "Cache-Control": "no-store" } }

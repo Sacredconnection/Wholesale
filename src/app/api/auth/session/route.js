@@ -2,8 +2,16 @@ import { getCustomerByEmail, isWooCommerceConfigured } from "@/lib/woocommerce";
 import { isApprovedWholesaleCustomer, mapCustomerToUser } from "@/lib/wc-mappers";
 import { deleteSession, getSession } from "@/lib/session";
 import { securityError } from "@/lib/request-security";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 
-export async function GET() {
+export async function GET(request) {
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: "auth-session",
+    limit: 120,
+    windowSeconds: 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   const session = await getSession();
   if (!session) {
     return Response.json(

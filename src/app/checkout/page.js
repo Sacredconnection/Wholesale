@@ -158,6 +158,7 @@ export default function CheckoutPage() {
     cartTotalWeightGrams,
   } = useCart();
   const initializedForUser = useRef(null);
+  const orderIdempotencyKey = useRef("");
   const [step, setStep] = useState(0);
   const [contact, setContact] = useState({
     firstName: "",
@@ -229,10 +230,16 @@ export default function CheckoutPage() {
     setError("");
 
     try {
+      if (!orderIdempotencyKey.current) {
+        orderIdempotencyKey.current = crypto.randomUUID();
+      }
       const response = await fetch("/api/orders", {
         method: "POST",
         credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          "Idempotency-Key": orderIdempotencyKey.current,
+        },
         body: JSON.stringify({
           items: cart.map(({ sku, quantity, wcProductId, wcVariationId, storeId }) => ({
             sku,
@@ -255,6 +262,7 @@ export default function CheckoutPage() {
       if (!response.ok) {
         throw new Error(data.error || "Order submission failed. Please try again.");
       }
+      orderIdempotencyKey.current = "";
 
       const completedStoreIds = (data.orders || []).map((order) => order.storeId);
       if (data.failures?.length) {

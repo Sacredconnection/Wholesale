@@ -8,6 +8,7 @@ import { setWpUserRole } from "@/lib/wp-auth";
 import { mapCustomerToUser, toWcAddress } from "@/lib/wc-mappers";
 import { sendApplicationReceivedEmail } from "@/lib/transactional-email";
 import { isSupportedCountryCode } from "@/lib/countries";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 import {
   cleanText,
   isSameOrigin,
@@ -31,6 +32,13 @@ function cleanAddress(value) {
 
 export async function POST(request) {
   if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
+  const ipLimit = await enforceRateLimit(request, {
+    namespace: "auth-register-ip",
+    limit: 5,
+    windowSeconds: 60 * 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (ipLimit) return ipLimit;
   if (!isWooCommerceConfigured()) return securityError("Registration backend unavailable.", 503);
 
   let body;
@@ -64,6 +72,13 @@ export async function POST(request) {
   ) {
     return securityError("Please select a valid Country/Region.", 400);
   }
+  const accountLimit = await enforceRateLimit(request, {
+    namespace: "auth-register-account",
+    limit: 3,
+    windowSeconds: 24 * 60 * 60,
+    identity: email,
+  });
+  if (accountLimit) return accountLimit;
 
   try {
     const customer = await createCustomer({

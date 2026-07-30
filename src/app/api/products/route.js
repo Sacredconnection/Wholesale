@@ -12,6 +12,7 @@ import {
 import { buildCategoryContext, isApprovedWholesaleCustomer, mapProductForRole } from "@/lib/wc-mappers";
 import { securityError } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
+import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 
 const catalogCacheSeconds = (() => {
   const value = Number(process.env.WC_REVALIDATE_SECONDS);
@@ -37,6 +38,13 @@ const getCachedStoreCatalog = unstable_cache(
 );
 
 export async function GET(request) {
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: "products-read",
+    limit: 120,
+    windowSeconds: 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   const session = await getSession();
   if (!session) return securityError("Authentication required.", 401);
 

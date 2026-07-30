@@ -35,29 +35,24 @@ import {
 } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
 import { isSupportedCountryCode } from "@/lib/countries";
+import {
+  completeIdempotency,
+  enforceRateLimit,
+  rateLimitIdentity,
+  readIdempotencyKey,
+  releaseIdempotency,
+  reserveIdempotency,
+} from "@/lib/abuse-protection";
 
-const ORDER_CUSTOMER_NOTE = `H & F Bank Account:
-Zelle: mslumiar@gmail.com
-H&F Trading Company
-Wells Fargo
-Account: 6114240598
-Routing numbers:
-Direct deposits, electronic payments 121042882
-Wire transfers – domestic 121000248
-Swift Wells Fargo: WFBIUS6S
-Wells Fargo Address: 420 Montgomery Street
-Sao Francisco – California
-Zip code: 94104
-Address: H&F: 2301 Stampede Ave Cody WY 82414
-– – – – –
-Terms of Payment:
-Buyer shall pay all sales, use, customs, excise or other
-taxes presently or hereafter payable in regards to this transaction, and
-Buyer shall reimburse Seller for any such taxes or charges paid by
-H&F Trading Company (hereafter “Seller.”)
-As importer no state excise tax is paid
-No excise tax paid.
-Shipment from USA`;
+const orderCustomerNote = () =>
+  cleanText(
+    (
+      process.env.ORDER_CUSTOMER_NOTE ||
+      "The Sacred Connection team will contact the buyer to arrange payment and shipping."
+    ).replace(/\\n/g, "\n"),
+    4_000,
+    { multiline: true }
+  );
 
 const missingBackendsResponse = () => {
   const missingStores = getMissingCommerceStores();
@@ -95,19 +90,41 @@ const addressIsComplete = (address) =>
   );
 
 // Lists orders from both backends for My Account.
-export async function GET() {
+export async function GET(request) {
+  const rateLimit = await enforceRateLimit(request, {
+    namespace: "orders-read",
+    limit: 60,
+    windowSeconds: 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (rateLimit) return rateLimit;
   const session = await getSession();
   if (!session) return securityError("Authentication required.", 401);
   const configurationError = missingBackendsResponse();
   if (configurationError) return configurationError;
 
-  const stores = getRequiredCommerceStores();
-  const results = await Promise.allSettled(
-    stores.map(async (store) => {
-      const orders = await getOrdersByEmail(session.email, store.id);
-      return orders.map((order) => mapOrder(order, store));
-    })
-  );
+  let stores;
+  let results;
+  try {
+    const wcCustomer = await getCustomerByEmail(session.email, PRIMARY_STORE_ID);
+    if (
+      !isApprovedWholesaleCustomer(wcCustomer) ||
+      wcCustomer.id !== session.customerId ||
+      (wcCustomer.email || "").toLowerCase() !== session.email
+    ) {
+      return securityError("Authentication required.", 401);
+    }
+    stores = getRequiredCommerceStores();
+    results = await Promise.allSettled(
+      stores.map(async (store) => {
+        const orders = await getOrdersByEmail(session.email, store.id);
+        return orders.map((order) => mapOrder(order, store));
+      })
+    );
+  } catch (error) {
+    console.error("GET /api/orders failed while validating the customer:", error);
+    return securityError("Failed to validate the account.", 502);
+  }
 
   const orders = results
     .flatMap((result) => (result.status === "fulfilled" ? result.value : []))
@@ -139,12 +156,28 @@ export async function GET() {
 // Creates one WooCommerce order per backend represented in the cart.
 export async function POST(request) {
   if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
+  const ipLimit = await enforceRateLimit(request, {
+    namespace: "orders-create-ip",
+    limit: 20,
+    windowSeconds: 10 * 60,
+    identity: rateLimitIdentity(request),
+  });
+  if (ipLimit) return ipLimit;
   const session = await getSession();
   if (!session) return securityError("Authentication required.", 401);
+  const idempotencyKey = readIdempotencyKey(request);
+  if (!idempotencyKey) {
+    return securityError(
+      "A valid Idempotency-Key header is required to create an order.",
+      400
+    );
+  }
   const configurationError = missingBackendsResponse();
   if (configurationError) return configurationError;
 
   let body;
+  let idempotencyHandle = null;
+  let orderCreationStarted = false;
   try {
     body = await readJsonBody(request);
   } catch (err) {
@@ -185,6 +218,13 @@ export async function POST(request) {
     if (!isApprovedWholesaleCustomer(wcCustomer) || wcCustomer.id !== session.customerId) {
       return securityError("Authentication required.", 401);
     }
+    const customerLimit = await enforceRateLimit(request, {
+      namespace: "orders-create-customer",
+      limit: 10,
+      windowSeconds: 10 * 60,
+      identity: String(wcCustomer.id),
+    });
+    if (customerLimit) return customerLimit;
     const customer = mapCustomerToUser(wcCustomer);
     const role = wcCustomer.role || null;
     const stores = getRequiredCommerceStores();
@@ -316,6 +356,35 @@ export async function POST(request) {
     };
 
     const storesInOrder = stores.filter((store) => entriesByStore.has(store.id));
+    const reservation = await reserveIdempotency({
+      namespace: "order-create",
+      identity: `${session.customerId}:${session.email}`,
+      key: idempotencyKey,
+    });
+    idempotencyHandle = reservation.handle;
+    if (reservation.state === "completed") {
+      return Response.json(reservation.completed.body, {
+        status: reservation.completed.status,
+        headers: {
+          "Cache-Control": "no-store",
+          "Idempotency-Replayed": "true",
+        },
+      });
+    }
+    if (reservation.state === "processing") {
+      return Response.json(
+        { error: "This order request is already being processed." },
+        {
+          status: 409,
+          headers: {
+            "Cache-Control": "no-store",
+            "Retry-After": "5",
+          },
+        }
+      );
+    }
+
+    orderCreationStarted = true;
     const creationResults = await Promise.allSettled(
       storesInOrder.map(async (store) => {
         const appliedRates = {};
@@ -349,7 +418,7 @@ export async function POST(request) {
             billing,
             shipping,
             line_items: lineItems,
-            customer_note: ORDER_CUSTOMER_NOTE,
+            customer_note: orderCustomerNote(),
             meta_data: [
               { key: "sc_channel", value: "wholesale-portal" },
               { key: "sc_source_store", value: store.id },
@@ -386,21 +455,39 @@ export async function POST(request) {
     });
 
     if (orders.length === 0) {
-      return Response.json(
-        { error: "Failed to register the order in the configured WooCommerce stores.", orders, failures },
-        { status: 502 }
-      );
+      const responseBody = {
+        error: "Failed to register the order in the configured WooCommerce stores.",
+        orders,
+        failures,
+      };
+      await completeIdempotency(idempotencyHandle, { status: 502, body: responseBody });
+      return Response.json(responseBody, {
+        status: 502,
+        headers: { "Cache-Control": "no-store" },
+      });
     }
 
-    return Response.json(
-      { orders, failures },
-      { status: failures.length > 0 ? 207 : 201 }
-    );
+    const status = failures.length > 0 ? 207 : 201;
+    const responseBody = { orders, failures };
+    await completeIdempotency(idempotencyHandle, { status, body: responseBody });
+    return Response.json(responseBody, {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    });
   } catch (err) {
     console.error("POST /api/orders failed before order creation:", err);
-    return Response.json(
-      { error: "Failed to validate the order against WooCommerce." },
-      { status: orderErrorStatus(err) }
-    );
+    const status = orderErrorStatus(err);
+    const responseBody = { error: "Failed to validate the order against WooCommerce." };
+    if (idempotencyHandle) {
+      if (orderCreationStarted) {
+        await completeIdempotency(idempotencyHandle, { status, body: responseBody });
+      } else {
+        await releaseIdempotency(idempotencyHandle);
+      }
+    }
+    return Response.json(responseBody, {
+      status,
+      headers: { "Cache-Control": "no-store" },
+    });
   }
 }
