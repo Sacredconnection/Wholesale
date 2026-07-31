@@ -674,78 +674,6 @@ function drawPdfCover(
   drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
 }
 
-function drawStoreCover(
-  pdf,
-  logo,
-  coverBackground,
-  coverDecoration,
-  store,
-  storeIndex,
-  pageNumber,
-  pageCount,
-  generatedAtLabel
-) {
-  const theme = storePdfTheme(store.storeId);
-  const storeHeadingColor = theme.secondary;
-  pdf.setFillColor(...theme.primary);
-  pdf.rect(0, 0, 210, 297, "F");
-  drawGreenCoverBackground(pdf, coverBackground);
-  drawCoverDecoration(pdf, coverDecoration);
-  drawStoreBrand(pdf, logo, 16, 14, 50);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(8);
-  pdf.setTextColor(...storeHeadingColor);
-  pdf.text(`STORE ${String(storeIndex + 1).padStart(2, "0")}`, 16, 76);
-  pdf.setDrawColor(...storeHeadingColor);
-  pdf.setLineWidth(0.7);
-  pdf.line(16, 82, 54, 82);
-  pdf.setFontSize(29);
-  pdf.setTextColor(255, 255, 255);
-  pdf.text(truncatePdfLines(pdf, store.storeName, 168, 3), 16, 108, {
-    lineHeightFactor: 1.08,
-  });
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  pdf.setTextColor(...theme.secondarySoft);
-  const storeDescription =
-    "Sacred Connection products presented by collection, including indigenous traditions, formats, identifiers, and product descriptions.";
-  pdf.text(truncatePdfLines(pdf, storeDescription, 145, 5), 16, 139, {
-    lineHeightFactor: 1.45,
-  });
-
-  pdf.setFillColor(255, 255, 255);
-  pdf.roundedRect(16, 180, 178, 48, 2.5, 2.5, "F");
-  const storeStats = [
-    [String(store.products.length), "PRODUCTS"],
-    [String(store.categoryGroups.length), "CATEGORIES"],
-  ];
-  storeStats.forEach(([value, label], index) => {
-    const x = index === 0 ? 62 : 148;
-    if (index) {
-      pdf.setDrawColor(220, 229, 226);
-      pdf.line(105, 190, 105, 218);
-    }
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(21);
-    pdf.setTextColor(...theme.primary);
-    pdf.text(value, x, 201, { align: "center" });
-    pdf.setFontSize(7);
-    pdf.setTextColor(83, 105, 98);
-    pdf.text(label, x, 213, { align: "center" });
-  });
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(7.5);
-  pdf.setTextColor(255, 255, 255);
-  pdf.text("STORE SECTION", 16, 264);
-  pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(...theme.muted);
-  pdf.text(`Page ${pageNumber} of ${pageCount}`, 16, 276);
-  drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
-}
-
 function drawGridHeader(
   pdf,
   logo,
@@ -1491,8 +1419,6 @@ async function renderDigitalCatalogPdf({
   const pageCount =
     1 +
     indexPageCount +
-    storeGroups.length +
-    categoryGroups.length +
     categoryGroups.reduce(
       (total, group) => total + Math.ceil(group.products.length / 4),
       0
@@ -1500,9 +1426,7 @@ async function renderDigitalCatalogPdf({
   const productDestinations = new Map();
   let destinationPage = 1 + indexPageCount;
   storeGroups.forEach((store) => {
-    destinationPage += 1;
     store.categoryGroups.forEach((group) => {
-      destinationPage += 1;
       for (let start = 0; start < group.products.length; start += 4) {
         destinationPage += 1;
         group.products.slice(start, start + 4).forEach((product, index) => {
@@ -1622,37 +1546,8 @@ async function renderDigitalCatalogPdf({
       });
     });
   });
-  storeGroups.forEach((store, storeIndex) => {
-    pdf.addPage("a4", "portrait");
-    currentPage += 1;
-    drawStoreCover(
-      pdf,
-      logo,
-      coverBackground,
-      coverDecoration,
-      store,
-      storeIndex,
-      currentPage,
-      pageCount,
-      generatedAtLabel
-    );
-    store.categoryGroups.forEach((group, categoryIndex) => {
-      pdf.addPage("a4", "portrait");
-      currentPage += 1;
-      drawCategoryCover(
-        pdf,
-        logo,
-        coverBackground,
-        coverDecoration,
-        store.storeId,
-        store.storeName,
-        group.category,
-        group.products,
-        categoryIndex,
-        currentPage,
-        pageCount,
-        generatedAtLabel
-      );
+  storeGroups.forEach((store) => {
+    store.categoryGroups.forEach((group) => {
       for (let start = 0; start < group.products.length; start += 4) {
         const pageProducts = group.products.slice(start, start + 4);
         pdf.addPage("a4", "portrait");

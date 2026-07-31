@@ -24,6 +24,10 @@ import {
   PRIMARY_STORE_ID,
 } from "@/lib/commerce-stores";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
+import {
+  isLocalDevUpstreamEnabled,
+  proxyLocalDevUpstream,
+} from "@/lib/local-dev-upstream";
 
 const PAGE_SIZE = 30;
 const VARIATION_FETCH_CONCURRENCY = 8;
@@ -211,6 +215,9 @@ export async function GET(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
+  if (isLocalDevUpstreamEnabled()) {
+    return proxyLocalDevUpstream(request);
+  }
   const requestedPage = pageNumber(searchParams.get("page"));
   const catalogFetchOptions = { revalidate: exportAll ? 0 : undefined };
 

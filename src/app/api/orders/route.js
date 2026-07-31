@@ -45,6 +45,10 @@ import {
   releaseIdempotency,
   reserveIdempotency,
 } from "@/lib/abuse-protection";
+import {
+  isLocalDevUpstreamEnabled,
+  proxyLocalDevUpstream,
+} from "@/lib/local-dev-upstream";
 
 const orderCustomerNote = () =>
   cleanText(
@@ -127,6 +131,9 @@ export async function GET(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
+  if (isLocalDevUpstreamEnabled()) {
+    return proxyLocalDevUpstream(request);
+  }
   const session = await getSession();
   if (!session) return securityError("Authentication required.", 401);
   const configurationError = missingBackendsResponse();
@@ -192,6 +199,11 @@ export async function POST(request) {
     identity: rateLimitIdentity(request),
   });
   if (ipLimit) return ipLimit;
+  if (isLocalDevUpstreamEnabled()) {
+    return proxyLocalDevUpstream(request, {
+      body: await request.arrayBuffer(),
+    });
+  }
   const session = await getSession();
   if (!session) return securityError("Authentication required.", 401);
   const idempotencyKey = readIdempotencyKey(request);

@@ -15,6 +15,10 @@ import {
 import { securityError } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
+import {
+  isLocalDevUpstreamEnabled,
+  proxyLocalDevUpstream,
+} from "@/lib/local-dev-upstream";
 
 function parseProductIdentifier(identifier) {
   if (typeof identifier !== "string" || identifier.length > 240) return null;
@@ -34,6 +38,9 @@ export async function GET(request, { params }) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
+  if (isLocalDevUpstreamEnabled()) {
+    return proxyLocalDevUpstream(request);
+  }
   const session = await getSession();
 
   const { id } = await params;

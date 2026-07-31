@@ -1,6 +1,10 @@
 import { getCommerceStoreOrigins } from "@/lib/commerce-stores";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
 import sharp from "sharp";
+import {
+  isLocalDevUpstreamEnabled,
+  proxyLocalDevUpstream,
+} from "@/lib/local-dev-upstream";
 
 export const runtime = "nodejs";
 
@@ -59,6 +63,9 @@ export async function GET(request) {
       identity: rateLimitIdentity(request),
     });
     if (rateLimit) return rateLimit;
+    if (isLocalDevUpstreamEnabled()) {
+      return proxyLocalDevUpstream(request);
+    }
 
     const { searchParams } = new URL(request.url);
     const source = searchParams.get("url");

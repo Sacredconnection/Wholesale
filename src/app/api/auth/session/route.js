@@ -3,6 +3,10 @@ import { isApprovedWholesaleCustomer, mapCustomerToUser } from "@/lib/wc-mappers
 import { deleteSession, getSession } from "@/lib/session";
 import { securityError } from "@/lib/request-security";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
+import {
+  isLocalDevUpstreamEnabled,
+  proxyLocalDevUpstream,
+} from "@/lib/local-dev-upstream";
 
 export async function GET(request) {
   const rateLimit = await enforceRateLimit(request, {
@@ -12,6 +16,14 @@ export async function GET(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
+  if (isLocalDevUpstreamEnabled()) {
+    try {
+      return await proxyLocalDevUpstream(request);
+    } catch (err) {
+      console.error("GET /api/auth/session local upstream failed:", err);
+      return securityError("The local sign-in bridge is unavailable.", 502);
+    }
+  }
   const session = await getSession();
   if (!session) {
     return Response.json(

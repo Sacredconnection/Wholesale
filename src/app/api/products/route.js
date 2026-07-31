@@ -18,6 +18,10 @@ import {
 import { securityError } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
+import {
+  isLocalDevUpstreamEnabled,
+  proxyLocalDevUpstream,
+} from "@/lib/local-dev-upstream";
 
 const catalogCacheSeconds = (() => {
   const value = Number(process.env.WC_REVALIDATE_SECONDS);
@@ -61,6 +65,9 @@ export async function GET(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
+  if (isLocalDevUpstreamEnabled()) {
+    return proxyLocalDevUpstream(request);
+  }
   const session = await getSession();
 
   const requestedStoreId = new URL(request.url).searchParams.get("store");

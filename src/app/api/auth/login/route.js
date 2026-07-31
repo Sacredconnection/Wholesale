@@ -11,6 +11,10 @@ import {
   securityError,
 } from "@/lib/request-security";
 import { createSession } from "@/lib/session";
+import {
+  isLocalDevUpstreamEnabled,
+  proxyLocalDevUpstream,
+} from "@/lib/local-dev-upstream";
 
 export async function POST(request) {
   if (!isSameOrigin(request)) return securityError("Cross-origin request rejected.", 403);
@@ -20,8 +24,6 @@ export async function POST(request) {
     windowSeconds: 15 * 60,
   });
   if (ipLimit) return ipLimit;
-  if (!isWooCommerceConfigured()) return securityError("Sign-in service unavailable.", 503);
-
   let body;
   try {
     body = await readJsonBody(request, 8 * 1024);
@@ -42,6 +44,20 @@ export async function POST(request) {
     identity: email,
   });
   if (accountLimit) return accountLimit;
+
+  if (isLocalDevUpstreamEnabled()) {
+    try {
+      return await proxyLocalDevUpstream(request, {
+        body: JSON.stringify({ email, password }),
+        persistSession: true,
+      });
+    } catch (err) {
+      console.error("POST /api/auth/login local upstream failed:", err);
+      return securityError("The local sign-in bridge is unavailable.", 502);
+    }
+  }
+
+  if (!isWooCommerceConfigured()) return securityError("Sign-in service unavailable.", 503);
 
   let authenticationStage = "WordPress credential verification";
   try {
