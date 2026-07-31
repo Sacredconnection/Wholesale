@@ -109,14 +109,6 @@ export default function Header({ onOpenLogin }) {
           </button>
           )}
 
-          <Link
-            className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5] hover:border-[#82d6c5] hover:bg-[#268072]/20 hover:text-white'} inline-flex items-center justify-center rounded-sm border px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-300`}
-            href="/digital-catalog"
-            aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
-          >
-            Digital Catalog
-          </Link>
-
           {isLoggedIn ? (
             <>
               <Link
@@ -153,6 +145,14 @@ export default function Header({ onOpenLogin }) {
               </Link>
             </>
           )}
+
+          <Link
+            className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5] hover:border-[#82d6c5] hover:bg-[#268072]/20 hover:text-white'} inline-flex items-center justify-center rounded-sm border px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-300`}
+            href="/digital-catalog"
+            aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
+          >
+            Digital Catalog
+          </Link>
         </div>
 
         {/* Mobile Cart and Hamburger Container (Mobile Only) */}
@@ -227,14 +227,6 @@ export default function Header({ onOpenLogin }) {
             Contact
           </Link>
           <div className="h-px bg-white/10 my-2"></div>
-          <Link
-            className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5]'} rounded-sm border px-4 py-3 text-center text-sm font-bold uppercase tracking-wider transition-colors hover:border-[#82d6c5] hover:text-white`}
-            href="/digital-catalog"
-            aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
-            onClick={() => setMobileMenuOpen(false)}
-          >
-            Open Digital Catalog
-          </Link>
           {isLoggedIn ? (
             <>
               <Link
@@ -278,6 +270,14 @@ export default function Header({ onOpenLogin }) {
               </Link>
             </>
           )}
+          <Link
+            className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5]'} rounded-sm border px-4 py-3 text-center text-sm font-bold uppercase tracking-wider transition-colors hover:border-[#82d6c5] hover:text-white`}
+            href="/digital-catalog"
+            aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
+            onClick={() => setMobileMenuOpen(false)}
+          >
+            Open Digital Catalog
+          </Link>
         </nav>
       )}
     </header>

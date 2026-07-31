@@ -66,6 +66,7 @@ export default function CatalogClient({ initialProducts = [] }) {
   const [pdfExportError, setPdfExportError] = useState("");
 
   // Filter States
+  const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [tribe, setTribe] = useState("All");
 
@@ -163,6 +164,7 @@ export default function CatalogClient({ initialProducts = [] }) {
   const filteredProducts = useMemo(() => {
     const normCat     = normalizeStr(category);
     const normTribe   = normalizeStr(tribe);
+    const normSearch  = normalizeStr(search);
 
     return products
       .filter((product) => {
@@ -170,10 +172,14 @@ export default function CatalogClient({ initialProducts = [] }) {
           category === "All" || normalizeStr(product.category) === normCat;
         const matchesTribe =
           tribe === "All" || normalizeStr(product.tribe) === normTribe;
-        return matchesCategory && matchesTribe;
+        const matchesSearch =
+          !normSearch ||
+          normalizeStr(product.name).includes(normSearch) ||
+          normalizeStr(product.sku).includes(normSearch);
+        return matchesCategory && matchesTribe && matchesSearch;
       })
       .sort((a, b) => normalizeStr(a.name).localeCompare(normalizeStr(b.name)));
-  }, [products, category, tribe]);
+  }, [products, category, tribe, search]);
 
 
   // Paginated Products
@@ -208,6 +214,7 @@ export default function CatalogClient({ initialProducts = [] }) {
 
   // Handle clear filters
   const handleClearFilters = () => {
+    setSearch("");
     setCategory("All");
     setTribe("All");
     setCurrentPage(1);
@@ -324,13 +331,14 @@ export default function CatalogClient({ initialProducts = [] }) {
         )}
 
         <FilterSidebar
-          filters={{ category, tribe }}
+          filters={{ search, category, tribe }}
           categories={categories.slice(1)}
           tribes={tribes}
           allValue="All"
           onChange={(nextFilters) => {
-            setCategory(nextFilters.category);
-            setTribe(nextFilters.tribe);
+            if ("search" in nextFilters) setSearch(nextFilters.search);
+            if ("category" in nextFilters) setCategory(nextFilters.category);
+            if ("tribe" in nextFilters) setTribe(nextFilters.tribe);
             setCurrentPage(1);
           }}
           onClear={handleClearFilters}
