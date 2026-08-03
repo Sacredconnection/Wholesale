@@ -1,7 +1,7 @@
 import {
   cartUnitPrice,
-  MIN_ORDER_AMOUNT,
   normalizeQuantityForWeight,
+  orderMinimumStatus,
   optionPriceForUser,
   quantityStepForWeight,
 } from "@/lib/pricing";
@@ -244,8 +244,9 @@ export const ensureWholesaleMinimum = (selections, user = null) => {
     };
   }
   let guard = 0;
+  let minimumStatus = orderMinimumStatus(user, totalAmount, totalWeight);
 
-  while (totalAmount < MIN_ORDER_AMOUNT && guard < 1000) {
+  while (!minimumStatus.meetsMinimum && guard < 1000) {
     const eligible = adjusted
       .filter((selection) => {
         const option = selection.product.options[selection.optionIndex];
@@ -273,6 +274,7 @@ export const ensureWholesaleMinimum = (selections, user = null) => {
       selected.product.options[selected.optionIndex].weightGrams
     );
     ({ totalWeight, totalAmount } = calculateTotals());
+    minimumStatus = orderMinimumStatus(user, totalAmount, totalWeight);
     guard += 1;
   }
 
@@ -280,7 +282,7 @@ export const ensureWholesaleMinimum = (selections, user = null) => {
     selections: adjusted,
     totalWeight,
     totalAmount,
-    meetsMinimum: totalAmount >= MIN_ORDER_AMOUNT,
+    meetsMinimum: minimumStatus.meetsMinimum,
   };
 };
 

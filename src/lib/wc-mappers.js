@@ -240,12 +240,17 @@ export function isApprovedWholesaleCustomer(customer) {
   );
 }
 
+const MINIMUM_ORDER_WEIGHT_BY_EMAIL = new Map([
+  ["garrywilco@gmail.com", 250],
+]);
+
 // Maps a WooCommerce customer to the user shape the UI stores in AuthContext.
 // Wholesale discounts live in customer meta so the team can manage them from
 // WP Admin; they default to 0 when absent.
 export function mapCustomerToUser(customer) {
   const profileAvatar = customerMeta(customer, "sc_profile_avatar_url");
   const savedDisplayName = customerMeta(customer, "sc_display_name");
+  const normalizedEmail = (customer.email || "").trim().toLowerCase();
   return {
     firstName: customer.first_name || "",
     lastName: customer.last_name || "",
@@ -265,6 +270,8 @@ export function mapCustomerToUser(customer) {
     role: customer.role || null,
     status: isApprovedWholesaleCustomer(customer) ? "ACTIVE" : "PENDING",
     discountRate: Number(customerMeta(customer, "sc_discount_rate")) || 0,
+    minimumOrderWeightGrams:
+      MINIMUM_ORDER_WEIGHT_BY_EMAIL.get(normalizedEmail) || null,
     avatar:
       profileAvatar === "__none__"
         ? null

@@ -5,6 +5,30 @@
 // and the same threshold is enforced again when an order is registered.
 export const MIN_ORDER_AMOUNT = 500;
 
+// Some approved accounts use a weight-based order minimum instead of the
+// standard dollar minimum. The server adds `minimumOrderWeightGrams` to those
+// users; keeping the evaluator here makes the cart, checkout, suggestions, and
+// order API follow the same rule.
+export function orderMinimumStatus(user, totalAmount, totalWeightGrams) {
+  const minimumWeightGrams = Number(user?.minimumOrderWeightGrams);
+  const usesWeightMinimum =
+    Number.isFinite(minimumWeightGrams) && minimumWeightGrams > 0;
+  const required = usesWeightMinimum
+    ? minimumWeightGrams
+    : MIN_ORDER_AMOUNT;
+  const current = usesWeightMinimum
+    ? Math.max(0, Number(totalWeightGrams) || 0)
+    : Math.max(0, Number(totalAmount) || 0);
+
+  return {
+    type: usesWeightMinimum ? "weight" : "amount",
+    required,
+    current,
+    remaining: Math.max(0, required - current),
+    meetsMinimum: current >= required,
+  };
+}
+
 // Small tins are packed in wholesale cases. Quantities must follow these
 // increments everywhere: product controls, cart updates, suggestions, and API.
 export function quantityStepForWeight(weightGrams) {

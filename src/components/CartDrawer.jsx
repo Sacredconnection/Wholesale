@@ -8,8 +8,8 @@ import { useCart } from './CartContext';
 import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
 import ProductRecommendations from './ProductRecommendations';
-import { ShoppingBag, X, Minus, Plus, ArrowRight, CircleDollarSign } from 'lucide-react';
-import { MIN_ORDER_AMOUNT, NEW_CUSTOMER_ROLE, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
+import { ShoppingBag, X, Minus, Plus, ArrowRight, CircleDollarSign, Scale } from 'lucide-react';
+import { NEW_CUSTOMER_ROLE, orderMinimumStatus, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
 import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
 export default function CartDrawer() {
@@ -42,7 +42,12 @@ export default function CartDrawer() {
   const discountPercentage = isLoggedIn && user ? user.discountRate : 0;
   const discountAmount = cartSubtotal * (discountPercentage / 100);
   const finalTotal = cartSubtotal - discountAmount;
-  const meetsMinimumAmount = finalTotal >= MIN_ORDER_AMOUNT;
+  const minimumStatus = orderMinimumStatus(
+    user,
+    finalTotal,
+    cartTotalWeightGrams
+  );
+  const MinimumIcon = minimumStatus.type === "weight" ? Scale : CircleDollarSign;
 
   // Progressive per-gram tiers applied to New Customer orders (by total
   // weight) — one rate per product line present in the cart.
@@ -62,7 +67,7 @@ export default function CartDrawer() {
       setIsLoginOpen(true);
       return;
     }
-    if (!meetsMinimumAmount) return;
+    if (!minimumStatus.meetsMinimum) return;
 
     setIsCartOpen(false);
     router.push("/checkout");
@@ -245,13 +250,22 @@ export default function CartDrawer() {
                   </div>
                 ))}
 
-                {/* Minimum order value indicator */}
-                {cart.length > 0 && !meetsMinimumAmount && (
+                {/* Minimum order indicator */}
+                {cart.length > 0 && !minimumStatus.meetsMinimum && (
                   <div className="flex items-center gap-2 bg-yellow-400/10 border border-yellow-400/25 text-yellow-400 text-[11px] px-3 py-2.5 rounded-sm mt-1">
-                    <CircleDollarSign className="w-3.5 h-3.5 shrink-0" />
+                    <MinimumIcon className="w-3.5 h-3.5 shrink-0" />
                     <span>
-                      Minimum wholesale order is <strong>${MIN_ORDER_AMOUNT.toFixed(2)}</strong>; add{" "}
-                      ${(MIN_ORDER_AMOUNT - finalTotal).toFixed(2)} more to submit.
+                      {minimumStatus.type === "weight" ? (
+                        <>
+                          Minimum wholesale order is <strong>{minimumStatus.required} g</strong>; add{" "}
+                          {Math.ceil(minimumStatus.remaining)} g more to submit.
+                        </>
+                      ) : (
+                        <>
+                          Minimum wholesale order is <strong>${minimumStatus.required.toFixed(2)}</strong>; add{" "}
+                          ${minimumStatus.remaining.toFixed(2)} more to submit.
+                        </>
+                      )}
                     </span>
                   </div>
                 )}
@@ -277,7 +291,7 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={handleCheckout}
-                disabled={cart.length === 0 || (isLoggedIn && !meetsMinimumAmount)}
+                disabled={cart.length === 0 || (isLoggedIn && !minimumStatus.meetsMinimum)}
                 className="w-full bg-[#EC2300] hover:bg-[#c51d00] disabled:opacity-40 disabled:hover:bg-[#EC2300] text-white text-xs font-bold uppercase tracking-widest py-5 rounded-sm transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 flex items-center justify-center gap-3 cursor-pointer disabled:cursor-not-allowed border-0"
               >
                 {isLoggedIn ? (

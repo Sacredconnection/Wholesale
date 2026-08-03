@@ -22,8 +22,8 @@ import {
 } from "@/lib/wc-mappers";
 import {
   isValidQuantityForWeight,
-  MIN_ORDER_AMOUNT,
   NEW_CUSTOMER_ROLE,
+  orderMinimumStatus,
   progressivePerGramRate,
   progressiveTableKeyFor,
 } from "@/lib/pricing";
@@ -489,10 +489,18 @@ export async function POST(request) {
     );
     const estimatedPartnerTotal =
       estimatedSubtotal * (1 - discountRate / 100);
-    if (estimatedPartnerTotal < MIN_ORDER_AMOUNT) {
+    const minimumStatus = orderMinimumStatus(
+      customer,
+      estimatedPartnerTotal,
+      totalWeightGrams
+    );
+    if (!minimumStatus.meetsMinimum) {
       return Response.json(
         {
-          error: `Minimum wholesale order is $${MIN_ORDER_AMOUNT.toFixed(2)}; this order sheet totals $${estimatedPartnerTotal.toFixed(2)} after partner discounts.`,
+          error:
+            minimumStatus.type === "weight"
+              ? `Minimum wholesale order is ${minimumStatus.required}g; this order sheet weighs ${Math.round(totalWeightGrams)}g.`
+              : `Minimum wholesale order is $${minimumStatus.required.toFixed(2)}; this order sheet totals $${estimatedPartnerTotal.toFixed(2)} after partner discounts.`,
         },
         { status: 422 }
       );
