@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import ProductPurchaseControls from "@/components/ProductPurchaseControls";
+import WorkbookImportReviewModal from "@/components/WorkbookImportReviewModal";
 import FilterSidebar from "@/components/catalog/FilterSidebar";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
@@ -22,6 +23,7 @@ import {
   PackageOpen,
   LoaderCircle,
   FileSpreadsheet,
+  Info,
   Upload,
 } from "lucide-react";
 
@@ -66,13 +68,15 @@ export default function CatalogClient({ initialProducts = [] }) {
   const productsLoading = liveProductsLoading && products.length === 0;
   const canUseOrderWorkbook =
     isLoggedIn && products.some((product) => product.pricingVisible === true);
-  const { cart, replaceCartWithSelections, setIsCartOpen, cartTotalItems } = useCart();
+  const { cart, addSelectionsToCart, replaceCartWithSelections, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [pdfExporting, setPdfExporting] = useState(false);
   const [pdfExportError, setPdfExportError] = useState("");
   const [workbookAction, setWorkbookAction] = useState("");
   const [workbookError, setWorkbookError] = useState("");
   const [workbookSuccess, setWorkbookSuccess] = useState("");
+  const [workbookReview, setWorkbookReview] = useState(null);
+  const [openWorkbookHint, setOpenWorkbookHint] = useState("");
   const importInputRef = useRef(null);
 
   // Filter States
@@ -376,27 +380,28 @@ export default function CatalogClient({ initialProducts = [] }) {
       if (errors.length) {
         throw new Error(`${errors.slice(0, 4).join(" ")}${errors.length > 4 ? ` ${errors.length - 4} more error(s).` : ""}`);
       }
-      if (
-        cart.length > 0 &&
-        !window.confirm(
-          "Importing this spreadsheet will replace the products currently in your order sheet. Continue?"
-        )
-      ) {
-        return;
-      }
-      const importedCount = replaceCartWithSelections(selections);
-      if (importedCount !== selections.length) {
-        throw new Error("The imported order could not be added to the order sheet.");
-      }
-      setWorkbookSuccess(
-        `${importedCount} ${importedCount === 1 ? "product line was" : "product lines were"} validated and loaded into your order sheet.`
-      );
-      setIsCartOpen(true);
+      setWorkbookReview(selections);
     } catch (error) {
       setWorkbookError(error.message || "The order spreadsheet could not be imported.");
     } finally {
       setWorkbookAction("");
     }
+  };
+
+  const confirmWorkbookImport = (selections, importMode) => {
+    const importedCount = importMode === "add"
+      ? addSelectionsToCart(selections)
+      : replaceCartWithSelections(selections);
+    if (importedCount !== selections.length) {
+      setWorkbookError("The reviewed order could not be added to the order sheet.");
+      setWorkbookReview(null);
+      return;
+    }
+    setWorkbookReview(null);
+    setWorkbookSuccess(
+      `${importedCount} ${importedCount === 1 ? "product line was" : "product lines were"} ${importMode === "add" ? "added to" : "loaded into"} your order sheet.`
+    );
+    setIsCartOpen(true);
   };
 
   return (
@@ -405,6 +410,17 @@ export default function CatalogClient({ initialProducts = [] }) {
       <Header
         onOpenLogin={() => setIsLoginOpen(true)}
       />
+
+      {workbookReview && (
+        <WorkbookImportReviewModal
+          selections={workbookReview}
+          user={user}
+          existingCart={cart}
+          replacesExistingOrder={cart.length > 0}
+          onClose={() => setWorkbookReview(null)}
+          onConfirm={confirmWorkbookImport}
+        />
+      )}
 
       {pdfExporting && (
         <div
@@ -461,19 +477,39 @@ export default function CatalogClient({ initialProducts = [] }) {
 
             {canUseOrderWorkbook ? (
               <>
-                <button
-                  type="button"
-                  onClick={handleWorkbookExport}
-                  disabled={Boolean(workbookAction)}
-                  className="flex w-full grow items-center justify-center gap-3 rounded-sm border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition-all duration-300 hover:border-[#268072]/60 hover:bg-white/10 disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:grow-0"
-                >
-                  {workbookAction === "export" ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin text-[#82d6c5]" aria-hidden="true" />
-                  ) : (
-                    <FileSpreadsheet className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
-                  )}
-                  {workbookAction === "export" ? "Preparing Excel" : "Export Order Excel"}
-                </button>
+                <div className="group relative w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={handleWorkbookExport}
+                    disabled={Boolean(workbookAction)}
+                    aria-describedby="export-order-excel-tooltip"
+                    className="flex w-full grow items-center justify-center gap-3 rounded-sm border border-white/10 bg-white/5 py-3.5 pl-6 pr-14 text-sm font-bold uppercase tracking-wide text-white transition-all duration-300 hover:border-[#268072]/60 hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5] disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:grow-0 sm:px-6"
+                  >
+                    {workbookAction === "export" ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin text-[#82d6c5]" aria-hidden="true" />
+                    ) : (
+                      <FileSpreadsheet className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
+                    )}
+                    {workbookAction === "export" ? "Preparing Excel" : "Export Order Excel"}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="About exporting an Excel order"
+                    aria-expanded={openWorkbookHint === "export"}
+                    aria-controls="export-order-excel-tooltip"
+                    onClick={() => setOpenWorkbookHint((current) => current === "export" ? "" : "export")}
+                    className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-white/15 bg-black/15 text-[#82d6c5] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#82d6c5] sm:hidden"
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <span
+                    id="export-order-excel-tooltip"
+                    role="tooltip"
+                    className={`pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-max max-w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-sm border border-white/15 bg-[#161616] px-3 py-2 text-center font-body-md text-xs normal-case leading-relaxed tracking-normal text-white/85 shadow-xl transition-opacity duration-150 motion-reduce:transition-none sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 ${openWorkbookHint === "export" ? "opacity-100" : "opacity-0"}`}
+                  >
+                    Download an Excel order form with current products and your pricing. Enter quantities, then import it here.
+                  </span>
+                </div>
                 <input
                   ref={importInputRef}
                   type="file"
@@ -482,19 +518,39 @@ export default function CatalogClient({ initialProducts = [] }) {
                   className="sr-only"
                   tabIndex={-1}
                 />
-                <button
-                  type="button"
-                  onClick={openWorkbookImport}
-                  disabled={Boolean(workbookAction)}
-                  className="flex w-full grow items-center justify-center gap-3 rounded-sm border border-[#82d6c5]/40 bg-[#268072]/20 px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-[#82d6c5] transition-all duration-300 hover:bg-[#268072]/30 hover:text-white disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:grow-0"
-                >
-                  {workbookAction === "import" ? (
-                    <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <Upload className="h-4 w-4" aria-hidden="true" />
-                  )}
-                  {workbookAction === "import" ? "Validating Excel" : "Import Order Excel"}
-                </button>
+                <div className="group relative w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={openWorkbookImport}
+                    disabled={Boolean(workbookAction)}
+                    aria-describedby="import-order-excel-tooltip"
+                    className="flex w-full grow items-center justify-center gap-3 rounded-sm border border-[#82d6c5]/40 bg-[#268072]/20 py-3.5 pl-6 pr-14 text-sm font-bold uppercase tracking-wide text-[#82d6c5] transition-all duration-300 hover:bg-[#268072]/30 hover:text-white focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5] disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:grow-0 sm:px-6"
+                  >
+                    {workbookAction === "import" ? (
+                      <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                    ) : (
+                      <Upload className="h-4 w-4" aria-hidden="true" />
+                    )}
+                    {workbookAction === "import" ? "Validating Excel" : "Import Order Excel"}
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="About importing an Excel order"
+                    aria-expanded={openWorkbookHint === "import"}
+                    aria-controls="import-order-excel-tooltip"
+                    onClick={() => setOpenWorkbookHint((current) => current === "import" ? "" : "import")}
+                    className="absolute right-2 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full border border-[#82d6c5]/25 bg-black/10 text-[#82d6c5] focus-visible:outline-2 focus-visible:outline-offset-1 focus-visible:outline-[#82d6c5] sm:hidden"
+                  >
+                    <Info className="h-4 w-4" aria-hidden="true" />
+                  </button>
+                  <span
+                    id="import-order-excel-tooltip"
+                    role="tooltip"
+                    className={`pointer-events-none absolute bottom-full left-1/2 z-50 mb-2 w-max max-w-[min(18rem,calc(100vw-2rem))] -translate-x-1/2 rounded-sm border border-white/15 bg-[#161616] px-3 py-2 text-center font-body-md text-xs normal-case leading-relaxed tracking-normal text-white/85 shadow-xl transition-opacity duration-150 motion-reduce:transition-none sm:opacity-0 sm:group-hover:opacity-100 sm:group-focus-within:opacity-100 ${openWorkbookHint === "import" ? "opacity-100" : "opacity-0"}`}
+                  >
+                    Upload your completed order form to validate quantities and load them into your order sheet.
+                  </span>
+                </div>
                 <button
                   onClick={() => setIsCartOpen(true)}
                   className="relative flex w-full grow items-center justify-center gap-3 rounded-sm border border-white/10 bg-[#1a1a1a] px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition-all duration-300 hover:border-white/20 hover:bg-white/5 sm:w-auto sm:grow-0"
