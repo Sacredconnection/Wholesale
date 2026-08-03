@@ -385,6 +385,8 @@ export async function POST(request) {
             .filter(Boolean)
             .join(" ") || payload.name;
         const weightGrams = extractWeightGrams(optionText, payload.weight) || 0;
+        const stockQuantity =
+          payload.stock_quantity == null ? null : Number(payload.stock_quantity);
         return {
           entry: {
             store,
@@ -395,6 +397,10 @@ export async function POST(request) {
             tableKey: tableKeyFromCategories(categories),
             rolePrice: role ? roleBasedPrices(payload.meta_data)[role] : undefined,
             basePrice: parseFloat(payload.price) || 0,
+            inStock: payload.stock_status !== "outofstock",
+            stockQuantity,
+            backordersAllowed:
+              payload.backorders === "yes" || payload.backorders === "notify",
           },
           lineWeightGrams: weightGrams * quantity,
         };
@@ -428,6 +434,38 @@ export async function POST(request) {
           error:
             "Invalid case quantity. 5g and 10g tins must be ordered in multiples of 10; 20g and 50g tins must be ordered in multiples of 5.",
         },
+        { status: 422 }
+      );
+    }
+    const unavailableItems = resolved.filter((entry) => entry.inStock === false);
+    if (unavailableItems.length > 0) {
+      return Response.json(
+        { error: "One or more products are now out of stock. Refresh your catalog and try again." },
+        { status: 422 }
+      );
+    }
+    const quantityByStockItem = new Map();
+    resolved.forEach((entry) => {
+      const key = `${entry.store.id}:${entry.productId}:${entry.variationId || 0}`;
+      quantityByStockItem.set(
+        key,
+        (quantityByStockItem.get(key) || 0) + entry.quantity
+      );
+    });
+    const stockExceeded = resolved.filter((entry) => {
+      if (
+        entry.backordersAllowed ||
+        !Number.isFinite(entry.stockQuantity) ||
+        entry.stockQuantity < 0
+      ) {
+        return false;
+      }
+      const key = `${entry.store.id}:${entry.productId}:${entry.variationId || 0}`;
+      return quantityByStockItem.get(key) > entry.stockQuantity;
+    });
+    if (stockExceeded.length > 0) {
+      return Response.json(
+        { error: "One or more requested quantities exceed the current stock. Refresh your catalog and try again." },
         { status: 422 }
       );
     }

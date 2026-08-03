@@ -16,6 +16,7 @@ import {
   mapStoreProduct,
   stripProductPricing,
 } from "@/lib/wc-mappers";
+import { loadPublicStoreProducts } from "@/lib/public-store-catalog";
 import { optionPriceForUser } from "@/lib/pricing";
 import { getSession } from "@/lib/session";
 import {
@@ -33,6 +34,7 @@ const PAGE_SIZE = 30;
 const VARIATION_FETCH_CONCURRENCY = 8;
 
 export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
 
 const normalize = (value) =>
   String(value || "")
@@ -208,6 +210,7 @@ export async function GET(request) {
   const maxPrice = positiveNumber(searchParams.get("maxPrice"));
   const onlyInStock = searchParams.get("inStock") === "true";
   const exportAll = searchParams.get("export") === "true";
+  const orderWorkbook = searchParams.get("orderWorkbook") === "true";
   const rateLimit = await enforceRateLimit(request, {
     namespace: exportAll ? "catalog-export" : "catalog-read",
     limit: exportAll ? 5 : 120,
@@ -215,11 +218,29 @@ export async function GET(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
+  // Local development stores the approved upstream session in a bridge cookie,
+  // not in the production session store. Let the authenticated proxy validate
+  // that session with the upstream instead of rejecting it locally.
+  if (
+    orderWorkbook &&
+    !isLocalDevUpstreamEnabled() &&
+    !(await getSession())
+  ) {
+    return Response.json(
+      {
+        error:
+          "Sign in with an approved wholesale account to create an order spreadsheet.",
+      },
+      { status: 401 }
+    );
+  }
   if (isLocalDevUpstreamEnabled()) {
     return proxyLocalDevUpstream(request);
   }
   const requestedPage = pageNumber(searchParams.get("page"));
-  const catalogFetchOptions = { revalidate: exportAll ? 0 : undefined };
+  const catalogFetchOptions = {
+    revalidate: exportAll || orderWorkbook ? 0 : undefined,
+  };
 
   try {
     let customer = null;
@@ -232,7 +253,9 @@ export async function GET(request) {
       );
       const catalogs = await Promise.all(
         configuredStores.map((store) =>
-          loadRestStoreCatalog(store, customer, catalogFetchOptions)
+          customer
+            ? loadRestStoreCatalog(store, customer, catalogFetchOptions)
+            : loadPublicStoreProducts(store, catalogFetchOptions)
         )
       );
       products = catalogs.flat();
@@ -274,6 +297,16 @@ export async function GET(request) {
           { status: 503 }
         );
       }
+    }
+
+    if (orderWorkbook && !customer) {
+      return Response.json(
+        {
+          error:
+            "Sign in with an approved wholesale account to create an order spreadsheet.",
+        },
+        { status: 401 }
+      );
     }
 
     const allPrices = products.flatMap((product) => [
@@ -435,7 +468,13 @@ export async function GET(request) {
           fetchedAt: new Date().toISOString(),
         },
       },
-      { headers: { "Cache-Control": "private, no-store" } }
+      {
+        headers: {
+          "Cache-Control": "private, no-store, no-cache, max-age=0, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
+      }
     );
   } catch (error) {
     console.error("GET /api/catalog failed:", error);

@@ -21,11 +21,15 @@ import {
   ArrowRight,
   PackageOpen,
   LoaderCircle,
+  FileSpreadsheet,
+  Upload,
 } from "lucide-react";
 
 import { useProducts } from "@/components/ProductsContext";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
-import { downloadDigitalCatalogPdf } from "@/lib/catalog-export";
+import { downloadDigitalCatalogPdf, exportCatalogExcel } from "@/lib/catalog-export";
+import { readCatalogOrderWorkbook } from "@/lib/catalog-order-workbook";
+import { isValidQuantityForWeight } from "@/lib/pricing";
 
 // Normalize string for accent-insensitive comparison
 // Strips diacritics, lowercases and trims — used ONLY for comparison, never for display
@@ -57,13 +61,19 @@ export default function CatalogClient({ initialProducts = [] }) {
     warning: productsWarning,
     reload,
   } = useProducts();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const products = liveProducts.length > 0 ? liveProducts : initialProducts;
   const productsLoading = liveProductsLoading && products.length === 0;
-  const { setIsCartOpen, cartTotalItems } = useCart();
+  const canUseOrderWorkbook =
+    isLoggedIn && products.some((product) => product.pricingVisible === true);
+  const { cart, replaceCartWithSelections, setIsCartOpen, cartTotalItems } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [pdfExporting, setPdfExporting] = useState(false);
   const [pdfExportError, setPdfExportError] = useState("");
+  const [workbookAction, setWorkbookAction] = useState("");
+  const [workbookError, setWorkbookError] = useState("");
+  const [workbookSuccess, setWorkbookSuccess] = useState("");
+  const importInputRef = useRef(null);
 
   // Filter States
   const [search, setSearch] = useState("");
@@ -236,6 +246,159 @@ export default function CatalogClient({ initialProducts = [] }) {
     }
   };
 
+  const loadOrderWorkbookProducts = async ({ applyFilters = true } = {}) => {
+    const params = new URLSearchParams({
+      export: "true",
+      orderWorkbook: "true",
+      fresh: String(Date.now()),
+    });
+    if (applyFilters && search.trim()) params.set("q", search.trim());
+    if (applyFilters && category !== "All") params.set("category", category);
+    if (applyFilters && tribe !== "All") params.set("tribe", tribe);
+
+    const response = await fetch(`/api/catalog?${params.toString()}`, {
+      credentials: "same-origin",
+      cache: "no-store",
+      headers: {
+        "Cache-Control": "no-cache, no-store, max-age=0",
+        Pragma: "no-cache",
+      },
+    });
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) {
+      throw new Error(
+        data.error || "The order spreadsheet could not be prepared."
+      );
+    }
+    if (!Array.isArray(data.products) || data.products.length === 0) {
+      throw new Error("There are no products matching the current filters.");
+    }
+    return data.products;
+  };
+
+  const orderWorkbookFilterLabel = () => {
+    const labels = [];
+    if (search.trim()) labels.push(`Search: ${search.trim()}`);
+    if (category !== "All") labels.push(`Category: ${category}`);
+    if (tribe !== "All") labels.push(`Collection: ${tribe}`);
+    return labels.length ? labels.join(" | ") : "Complete catalog";
+  };
+
+  const handleWorkbookExport = async () => {
+    if (!canUseOrderWorkbook || workbookAction) return;
+    setWorkbookAction("export");
+    setWorkbookError("");
+    setWorkbookSuccess("");
+    try {
+      const exportProducts = await loadOrderWorkbookProducts();
+      await exportCatalogExcel({
+        products: exportProducts,
+        user,
+        filterLabel: orderWorkbookFilterLabel(),
+      });
+    } catch (error) {
+      setWorkbookError(error.message || "The order spreadsheet could not be generated.");
+    } finally {
+      setWorkbookAction("");
+    }
+  };
+
+  const openWorkbookImport = () => {
+    setWorkbookError("");
+    setWorkbookSuccess("");
+    if (canUseOrderWorkbook) importInputRef.current?.click();
+  };
+
+  const handleWorkbookImport = async (event) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+    if (!file.name.toLocaleLowerCase().endsWith(".xlsx")) {
+      setWorkbookError("Choose the .xlsx workbook generated from this catalog.");
+      return;
+    }
+
+    setWorkbookAction("import");
+    setWorkbookError("");
+    setWorkbookSuccess("");
+    try {
+      const importedItems = await readCatalogOrderWorkbook(file);
+      const liveProducts = await loadOrderWorkbookProducts({
+        applyFilters: false,
+      });
+      const liveOptions = new Map();
+      liveProducts.forEach((product) => {
+        (product.options || []).forEach((option, optionIndex) => {
+          const storeId = String(product.storeId || "sacred-connection");
+          const sku = String(option.sku || "").trim();
+          if (!sku) return;
+          liveOptions.set(`${storeId}\u0000${sku.toLocaleLowerCase()}`, {
+            product,
+            optionIndex,
+            option,
+          });
+        });
+      });
+
+      const errors = [];
+      const selections = importedItems.flatMap((item) => {
+        const match = liveOptions.get(
+          `${item.storeId}\u0000${item.sku.toLocaleLowerCase()}`
+        );
+        if (!match) {
+          errors.push(`${item.source}: product is no longer available.`);
+          return [];
+        }
+        if (match.option.inStock === false) {
+          errors.push(`${item.source}: this product is currently out of stock.`);
+          return [];
+        }
+        const currentStock = Number(match.option.stockQuantity);
+        if (
+          match.option.backordersAllowed !== true &&
+          Number.isFinite(currentStock) &&
+          currentStock >= 0 &&
+          item.quantity > currentStock
+        ) {
+          errors.push(`${item.source}: only ${currentStock} unit(s) are currently available.`);
+          return [];
+        }
+        if (!isValidQuantityForWeight(item.quantity, match.option.weightGrams)) {
+          errors.push(`${item.source}: quantity is not valid for ${match.product.name} (${match.option.name}).`);
+          return [];
+        }
+        return [{
+          product: match.product,
+          optionIndex: match.optionIndex,
+          quantity: item.quantity,
+        }];
+      });
+      if (errors.length) {
+        throw new Error(`${errors.slice(0, 4).join(" ")}${errors.length > 4 ? ` ${errors.length - 4} more error(s).` : ""}`);
+      }
+      if (
+        cart.length > 0 &&
+        !window.confirm(
+          "Importing this spreadsheet will replace the products currently in your order sheet. Continue?"
+        )
+      ) {
+        return;
+      }
+      const importedCount = replaceCartWithSelections(selections);
+      if (importedCount !== selections.length) {
+        throw new Error("The imported order could not be added to the order sheet.");
+      }
+      setWorkbookSuccess(
+        `${importedCount} ${importedCount === 1 ? "product line was" : "product lines were"} validated and loaded into your order sheet.`
+      );
+      setIsCartOpen(true);
+    } catch (error) {
+      setWorkbookError(error.message || "The order spreadsheet could not be imported.");
+    } finally {
+      setWorkbookAction("");
+    }
+  };
+
   return (
     <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased">
       {/* Navigation Header */}
@@ -296,19 +459,55 @@ export default function CatalogClient({ initialProducts = [] }) {
               {pdfExporting ? "Generating PDF" : "PDF Catalog"}
             </button>
 
-            {isLoggedIn ? (
-              <button
-                onClick={() => setIsCartOpen(true)}
-                className="relative flex w-full grow items-center justify-center gap-3 rounded-sm border border-white/10 bg-[#1a1a1a] px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition-all duration-300 hover:border-white/20 hover:bg-white/5 sm:w-auto sm:grow-0"
-              >
-                <ShoppingBag className="w-4 h-4 text-[#82d6c5]" />
-                Order Sheet
-                {cartTotalItems > 0 && (
-                  <span className="absolute -right-2 -top-2 flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-[#e02401] text-[10px] font-bold text-white">
-                    {cartTotalItems}
-                  </span>
-                )}
-              </button>
+            {canUseOrderWorkbook ? (
+              <>
+                <button
+                  type="button"
+                  onClick={handleWorkbookExport}
+                  disabled={Boolean(workbookAction)}
+                  className="flex w-full grow items-center justify-center gap-3 rounded-sm border border-white/10 bg-white/5 px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition-all duration-300 hover:border-[#268072]/60 hover:bg-white/10 disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:grow-0"
+                >
+                  {workbookAction === "export" ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin text-[#82d6c5]" aria-hidden="true" />
+                  ) : (
+                    <FileSpreadsheet className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
+                  )}
+                  {workbookAction === "export" ? "Preparing Excel" : "Export Order Excel"}
+                </button>
+                <input
+                  ref={importInputRef}
+                  type="file"
+                  accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  onChange={handleWorkbookImport}
+                  className="sr-only"
+                  tabIndex={-1}
+                />
+                <button
+                  type="button"
+                  onClick={openWorkbookImport}
+                  disabled={Boolean(workbookAction)}
+                  className="flex w-full grow items-center justify-center gap-3 rounded-sm border border-[#82d6c5]/40 bg-[#268072]/20 px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-[#82d6c5] transition-all duration-300 hover:bg-[#268072]/30 hover:text-white disabled:cursor-wait disabled:opacity-70 sm:w-auto sm:grow-0"
+                >
+                  {workbookAction === "import" ? (
+                    <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" />
+                  ) : (
+                    <Upload className="h-4 w-4" aria-hidden="true" />
+                  )}
+                  {workbookAction === "import" ? "Validating Excel" : "Import Order Excel"}
+                </button>
+                <button
+                  onClick={() => setIsCartOpen(true)}
+                  className="relative flex w-full grow items-center justify-center gap-3 rounded-sm border border-white/10 bg-[#1a1a1a] px-6 py-3.5 text-sm font-bold uppercase tracking-wide text-white transition-all duration-300 hover:border-white/20 hover:bg-white/5 sm:w-auto sm:grow-0"
+                >
+                  <ShoppingBag className="w-4 h-4 text-[#82d6c5]" />
+                  Order Sheet
+                  {cartTotalItems > 0 && (
+                    <span className="absolute -right-2 -top-2 flex h-5 w-5 animate-pulse items-center justify-center rounded-full bg-[#e02401] text-[10px] font-bold text-white">
+                      {cartTotalItems}
+                    </span>
+                  )}
+                </button>
+              </>
             ) : (
               <button
                 type="button"
@@ -327,6 +526,24 @@ export default function CatalogClient({ initialProducts = [] }) {
             role="alert"
           >
             {pdfExportError}
+          </div>
+        )}
+
+        {workbookError && (
+          <div
+            className="rounded-sm border border-red-300/25 bg-red-950/45 px-4 py-3 text-sm font-semibold text-red-100"
+            role="alert"
+          >
+            {workbookError}
+          </div>
+        )}
+
+        {workbookSuccess && (
+          <div
+            className="rounded-sm border border-[#82d6c5]/30 bg-[#102c27]/70 px-4 py-3 text-sm font-semibold text-[#82d6c5]"
+            role="status"
+          >
+            {workbookSuccess}
           </div>
         )}
 

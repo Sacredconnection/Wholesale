@@ -6,13 +6,10 @@ import {
   ChevronRight,
   Download,
   Eye,
-  FileSpreadsheet,
   FileText,
-  Info,
   LoaderCircle,
   PackageOpen,
   RefreshCw,
-  ShoppingBag,
   X,
 } from "lucide-react";
 import Header from "@/components/Header";
@@ -25,7 +22,6 @@ import { useCart } from "@/components/CartContext";
 import {
   createDigitalCatalogPdfPreview,
   downloadDigitalCatalogPdf,
-  exportCatalogExcel,
 } from "@/lib/catalog-export";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 
@@ -68,7 +64,7 @@ function isIndigenousRapeCategory(category) {
 
 export default function CatalogPage() {
   const { isLoggedIn, user } = useAuth();
-  const { addToCart, setIsCartOpen, cartTotalItems } = useCart();
+  const { addToCart } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [filters, setFilters] = useState(EMPTY_FILTERS);
   const [page, setPage] = useState(1);
@@ -169,11 +165,6 @@ export default function CatalogPage() {
     () => pageList(pagination.page, pagination.totalPages),
     [pagination.page, pagination.totalPages]
   );
-  const hasActiveExportFilters = Boolean(
-    filters.category ||
-    filters.tribe
-  );
-
   const handleFiltersChange = (nextFilters) => {
     setFilters(nextFilters);
     setPage(1);
@@ -186,24 +177,6 @@ export default function CatalogPage() {
 
   const handleAddToCart = (product, optionIndex) => {
     addToCart(product, optionIndex, 1);
-  };
-
-  const loadExportProducts = async () => {
-    const params = new URLSearchParams({ export: "true" });
-    if (filters.category) params.set("category", filters.category);
-    if (filters.tribe) params.set("tribe", filters.tribe);
-    const response = await fetch(`/api/catalog?${params.toString()}`, {
-      credentials: "same-origin",
-      cache: "no-store",
-    });
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.error || "The catalog could not be prepared for export.");
-    }
-    if (!Array.isArray(data.products) || data.products.length === 0) {
-      throw new Error("There are no products matching the current filters.");
-    }
-    return data.products;
   };
 
   const filterLabel = () => {
@@ -239,33 +212,13 @@ export default function CatalogPage() {
       setPreviewMeta({
         productCount: preview.productCount,
         generatedAt: preview.generatedAt,
+        generatedAtLabel: preview.generatedAtLabel,
       });
       setIsPreviewOpen(true);
     } catch (previewFailure) {
       setExportError(
         previewFailure.message || "The PDF preview could not be generated."
       );
-    } finally {
-      setExporting("");
-    }
-  };
-
-  const handleExport = async (format) => {
-    setExporting(format);
-    setExportError("");
-    try {
-      if (format === "excel") {
-        const exportProducts = await loadExportProducts();
-        await exportCatalogExcel({
-          products: exportProducts,
-          user,
-          includeLinks: isLoggedIn,
-        });
-      } else {
-        await downloadDigitalCatalogPdf(currentPdfOptions());
-      }
-    } catch (exportFailure) {
-      setExportError(exportFailure.message || "The export could not be generated.");
     } finally {
       setExporting("");
     }
@@ -324,14 +277,7 @@ export default function CatalogPage() {
                 </h2>
                 <p className="mt-1 text-[11px] text-white/45 sm:text-xs">
                   {previewMeta
-                    ? `${previewMeta.productCount} products · Updated ${new Intl.DateTimeFormat(
-                        "en-US",
-                        {
-                          hour: "2-digit",
-                          minute: "2-digit",
-                          second: "2-digit",
-                        }
-                      ).format(previewMeta.generatedAt)}`
+                    ? `${previewMeta.productCount} products · Updated ${previewMeta.generatedAtLabel}`
                     : "Current catalog preview"}
                 </p>
               </div>
@@ -400,53 +346,22 @@ export default function CatalogPage() {
             </p>
           </div>
 
-          <div className="flex w-full flex-col items-stretch gap-4">
-            <section
-              className="catalog-export-tip rounded-lg border border-[#82d6c5]/25 bg-[#102c27]/70 px-4 py-4 shadow-lg shadow-black/10 sm:px-5"
-              aria-labelledby="pdf-export-tip-title"
-            >
-              <div className="flex min-w-0 gap-3">
-                <Info className="mt-0.5 h-5 w-5 shrink-0 text-[#82d6c5]" aria-hidden="true" />
-                <div className="min-w-0">
-                  <h2 id="pdf-export-tip-title" className="text-sm font-black text-white">
-                    Customize your PDF catalog
-                  </h2>
-                  <p className="mt-1 text-sm leading-6 text-white/65">
-                    To include every Sacred Connection product, clear the category filters. To create a personalized catalog, choose a category and subcategory before selecting Generate PDF.
-                  </p>
-                  <div className="mt-3 flex flex-wrap items-center gap-3">
-                    <span
-                      className={`inline-flex rounded-full px-3 py-1.5 text-[10px] font-black uppercase tracking-[0.12em] ${
-                        hasActiveExportFilters
-                          ? "bg-[#d99a1b]/15 text-[#ffd27a]"
-                          : "bg-[#268072]/25 text-[#82d6c5]"
-                      }`}
-                      aria-live="polite"
-                    >
-                      {hasActiveExportFilters
-                        ? `${pagination.totalItems} filtered products`
-                        : `Complete catalog: ${pagination.totalItems} products`}
-                    </span>
-                    {hasActiveExportFilters && (
-                      <button
-                        type="button"
-                        onClick={clearFilters}
-                        disabled={loading}
-                        className="text-xs font-bold text-[#82d6c5] transition-colors hover:text-white disabled:cursor-wait disabled:opacity-50"
-                      >
-                        Clear filters for full catalog
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </section>
-
+          <div className="flex w-full flex-col items-stretch gap-2">
             <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
               <button
                 type="button"
                 disabled={Boolean(exporting)}
-                onClick={() => handleExport("pdf")}
+                onClick={async () => {
+                  setExporting("pdf");
+                  setExportError("");
+                  try {
+                    await downloadDigitalCatalogPdf(currentPdfOptions());
+                  } catch (exportFailure) {
+                    setExportError(exportFailure.message || "The PDF could not be generated.");
+                  } finally {
+                    setExporting("");
+                  }
+                }}
                 className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] text-white transition-colors hover:border-[#268072]/60 hover:bg-white/10 disabled:cursor-wait disabled:opacity-50"
               >
                 {exporting === "pdf" ? (
@@ -456,42 +371,6 @@ export default function CatalogPage() {
                 )}
                 {exporting === "pdf" ? "Generating PDF" : "Generate PDF"}
               </button>
-              <button
-                type="button"
-                disabled={Boolean(exporting)}
-                onClick={() => handleExport("excel")}
-                className="inline-flex items-center justify-center gap-2 rounded-sm border border-white/10 bg-white/5 px-4 py-3 text-xs font-black uppercase tracking-[0.1em] text-white transition-colors hover:border-[#268072]/60 hover:bg-white/10 disabled:cursor-wait disabled:opacity-50"
-              >
-                {exporting === "excel" ? (
-                  <LoaderCircle className="h-4 w-4 animate-spin text-[#82d6c5]" aria-hidden="true" />
-                ) : (
-                  <FileSpreadsheet className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
-                )}
-                {exporting === "excel" ? "Preparing Excel" : "Export Excel"}
-              </button>
-              {isLoggedIn ? (
-                <button
-                  type="button"
-                  onClick={() => setIsCartOpen(true)}
-                  className="relative inline-flex items-center justify-center gap-2 rounded-sm border border-white/10 bg-[#1a1a1a] px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:border-[#268072]/60"
-                >
-                  <ShoppingBag className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
-                  Order sheet
-                  {cartTotalItems > 0 && (
-                    <span className="absolute -right-2 -top-2 flex h-5 min-w-5 items-center justify-center rounded-full bg-[#EC2300] px-1 text-[10px] text-white">
-                      {cartTotalItems}
-                    </span>
-                  )}
-                </button>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setIsLoginOpen(true)}
-                  className="rounded-sm bg-[#EC2300] px-6 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors hover:bg-[#c51d00]"
-                >
-                  Client login
-                </button>
-              )}
             </div>
             {exportError && (
               <p className="max-w-lg text-right text-xs leading-5 text-[#ff9b88]" role="alert">

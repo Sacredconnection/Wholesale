@@ -144,6 +144,8 @@ export function mapVariationToOption(variation) {
     wcVariationId: variation.id,
     inStock: variation.stock_status !== "outofstock",
     stockStatus: variation.stock_status || "instock",
+    backordersAllowed:
+      variation.backorders === "yes" || variation.backorders === "notify",
     stockQuantity:
       variation.stock_quantity == null ? null : Number(variation.stock_quantity),
   };
@@ -176,6 +178,7 @@ const mapStoreVariationToOption = (variation) => {
     wcVariationId: variation.id,
     inStock: variation.is_in_stock !== false,
     stockStatus: variation.is_in_stock === false ? "outofstock" : "instock",
+    backordersAllowed: false,
     stockQuantity: null,
   };
 };
@@ -341,6 +344,8 @@ export function mapProduct(
             wcVariationId: null,
             inStock: product.stock_status !== "outofstock",
             stockStatus: product.stock_status || "instock",
+            backordersAllowed:
+              product.backorders === "yes" || product.backorders === "notify",
             stockQuantity:
               product.stock_quantity == null ? null : Number(product.stock_quantity),
           },
@@ -428,6 +433,7 @@ export function mapStoreProduct(
             wcVariationId: null,
             inStock: product.is_in_stock !== false,
             stockStatus: product.is_in_stock === false ? "outofstock" : "instock",
+            backordersAllowed: false,
             stockQuantity: null,
           },
         ];

@@ -33,6 +33,10 @@ export function isLocalDevUpstreamEnabled() {
   return Boolean(configuredOrigin());
 }
 
+export function getLocalDevUpstreamOrigin() {
+  return configuredOrigin();
+}
+
 const escapeRegExp = (value) =>
   value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 

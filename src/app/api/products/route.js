@@ -15,6 +15,7 @@ import {
   mapProductForRole,
   stripProductPricing,
 } from "@/lib/wc-mappers";
+import { loadPublicStoreProducts } from "@/lib/public-store-catalog";
 import { securityError } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
@@ -99,12 +100,14 @@ export async function GET(request) {
 
     const catalogs = await Promise.all(
       stores.map((store) =>
-        getCachedStoreCatalog(
-          store.id,
-          store.name,
-          revealPricing ? customer.role : null,
-          revealPricing
-        )
+        revealPricing
+          ? getCachedStoreCatalog(
+              store.id,
+              store.name,
+              customer.role,
+              true
+            )
+          : loadPublicStoreProducts(store)
       )
     );
     const products = catalogs.flat().sort((a, b) => a.name.localeCompare(b.name));

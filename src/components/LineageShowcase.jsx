@@ -236,7 +236,7 @@ export default function LineageShowcase() {
       {/* Tribe Carousel Track - Seamless CSS Marquee replaced by Draggable Slider */}
       <div className="relative">
         <div
-          className="lineage-decorative-band pointer-events-none absolute left-1/2 top-1/2 z-0 hidden h-[100px] w-screen -translate-x-1/2 -translate-y-1/2 bg-[url('/decorations/lineage-decorative-band.webp')] bg-center bg-repeat-x [background-size:auto_128px] min-[1440px]:block"
+          className="lineage-decorative-band pointer-events-none absolute left-1/2 top-1/2 z-0 hidden h-[100px] w-screen -translate-x-1/2 -translate-y-1/2 bg-center bg-repeat-x [background-size:auto_128px] min-[1440px]:block"
           aria-hidden="true"
         />
 

@@ -12,6 +12,7 @@ import {
   mapProductForRole,
   stripProductPricing,
 } from "@/lib/wc-mappers";
+import { loadPublicStoreProductBySlug } from "@/lib/public-store-catalog";
 import { securityError } from "@/lib/request-security";
 import { getSession } from "@/lib/session";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
@@ -51,14 +52,27 @@ export async function GET(request, { params }) {
   }
 
   try {
+    if (!session) {
+      const product = await loadPublicStoreProductBySlug(
+        identity.store,
+        identity.slug
+      );
+      if (!product) {
+        return Response.json({ error: "Product not found." }, { status: 404 });
+      }
+      return Response.json(
+        { product, viewer: { authenticated: false } },
+        { headers: { "Cache-Control": "private, no-store" } }
+      );
+    }
+
     const [customer, wcProduct] = await Promise.all([
-      session ? getCustomerByEmail(session.email) : Promise.resolve(null),
+      getCustomerByEmail(session.email),
       getProductBySlug(identity.slug, identity.store.id),
     ]);
     if (!wcProduct) return Response.json({ error: "Product not found." }, { status: 404 });
     const revealPricing = Boolean(
-      session &&
-        isApprovedWholesaleCustomer(customer) &&
+      isApprovedWholesaleCustomer(customer) &&
         customer.id === session.customerId
     );
 

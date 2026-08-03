@@ -84,6 +84,12 @@ async function wcFetch(
     headers: {
       Authorization: `Basic ${auth}`,
       "Content-Type": "application/json",
+      ...(method === "GET" && effectiveRevalidate === 0
+        ? {
+            "Cache-Control": "no-cache, no-store, max-age=0",
+            Pragma: "no-cache",
+          }
+        : {}),
     },
     body: body ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(requestTimeoutMs()),
@@ -125,7 +131,15 @@ async function storeFetch(storeId, path, { params = {}, revalidate, tags = [] } 
 
   const effectiveRevalidate = revalidate ?? revalidateSeconds();
   const res = await fetch(url, {
-    headers: { Accept: "application/json" },
+    headers: {
+      Accept: "application/json",
+      ...(effectiveRevalidate === 0
+        ? {
+            "Cache-Control": "no-cache, no-store, max-age=0",
+            Pragma: "no-cache",
+          }
+        : {}),
+    },
     signal: AbortSignal.timeout(requestTimeoutMs()),
     ...(effectiveRevalidate === 0
       ? { cache: "no-store" }

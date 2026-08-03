@@ -1,5 +1,19 @@
 @import "tailwindcss";
 
+.retail-redirect-section {
+  background-image: url("/banner/retail-sanctuary/retail-sanctuary-banner-mobile.webp");
+}
+
+@media (min-width: 48rem) {
+  .retail-redirect-section {
+    background-image: url("/banner/retail-sanctuary/retail-sanctuary-banner-desktop.webp");
+  }
+}
+
+.lineage-decorative-band {
+  background-image: url("/decorations/lineage-decorative-band.webp");
+}
+
 @theme {
   --color-on-tertiary-fixed-variant: #454747;
   --color-surface-container-highest: #353535;

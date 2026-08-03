@@ -145,6 +145,18 @@ export function CartProvider({ children }) {
   const addToCart = (product, optionIndex, quantity = 1) =>
     addSelectionsToCart([{ product, optionIndex, quantity }]);
 
+  const replaceCartWithSelections = (selections) => {
+    const incomingItems = (Array.isArray(selections) ? selections : [])
+      .map(({ product, optionIndex, quantity = 1 }) =>
+        cartItemFromSelection(product, optionIndex, Number(quantity))
+      )
+      .filter(Boolean);
+    if (incomingItems.length === 0) return 0;
+
+    setCart(incomingItems);
+    return incomingItems.length;
+  };
+
   // Update item quantity
   const updateQuantity = (cartKey, change) => {
     setCart((prevCart) =>
@@ -210,6 +222,7 @@ export function CartProvider({ children }) {
       setIsCartOpen,
       addToCart,
       addSelectionsToCart,
+      replaceCartWithSelections,
       updateQuantity,
       removeFromCart,
       clearCart,

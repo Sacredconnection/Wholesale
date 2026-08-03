@@ -1,11 +1,27 @@
 "use client";
 
-import { optionPriceForUser } from "@/lib/pricing";
+import { optionPriceForUser, quantityStepForWeight } from "@/lib/pricing";
+import {
+  catalogOrderItemToken,
+  ORDER_ITEM_HEADER,
+  ORDER_QUANTITY_HEADER,
+  ORDER_WORKBOOK_MARKER,
+  ORDER_WORKBOOK_META_SHEET,
+  ORDER_WORKBOOK_VERSION,
+} from "@/lib/catalog-order-workbook";
 
 const BRAND_DARK = "FF1A1A1A";
 const BRAND_GREEN = "FF268072";
 const BRAND_MINT = "FF82D6C5";
 const BRAND_RED = "FFEC2300";
+const CATALOG_GRID_COLOR = "FFD5DEDB";
+
+const catalogGridBorder = () => ({
+  top: { style: "thin", color: { argb: CATALOG_GRID_COLOR } },
+  left: { style: "thin", color: { argb: CATALOG_GRID_COLOR } },
+  bottom: { style: "thin", color: { argb: CATALOG_GRID_COLOR } },
+  right: { style: "thin", color: { argb: CATALOG_GRID_COLOR } },
+});
 
 const DEFAULT_ETHNICITY_COLOR = [38, 128, 114];
 const SACRED_PRIMARY = [20, 65, 57];
@@ -61,13 +77,34 @@ function buttonTextColor(background) {
   return whiteContrast >= darkContrast ? [255, 255, 255] : [26, 26, 26];
 }
 
-const safeFilenameDate = () => new Date().toISOString().slice(0, 10);
+const excelArgb = (color) =>
+  `FF${color
+    .map((channel) => Math.max(0, Math.min(255, channel)).toString(16).padStart(2, "0"))
+    .join("")
+    .toUpperCase()}`;
+
+const twoDigits = (value) => String(value).padStart(2, "0");
+
+const safeFilenameDate = (date = new Date()) =>
+  `${date.getFullYear()}-${twoDigits(date.getMonth() + 1)}-${twoDigits(
+    date.getDate()
+  )}`;
 
 const safeFilenameTimestamp = (date) =>
-  date.toISOString().replace(/\..+$/, "").replace(/[:T]/g, "-");
+  `${safeFilenameDate(date)}-${twoDigits(date.getHours())}-${twoDigits(
+    date.getMinutes()
+  )}-${twoDigits(date.getSeconds())}`;
 
-const formatPdfGenerationTimestamp = (date) =>
-  new Intl.DateTimeFormat("en-US", {
+const clientGenerationContext = (date = new Date()) => {
+  const resolvedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+  const timeZone = resolvedTimeZone || "Client local time";
+  const offsetMinutes = -date.getTimezoneOffset();
+  const offsetSign = offsetMinutes >= 0 ? "+" : "-";
+  const absoluteOffset = Math.abs(offsetMinutes);
+  const utcOffset = `UTC${offsetSign}${twoDigits(
+    Math.floor(absoluteOffset / 60)
+  )}:${twoDigits(absoluteOffset % 60)}`;
+  const localDateTime = new Intl.DateTimeFormat("en-US", {
     year: "numeric",
     month: "short",
     day: "2-digit",
@@ -75,8 +112,16 @@ const formatPdfGenerationTimestamp = (date) =>
     minute: "2-digit",
     second: "2-digit",
     hourCycle: "h23",
-    timeZoneName: "short",
+    ...(resolvedTimeZone ? { timeZone: resolvedTimeZone } : {}),
   }).format(date);
+
+  return {
+    date,
+    timeZone,
+    utcOffset,
+    label: `${localDateTime} (${timeZone}, ${utcOffset})`,
+  };
+};
 
 function downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -158,196 +203,431 @@ async function deliverPdf(pdf, filename, delivery) {
 function catalogRows(products, user) {
   return products.flatMap((product) => {
     const options = product.options?.length ? product.options : [{}];
+
     return options.map((option) => ({
-      sku: option.sku || product.sku || "",
+      productId: product.id || "",
       product: product.name || "",
-      category: product.category || "",
       option: option.name || "Single format",
-      weight: Number(option.weightGrams) || null,
+      weight: Number.isFinite(Number(option.weightGrams))
+        ? Number(option.weightGrams)
+        : null,
+      availability:
+        option.inStock === false
+          ? "Out of stock"
+          : option.backordersAllowed && Number(option.stockQuantity) === 0
+            ? "Available on backorder"
+          : Number.isFinite(Number(option.stockQuantity))
+            ? `${Math.max(0, Number(option.stockQuantity))} in stock`
+            : "In stock",
+      inStock: option.inStock !== false,
+      backordersAllowed: option.backordersAllowed === true,
+      stockQuantity: Number.isFinite(Number(option.stockQuantity))
+        ? Number(option.stockQuantity)
+        : null,
       price: user ? optionPriceForUser(option, user, product.category) : null,
-      description: "",
+      orderQuantity: "",
+      importItem: catalogOrderItemToken(product, option),
+      quantityStep: quantityStepForWeight(option.weightGrams),
       productUrl: product.productUrl || "",
     }));
   });
 }
 
-export async function exportCatalogExcel({ products, user, includeLinks }) {
-  const includePricing = Boolean(user);
-  const ExcelJS = await import("exceljs");
-  const Workbook = ExcelJS.Workbook || ExcelJS.default?.Workbook;
-  const workbook = new Workbook();
-  workbook.creator = "Sacred Connection Wholesale";
-  workbook.created = new Date();
-  workbook.modified = new Date();
+const productEthnicity = (product) =>
+  String(product.tribe || product.category || "Other Products").trim() ||
+  "Other Products";
 
-  const instructions = workbook.addWorksheet("Instructions", {
-    views: [{ showGridLines: false }],
+const productsByEthnicity = (products) => {
+  const groups = new Map();
+  products.forEach((product) => {
+    const ethnicity = productEthnicity(product);
+    if (!groups.has(ethnicity)) groups.set(ethnicity, []);
+    groups.get(ethnicity).push(product);
   });
-  instructions.columns = [
-    { width: 4 },
-    { width: 24 },
-    { width: 76 },
-  ];
-  instructions.mergeCells("B2:C2");
-  instructions.getCell("B2").value = "SACRED CONNECTION - ORDER WORKBOOK";
-  instructions.getCell("B2").font = { bold: true, size: 18, color: { argb: "FFFFFFFF" } };
-  instructions.getCell("B2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND_GREEN } };
-  instructions.getCell("B2").alignment = { vertical: "middle" };
-  instructions.getRow(2).height = 36;
+  return [...groups.entries()].sort(([left], [right]) =>
+    normalizeEthnicity(left).localeCompare(normalizeEthnicity(right))
+  );
+};
 
-  const guidance = [
-    ["1", "Open the Order sheet and locate products by SKU, name, category, or option."],
-    ["2", "Enter the desired amount only in the Quantidade column. Keep SKU values unchanged."],
-    ["3", "Use Descricao for an optional note about that line."],
-    ["4", "Rows with quantity zero are ignored when the order file is imported."],
-    ["5", "Save this workbook. CSV order import will be enabled in the next catalog phase."],
-  ];
-  instructions.getCell("B4").value = "HOW TO USE";
-  instructions.getCell("B4").font = { bold: true, color: { argb: BRAND_GREEN } };
-  guidance.forEach(([step, text], index) => {
-    const row = 5 + index;
-    instructions.getCell(row, 2).value = step;
-    instructions.getCell(row, 2).font = { bold: true, color: { argb: BRAND_RED } };
-    instructions.getCell(row, 3).value = text;
-    instructions.getCell(row, 3).alignment = { wrapText: true, vertical: "top" };
-    instructions.getRow(row).height = 27;
-  });
-  instructions.getCell("B12").value = "Generated";
-  instructions.getCell("C12").value = new Date();
-  instructions.getCell("C12").numFmt = "yyyy-mm-dd hh:mm";
+const worksheetName = (ethnicity, usedNames) => {
+  const cleaned = String(ethnicity || "Other Products")
+    .replace(/[\\/?*[\]:]/g, " ")
+    .replace(/^'+|'+$/g, "")
+    .replace(/\s+/g, " ")
+    .trim() || "Other Products";
+  let candidate = cleaned.slice(0, 31);
+  let suffix = 2;
+  while (usedNames.has(candidate.toLocaleLowerCase())) {
+    const suffixText = ` ${suffix}`;
+    candidate = `${cleaned.slice(0, 31 - suffixText.length)}${suffixText}`;
+    suffix += 1;
+  }
+  usedNames.add(candidate.toLocaleLowerCase());
+  return candidate;
+};
 
-  const sheet = workbook.addWorksheet("Order", {
-    views: [{ state: "frozen", ySplit: 5, showGridLines: false }],
-    pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1 },
-  });
-  sheet.columns = [
-    { key: "sku", width: 24 },
-    { key: "quantity", width: 14 },
-    { key: "description", width: 28 },
-    { key: "product", width: 42 },
-    { key: "category", width: 22 },
-    { key: "option", width: 22 },
-    { key: "weight", width: 13 },
-    { key: "price", width: 19 },
-    { key: "subtotal", width: 19 },
-    { key: "link", width: 18 },
-  ];
+const columnName = (index) => {
+  let value = index;
+  let name = "";
+  while (value > 0) {
+    const remainder = (value - 1) % 26;
+    name = String.fromCharCode(65 + remainder) + name;
+    value = Math.floor((value - 1) / 26);
+  }
+  return name;
+};
 
-  sheet.mergeCells("A1:J1");
-  sheet.getCell("A1").value = "SACRED CONNECTION WHOLESALE ORDER";
-  sheet.getCell("A1").font = { bold: true, size: 18, color: { argb: "FFFFFFFF" } };
-  sheet.getCell("A1").fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND_DARK } };
-  sheet.getCell("A1").alignment = { vertical: "middle" };
-  sheet.getRow(1).height = 38;
+const wrappedLineCount = (value, columnWidth) => {
+  const text = String(value || "").trim();
+  if (!text) return 1;
+  const charactersPerLine = Math.max(8, Math.floor(columnWidth * 1.15));
+  return text.split(/\r?\n/).reduce((total, paragraph) => {
+    const words = paragraph.split(/\s+/).filter(Boolean);
+    if (!words.length) return total + 1;
+    let lines = 1;
+    let currentLength = 0;
+    words.forEach((word) => {
+      const nextLength = currentLength ? currentLength + word.length + 1 : word.length;
+      if (currentLength && nextLength > charactersPerLine) {
+        lines += 1;
+        currentLength = word.length;
+      } else {
+        currentLength = nextLength;
+      }
+    });
+    return total + lines;
+  }, 0);
+};
 
-  sheet.mergeCells("A2:J2");
-  sheet.getCell("A2").value = "Fill only Quantidade and Descricao. Do not change SKU values.";
+const catalogRowHeight = (item, columns) => {
+  return 24;
+};
+
+const formatCatalogSheet = (
+  sheet,
+  columns,
+  rows,
+  filterLabel,
+  accentColor = DEFAULT_ETHNICITY_COLOR,
+  generatedAtLabel = clientGenerationContext().label,
+  orderEnabled = false
+) => {
+  const lastColumn = columnName(columns.length);
+  const headerRowNumber = 6;
+  const firstDataRow = headerRowNumber + 1;
+  const lastDataRow = Math.max(firstDataRow, firstDataRow + rows.length - 1);
+  const accentArgb = excelArgb(accentColor);
+  const accentTextArgb = excelArgb(buttonTextColor(accentColor));
+  const accentBorderArgb = excelArgb(mixWithWhite(accentColor, 0.55));
+
+  sheet.columns = columns.map(({ key, width }) => ({ key, width }));
+  sheet.mergeCells(`A1:${lastColumn}1`);
+  sheet.getCell("A1").value = "SACRED CONNECTION WHOLESALE";
+  sheet.getCell("A1").font = {
+    bold: true,
+    size: 14,
+    color: { argb: accentTextArgb },
+  };
+  sheet.getCell("A1").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: accentArgb },
+  };
+  sheet.getCell("A1").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+  sheet.getRow(1).height = 30;
+
+  sheet.mergeCells(`A2:${lastColumn}2`);
+  sheet.getCell("A2").value = filterLabel || "Complete catalog";
   sheet.getCell("A2").font = { italic: true, color: { argb: "FF4F625D" } };
-  sheet.getCell("A2").alignment = { vertical: "middle" };
-  sheet.getRow(2).height = 25;
+  sheet.getCell("A2").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+  sheet.getRow(2).height = 24;
 
-  sheet.getCell("A3").value = "Products / variations";
-  sheet.getCell("B3").value = catalogRows(products, user).length;
-  sheet.getCell("D3").value = "Catalog products";
-  sheet.getCell("E3").value = products.length;
+  sheet.getCell("A3").value = "Catalog products";
+  sheet.getCell("B3").value = new Set(rows.map((row) => row.productId)).size;
+  sheet.getCell("D3").value = "Products / variations";
+  sheet.getCell("E3").value = rows.length;
   ["A3", "D3"].forEach((address) => {
-    sheet.getCell(address).font = { bold: true, color: { argb: BRAND_GREEN } };
+    sheet.getCell(address).font = { bold: true, color: { argb: accentArgb } };
+  });
+  sheet.getRow(3).eachCell({ includeEmpty: true }, (cell) => {
+    cell.alignment = { horizontal: "center", vertical: "middle" };
   });
 
-  const headers = [
-    "SKU",
-    "Quantidade",
-    "Descricao",
-    "Produto",
-    "Categoria",
-    "Opcao",
-    "Peso (g)",
-    includePricing ? "Preco unitario (USD)" : "Partner price (login required)",
-    includePricing ? "Subtotal (USD)" : "Subtotal (login required)",
-    "Produto no site",
-  ];
-  sheet.getRow(5).values = headers;
-  sheet.getRow(5).height = 30;
-  sheet.getRow(5).eachCell((cell) => {
-    cell.font = { bold: true, color: { argb: "FFFFFFFF" } };
-    cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND_GREEN } };
-    cell.alignment = { vertical: "middle", wrapText: true };
-    cell.border = { bottom: { style: "medium", color: { argb: BRAND_MINT } } };
-  });
+  sheet.mergeCells(`A4:${lastColumn}4`);
+  sheet.getCell("A4").value = `Generated in client local time: ${generatedAtLabel}`;
+  sheet.getCell("A4").font = {
+    italic: true,
+    size: 10,
+    color: { argb: "FF4F625D" },
+  };
+  sheet.getCell("A4").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+  };
+  sheet.getRow(4).height = 24;
 
-  const rows = catalogRows(products, user);
-  rows.forEach((item, index) => {
-    const rowNumber = index + 6;
-    const row = sheet.getRow(rowNumber);
-    row.values = [
-      item.sku,
-      0,
-      item.description,
-      item.product,
-      item.category,
-      item.option,
-      item.weight,
-      item.price,
-      includePricing
-        ? { formula: `IF(B${rowNumber}>0,B${rowNumber}*H${rowNumber},"")` }
-        : "",
-      "",
-    ];
-    row.height = 24;
-    row.alignment = { vertical: "middle" };
-    row.getCell(1).numFmt = "@";
-    row.getCell(2).numFmt = "0";
-    row.getCell(2).dataValidation = {
-      type: "whole",
-      operator: "between",
-      allowBlank: true,
-      formulae: [0, 99999],
-      showErrorMessage: true,
-      errorTitle: "Invalid quantity",
-      error: "Enter a whole number equal to or greater than zero.",
+  const visibleColumnCount = columns.filter((column) => !column.hidden).length;
+  const visibleLastColumn = columnName(visibleColumnCount);
+  sheet.mergeCells(`A5:${visibleLastColumn}5`);
+  sheet.getCell("A5").value = orderEnabled
+    ? "ORDER: enter a quantity only in the yellow column. Leave unwanted items blank or enter 0, then import this .xlsx file on the website."
+    : "READ-ONLY CATALOG: sign in on the website to download the editable order workbook with client pricing.";
+  sheet.getCell("A5").font = { bold: true, color: { argb: "FF664700" } };
+  sheet.getCell("A5").fill = {
+    type: "pattern",
+    pattern: "solid",
+    fgColor: { argb: "FFFFE699" },
+  };
+  sheet.getCell("A5").alignment = {
+    horizontal: "center",
+    vertical: "middle",
+    wrapText: true,
+  };
+  sheet.getRow(5).height = 36;
+
+  sheet.getRow(headerRowNumber).values = columns.map(({ header }) => header);
+  sheet.getRow(headerRowNumber).height = 42;
+  sheet.getRow(headerRowNumber).eachCell((cell) => {
+    cell.font = { bold: true, color: { argb: accentTextArgb } };
+    cell.fill = {
+      type: "pattern",
+      pattern: "solid",
+      fgColor: { argb: accentArgb },
     };
-    row.getCell(2).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF2CC" } };
-    row.getCell(3).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFFFF9E8" } };
-    row.getCell(8).numFmt = '"$"#,##0.00';
-    row.getCell(9).numFmt = '"$"#,##0.00';
-    if (includeLinks && item.productUrl) {
-      row.getCell(10).value = {
+    cell.alignment = {
+      horizontal: "center",
+      vertical: "middle",
+      wrapText: true,
+    };
+    cell.border = {
+      bottom: { style: "medium", color: { argb: accentBorderArgb } },
+    };
+  });
+
+  const keyIndex = new Map(columns.map((column, index) => [column.key, index + 1]));
+  rows.forEach((item, index) => {
+    const row = sheet.getRow(firstDataRow + index);
+    row.values = columns.map(({ key }) => item[key] ?? "");
+    row.height = catalogRowHeight(item, columns);
+    columns.forEach(({ key }, columnIndex) => {
+      const cell = row.getCell(columnIndex + 1);
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: false,
+      };
+    });
+
+    if (keyIndex.has("price")) {
+      row.getCell(keyIndex.get("price")).numFmt = '"$"#,##0.00';
+    }
+    if (keyIndex.has("availability")) {
+      const availabilityCell = row.getCell(keyIndex.get("availability"));
+      availabilityCell.font = {
+        bold: true,
+        color: { argb: item.inStock ? "FF1F6B5D" : "FF9D1C1C" },
+      };
+      if (!item.inStock) {
+        availabilityCell.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFFFE4E1" },
+        };
+      }
+    }
+    if (keyIndex.has("orderQuantity")) {
+      const quantityCell = row.getCell(keyIndex.get("orderQuantity"));
+      const step = Math.max(1, Number(item.quantityStep) || 1);
+      const stockLimit =
+        !item.backordersAllowed &&
+        Number.isFinite(Number(item.stockQuantity)) &&
+        Number(item.stockQuantity) >= 0
+          ? Math.min(1000, Math.floor(Number(item.stockQuantity)))
+          : 1000;
+      const address = quantityCell.address;
+      quantityCell.numFmt = "0";
+      quantityCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: item.inStock ? "FFFFE699" : "FFF1F1F1" },
+      };
+      quantityCell.protection = { locked: !item.inStock };
+      if (item.inStock) quantityCell.dataValidation = {
+        type: "custom",
+        allowBlank: true,
+        formulae: [
+          `OR(${address}="",AND(ISNUMBER(${address}),${address}=INT(${address}),${address}>=${step},${address}<=${stockLimit},MOD(${address},${step})=0))`,
+        ],
+        showErrorMessage: true,
+        errorStyle: "stop",
+        errorTitle: "Invalid order quantity",
+        error: `Use a whole number from ${step} to ${stockLimit} in multiples of ${step}, or leave the cell blank.`,
+        showInputMessage: true,
+        promptTitle: "Order quantity",
+        prompt:
+          step === 1
+            ? `Enter a whole-number quantity up to ${stockLimit}, or leave blank.`
+            : `This weight must be ordered in multiples of ${step}, up to ${stockLimit}.`,
+      };
+    }
+    if (keyIndex.has("productUrl") && item.productUrl) {
+      row.getCell(keyIndex.get("productUrl")).value = {
         text: "Open product",
         hyperlink: new URL(item.productUrl, window.location.origin).href,
       };
-      row.getCell(10).font = { color: { argb: BRAND_GREEN }, underline: true };
-    } else {
-      row.getCell(10).value = "Login required";
-      row.getCell(10).font = { italic: true, color: { argb: "FF7A7A7A" } };
+      row.getCell(keyIndex.get("productUrl")).font = {
+        color: { argb: BRAND_GREEN },
+        underline: true,
+      };
     }
-    if (index % 2 === 1) {
-      [1, 4, 5, 6, 7, 8, 9, 10].forEach((column) => {
-        row.getCell(column).fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FFF3F7F6" } };
+    const fill = index % 2 === 1 ? "FFF3F7F6" : null;
+    if (fill) {
+      row.eachCell((cell, columnNumber) => {
+        if (columnNumber === keyIndex.get("orderQuantity")) return;
+        if (columnNumber === keyIndex.get("availability") && !item.inStock) return;
+        cell.fill = { type: "pattern", pattern: "solid", fgColor: { argb: fill } };
       });
     }
   });
 
-  const firstDataRow = 6;
-  const lastDataRow = Math.max(firstDataRow, rows.length + 5);
-  const totalRow = lastDataRow + 2;
-  sheet.getCell(totalRow, 1).value = "ORDER TOTAL";
-  sheet.getCell(totalRow, 1).font = { bold: true, color: { argb: "FFFFFFFF" } };
-  sheet.getCell(totalRow, 1).fill = { type: "pattern", pattern: "solid", fgColor: { argb: BRAND_DARK } };
-  sheet.getCell(totalRow, 2).value = { formula: `SUM(B${firstDataRow}:B${lastDataRow})` };
-  sheet.getCell(totalRow, 2).font = { bold: true };
-  sheet.getCell(totalRow, 9).value = includePricing
-    ? { formula: `SUM(I${firstDataRow}:I${lastDataRow})` }
-    : "LOGIN TO VIEW PRICING";
-  sheet.getCell(totalRow, 9).font = { bold: true, color: { argb: BRAND_RED } };
-  sheet.getCell(totalRow, 9).numFmt = '"$"#,##0.00';
-  sheet.autoFilter = { from: "A5", to: `J${lastDataRow}` };
+  for (let rowNumber = 1; rowNumber <= lastDataRow; rowNumber += 1) {
+    for (let columnNumber = 1; columnNumber <= columns.length; columnNumber += 1) {
+      const cell = sheet.getRow(rowNumber).getCell(columnNumber);
+      const key = columns[columnNumber - 1]?.key;
+      cell.border = catalogGridBorder();
+      cell.alignment = {
+        horizontal: "center",
+        vertical: "middle",
+        wrapText: rowNumber === headerRowNumber,
+      };
+    }
+  }
+  sheet.getRow(headerRowNumber).eachCell((cell) => {
+    cell.border = {
+      ...catalogGridBorder(),
+      bottom: { style: "medium", color: { argb: accentBorderArgb } },
+    };
+  });
+
+  sheet.autoFilter = {
+    from: `A${headerRowNumber}`,
+    to: `${lastColumn}${lastDataRow}`,
+  };
+  columns.forEach((column, index) => {
+    if (column.hidden) sheet.getColumn(index + 1).hidden = true;
+  });
+};
+
+export async function exportCatalogExcel({
+  products,
+  user,
+  filterLabel = "Complete catalog",
+}) {
+  if (!user) {
+    throw new Error("Sign in with your wholesale account to generate an order spreadsheet.");
+  }
+  const includePricing = true;
+  const orderEnabled = true;
+  const ExcelJS = await import("exceljs");
+  const Workbook = ExcelJS.Workbook || ExcelJS.default?.Workbook;
+  const workbook = new Workbook();
+  workbook.creator = "Sacred Connection Wholesale";
+  workbook.subject = "Wholesale digital product catalog";
+  workbook.title = "Sacred Connection Wholesale Catalog";
+  const generation = clientGenerationContext();
+  workbook.created = generation.date;
+  workbook.modified = generation.date;
+
+  const baseColumns = [
+    { key: "product", header: "Product", width: 42 },
+    { key: "option", header: "Format", width: 24 },
+    { key: "weight", header: "Weight (g)", width: 14 },
+    { key: "availability", header: "Availability", width: 18 },
+  ];
+  const pricingColumns = includePricing
+    ? [{ key: "price", header: "Unit Price (USD)", width: 19 }]
+    : [];
+  const orderColumns = orderEnabled
+    ? [{ key: "orderQuantity", header: ORDER_QUANTITY_HEADER, width: 18 }]
+    : [];
+  // Keep the customer-facing workbook concise: it contains only order data.
+  const linkColumns = [];
+  const technicalColumns = orderEnabled
+    ? [{ key: "importItem", header: ORDER_ITEM_HEADER, width: 2, hidden: true }]
+    : [];
+  const columns = [
+    ...baseColumns,
+    ...pricingColumns,
+    ...orderColumns,
+    ...linkColumns,
+    ...technicalColumns,
+  ];
+  const usedNames = new Set();
+  const protectionPassword =
+    globalThis.crypto?.randomUUID?.() ||
+    `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
+  for (const [ethnicity, ethnicityProducts] of productsByEthnicity(products)) {
+    const rows = catalogRows(ethnicityProducts, user);
+    const accentColor = ethnicityColor({ tribe: ethnicity });
+    const sheet = workbook.addWorksheet(worksheetName(ethnicity, usedNames), {
+      properties: { tabColor: { argb: excelArgb(accentColor) } },
+      views: [{ state: "frozen", ySplit: 6, showGridLines: false }],
+      pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1 },
+    });
+    formatCatalogSheet(
+      sheet,
+      columns,
+      rows,
+      `${filterLabel} | Ethnicity: ${ethnicity}`,
+      accentColor,
+      generation.label,
+      orderEnabled
+    );
+    await sheet.protect(protectionPassword, {
+      spinCount: 10_000,
+      selectLockedCells: true,
+      selectUnlockedCells: orderEnabled,
+      formatCells: false,
+      formatColumns: false,
+      formatRows: false,
+      insertColumns: false,
+      insertRows: false,
+      deleteColumns: false,
+      deleteRows: false,
+      sort: false,
+      autoFilter: true,
+    });
+  }
+
+  if (orderEnabled) {
+    const metadata = workbook.addWorksheet(ORDER_WORKBOOK_META_SHEET, {
+      state: "veryHidden",
+    });
+    metadata.getCell("A1").value = "Marker";
+    metadata.getCell("B1").value = ORDER_WORKBOOK_MARKER;
+    metadata.getCell("A2").value = "Version";
+    metadata.getCell("B2").value = ORDER_WORKBOOK_VERSION;
+    metadata.getCell("A3").value = "Generated";
+    metadata.getCell("B3").value = generation.label;
+    await metadata.protect(protectionPassword, {
+      spinCount: 10_000,
+      selectLockedCells: false,
+      selectUnlockedCells: false,
+    });
+  }
 
   const buffer = await workbook.xlsx.writeBuffer();
   downloadBlob(
     new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     }),
-    `sacred-connection-order-${safeFilenameDate()}.xlsx`
+    `sacred-connection-${orderEnabled ? "order" : "catalog"}-${safeFilenameDate(generation.date)}.xlsx`
   );
 }
 
@@ -1284,22 +1564,31 @@ async function fetchDigitalCatalogProducts({
 }
 
 async function buildDigitalCatalogPdf(options = {}) {
-  const generatedAt = new Date();
+  const generation = clientGenerationContext();
+  const generatedAt = generation.date;
   const products = await fetchDigitalCatalogProducts(options);
   const pdf = await renderDigitalCatalogPdf({
     products,
     includeLinks: false,
     filterLabel: options.filterLabel || "Complete catalog",
     generatedAt,
+    generatedAtLabel: generation.label,
   });
-  return { pdf, products, generatedAt };
+  return {
+    pdf,
+    products,
+    generatedAt,
+    generatedAtLabel: generation.label,
+  };
 }
 
 export async function createDigitalCatalogPdfPreview(options = {}) {
-  const { pdf, products, generatedAt } = await buildDigitalCatalogPdf(options);
+  const { pdf, products, generatedAt, generatedAtLabel } =
+    await buildDigitalCatalogPdf(options);
   return {
     blob: pdf.output("blob"),
     generatedAt,
+    generatedAtLabel,
     productCount: products.length,
   };
 }
@@ -1322,6 +1611,7 @@ async function renderDigitalCatalogPdf({
   includeLinks,
   filterLabel,
   generatedAt,
+  generatedAtLabel,
 }) {
   const { jsPDF } = await import("jspdf");
   const preferredStoreOrder = [SACRED_STORE_ID];
@@ -1511,7 +1801,6 @@ async function renderDigitalCatalogPdf({
     productImages.push(...(await Promise.all(batch.map(loadProductImage))));
   }
   const imagesByProduct = new Map(products.map((product, index) => [product.id || product.sku, productImages[index]]));
-  const generatedAtLabel = formatPdfGenerationTimestamp(generatedAt);
   pdf.setCreationDate(generatedAt);
   drawPdfCover(
     pdf,

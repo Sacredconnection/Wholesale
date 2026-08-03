@@ -2,39 +2,45 @@ import "server-only";
 
 import { cache } from "react";
 import {
-  getAllProducts,
-  getCategories,
-  getProductBySlug,
-  getProductVariations,
-} from "@/lib/woocommerce";
-import {
   getRequiredCommerceStores,
   PRIMARY_STORE_ID,
 } from "@/lib/commerce-stores";
 import {
-  buildCategoryContext,
-  mapProductForRole,
-  stripProductPricing,
-} from "@/lib/wc-mappers";
+  loadPublicStoreProductBySlug,
+  loadPublicStoreProducts,
+} from "@/lib/public-store-catalog";
+import { getLocalDevUpstreamOrigin } from "@/lib/local-dev-upstream";
 
 const productPath = (slug) => `/product/${encodeURIComponent(slug)}`;
 
-export const getPublicCatalogProducts = cache(async () => {
-  const catalogs = await Promise.all(
-    getRequiredCommerceStores().map(async (store) => {
-      const [products, categories] = await Promise.all([
-        getAllProducts(store.id),
-        getCategories(store.id),
-      ]);
-      const categoryContext = buildCategoryContext(categories);
+async function fetchLocalUpstream(path) {
+  const origin = getLocalDevUpstreamOrigin();
+  if (!origin) return null;
+  const target = new URL(path, origin);
+  if (target.origin !== origin || !target.pathname.startsWith("/api/")) {
+    throw new Error("Invalid local development catalog upstream path.");
+  }
+  const response = await fetch(target, {
+    headers: { Accept: "application/json", Origin: origin },
+    cache: "no-store",
+    signal: AbortSignal.timeout(60_000),
+  });
+  if (!response.ok) {
+    throw new Error(`Local catalog upstream failed with status ${response.status}.`);
+  }
+  return response.json();
+}
 
-      return products.map((product) => {
-        const mapped = stripProductPricing(
-          mapProductForRole(product, [], categoryContext, null, store)
-        );
-        return { ...mapped, productUrl: productPath(mapped.slug) };
-      });
-    })
+export const getPublicCatalogProducts = cache(async () => {
+  const upstream = await fetchLocalUpstream("/api/products");
+  if (upstream) {
+    return (Array.isArray(upstream.products) ? upstream.products : []).sort(
+      (left, right) => left.name.localeCompare(right.name)
+    );
+  }
+
+  const catalogs = await Promise.all(
+    getRequiredCommerceStores().map((store) => loadPublicStoreProducts(store))
   );
 
   return catalogs
@@ -50,24 +56,12 @@ export const getPublicProductBySlug = cache(
     );
     if (!store) return null;
 
-    const product = await getProductBySlug(slug, store.id);
-    if (!product) return null;
-
-    const [variations, categories] = await Promise.all([
-      product.type === "variable"
-        ? getProductVariations(product.id, store.id)
-        : [],
-      getCategories(store.id),
-    ]);
-    const mapped = stripProductPricing(
-      mapProductForRole(
-        product,
-        variations,
-        buildCategoryContext(categories),
-        null,
-        store
-      )
+    const upstream = await fetchLocalUpstream(
+      `/api/products/${encodeURIComponent(`${store.id}~${slug}`)}`
     );
-    return { ...mapped, productUrl: productPath(mapped.slug) };
+    if (upstream) return upstream.product || null;
+
+    const product = await loadPublicStoreProductBySlug(store, slug);
+    return product ? { ...product, productUrl: productPath(product.slug) } : null;
   }
 );
