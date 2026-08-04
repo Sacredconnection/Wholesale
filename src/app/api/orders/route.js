@@ -21,6 +21,7 @@ import {
   toWcAddress,
 } from "@/lib/wc-mappers";
 import {
+  isOptionOrderable,
   isValidQuantityForWeight,
   NEW_CUSTOMER_ROLE,
   orderMinimumStatus,
@@ -397,7 +398,13 @@ export async function POST(request) {
             tableKey: tableKeyFromCategories(categories),
             rolePrice: role ? roleBasedPrices(payload.meta_data)[role] : undefined,
             basePrice: parseFloat(payload.price) || 0,
-            inStock: payload.stock_status !== "outofstock",
+            inStock: isOptionOrderable({
+              inStock: payload.stock_status !== "outofstock",
+              stockQuantity,
+              weightGrams,
+              backordersAllowed:
+                payload.backorders === "yes" || payload.backorders === "notify",
+            }),
             stockQuantity,
             backordersAllowed:
               payload.backorders === "yes" || payload.backorders === "notify",

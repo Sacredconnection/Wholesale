@@ -8,6 +8,7 @@ import { useProducts } from "@/components/ProductsContext";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import {
   optionPriceForUser,
+  orderableStockQuantity,
   quantityStepForWeight,
 } from "@/lib/pricing";
 
@@ -77,6 +78,9 @@ export default function ProductPurchaseControls({
   const activeProduct = product.optionsLoaded ? product : resolvedProduct;
   const selectedOption = activeProduct?.options[selectedOptionIndex];
   const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
+  const maximumQuantity = orderableStockQuantity(selectedOption);
+  const canIncreaseQuantity =
+    maximumQuantity == null || quantity + quantityStep <= maximumQuantity;
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, activeProduct.category)
     : null;
@@ -84,7 +88,7 @@ export default function ProductPurchaseControls({
     price == null ? null : price * quantityStep;
   const selectedTotal =
     price == null ? null : price * quantity;
-  const canAdd = Boolean(selectedOption && !error);
+  const canAdd = Boolean(selectedOption && selectedOption.inStock !== false && !error);
 
   const handleAdd = () => {
     if (!activeProduct || !canAdd) return;
@@ -139,6 +143,7 @@ export default function ProductPurchaseControls({
         <p className="text-[9px] font-semibold leading-relaxed text-[#82d6c5]">
           This {Math.round(selectedOption.weightGrams)}g tin is sold in multiples
           of {quantityStep} units.
+          {maximumQuantity != null && ` ${maximumQuantity / quantityStep} ${maximumQuantity / quantityStep === 1 ? "pack" : "packs"} available.`}
         </p>
       )}
 
@@ -207,10 +212,14 @@ export default function ProductPurchaseControls({
             <button
               type="button"
               onClick={() =>
-                setQuantity((value) => value + quantityStep)
+                setQuantity((value) => Math.min(
+                  maximumQuantity == null ? Number.POSITIVE_INFINITY : maximumQuantity,
+                  value + quantityStep
+                ))
               }
+              disabled={!canIncreaseQuantity}
               aria-label={`Increase quantity of ${product.name}`}
-              className={`${compact ? "p-2" : "p-2.5"} cursor-pointer border-0 bg-transparent text-white/55 hover:text-white`}
+              className={`${compact ? "p-2" : "p-2.5"} cursor-pointer border-0 bg-transparent text-white/55 hover:text-white disabled:cursor-not-allowed disabled:opacity-25`}
             >
               <Plus className="h-3.5 w-3.5" />
             </button>

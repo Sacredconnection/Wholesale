@@ -12,6 +12,7 @@ import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useProducts } from "@/components/ProductsContext";
 import {
   optionPriceForUser,
+  orderableStockQuantity,
   quantityStepForWeight,
 } from "@/lib/pricing";
 import { useCart } from "@/components/CartContext";
@@ -237,11 +238,15 @@ export default function ProductDetailClient({ initialProduct }) {
 
   const selectedOption = product.options[selectedOptIdx];
   const quantityStep = activeQuantityStep;
+  const maximumQuantity = orderableStockQuantity(selectedOption);
+  const canIncreaseQuantity =
+    maximumQuantity == null || quantity + quantityStep <= maximumQuantity;
   const canPurchase = Boolean(
     isLoggedIn &&
       user &&
       product.pricingVisible === true &&
-      selectedOption?.price != null
+      selectedOption?.price != null &&
+      selectedOption?.inStock !== false
   );
   const productDescription = product.description || "Wholesale botanical product sourced through equitable fair-trade agreements with Amazonian community associations and prepared using established local production methods.";
   const hasLongDescription = productDescription.length > 280;
@@ -495,6 +500,7 @@ export default function ProductDetailClient({ initialProduct }) {
                 <p className="text-[10px] font-semibold text-[#82d6c5]">
                   This {Math.round(selectedOption.weightGrams)}g tin is sold in
                   multiples of {quantityStep} units.
+                  {maximumQuantity != null && ` ${maximumQuantity / quantityStep} ${maximumQuantity / quantityStep === 1 ? "pack" : "packs"} available.`}
                 </p>
               )}
 
@@ -533,9 +539,13 @@ export default function ProductDetailClient({ initialProduct }) {
                     </span>
                     <button
                       onClick={() =>
-                        setQuantity((previous) => previous + quantityStep)
+                        setQuantity((previous) => Math.min(
+                          maximumQuantity == null ? Number.POSITIVE_INFINITY : maximumQuantity,
+                          previous + quantityStep
+                        ))
                       }
-                      className="p-3 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
+                      disabled={!canIncreaseQuantity}
+                      className="p-3 text-white/50 hover:text-white cursor-pointer bg-transparent border-0 disabled:cursor-not-allowed disabled:opacity-25"
                     >
                       <Plus className="w-4 h-4" />
                     </button>

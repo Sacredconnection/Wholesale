@@ -5,6 +5,7 @@ import { Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 import {
+  orderableStockQuantity,
   optionPriceForUser,
   quantityStepForWeight,
 } from "@/lib/pricing";
@@ -59,6 +60,9 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
 
   const selectedOption = resolvedProduct?.options[selectedOptionIndex];
   const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
+  const maximumQuantity = orderableStockQuantity(selectedOption);
+  const canIncreaseQuantity =
+    maximumQuantity == null || quantity + quantityStep <= maximumQuantity;
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, resolvedProduct.category)
     : null;
@@ -66,9 +70,10 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
     price == null ? null : price * quantityStep;
   const selectedTotal =
     price == null ? null : price * quantity;
+  const canAdd = selectedOption?.inStock !== false && maximumQuantity !== 0;
 
   const handleAdd = () => {
-    if (resolvedProduct && selectedOption) {
+    if (resolvedProduct && selectedOption && canAdd) {
       onAddToCart(resolvedProduct, selectedOptionIndex, quantity);
     }
   };
@@ -168,7 +173,7 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
               <div className="flex items-center rounded-sm border border-white/10 bg-[#101010]">
                 <button type="button" onClick={() => setQuantity((value) => Math.max(quantityStep, value - quantityStep))} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Decrease quantity"><Minus className="h-4 w-4" /></button>
                 <span className="w-10 text-center text-sm font-bold text-white">{quantity}</span>
-                <button type="button" onClick={() => setQuantity((value) => value + quantityStep)} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setQuantity((value) => Math.min(maximumQuantity == null ? Number.POSITIVE_INFINITY : maximumQuantity, value + quantityStep))} disabled={!canIncreaseQuantity} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-25" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
               </div>
               {quantityStep > 1 && quantity > quantityStep && selectedTotal != null && (
                 <p className="w-full border-t border-white/5 pt-3 text-right text-[10px] font-semibold text-white/50">
@@ -178,7 +183,7 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
               )}
             </div>
 
-            <button type="button" onClick={handleAdd} className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm border-0 bg-[#EC2300] px-6 py-4 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-[#c51d00]">
+            <button type="button" onClick={handleAdd} disabled={!canAdd} className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-sm border-0 bg-[#EC2300] px-6 py-4 text-xs font-bold uppercase tracking-widest text-white transition-colors hover:bg-[#c51d00] disabled:cursor-not-allowed disabled:opacity-35">
               <ShoppingBag className="h-4 w-4" />
               Add selected option
             </button>

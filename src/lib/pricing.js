@@ -38,6 +38,23 @@ export function quantityStepForWeight(weightGrams) {
   return 1;
 }
 
+// A variation with tracked stock below its required case multiple cannot be
+// purchased, even when WooCommerce still reports it as "in stock".
+export function orderableStockQuantity(option) {
+  if (!option || option.backordersAllowed === true) return null;
+  const stockQuantity = Number(option.stockQuantity);
+  if (!Number.isFinite(stockQuantity) || stockQuantity < 0) return null;
+  const quantityStep = quantityStepForWeight(option.weightGrams);
+  return Math.floor(Math.max(0, stockQuantity) / quantityStep) * quantityStep;
+}
+
+export function isOptionOrderable(option) {
+  if (!option || option.inStock === false) return false;
+  if (option.backordersAllowed === true) return true;
+  const orderableQuantity = orderableStockQuantity(option);
+  return orderableQuantity == null || orderableQuantity > 0;
+}
+
 export function normalizeQuantityForWeight(quantity, weightGrams) {
   const step = quantityStepForWeight(weightGrams);
   const requested = Math.max(1, Math.floor(Number(quantity) || step));

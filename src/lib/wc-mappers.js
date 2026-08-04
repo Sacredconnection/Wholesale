@@ -1,6 +1,7 @@
 // Maps WooCommerce REST payloads to the internal product shape used by the UI.
 
 import "server-only";
+import { isOptionOrderable } from "@/lib/pricing";
 
 const DEFAULT_APPROVED_WHOLESALE_ROLES = [
   "new customer",
@@ -332,7 +333,7 @@ export function mapProduct(
 ) {
   const { parentById = {}, nameById = {} } = categoryContext;
 
-  const options =
+  const rawOptions =
     product.type === "variable" && variations.length > 0
       ? variations
           .filter(
@@ -358,6 +359,10 @@ export function mapProduct(
               product.stock_quantity == null ? null : Number(product.stock_quantity),
           },
         ];
+  const options = rawOptions.map((option) => ({
+    ...option,
+    inStock: isOptionOrderable(option),
+  }));
 
   const trackedQuantities = options
     .map((option) => option.stockQuantity)
@@ -419,7 +424,7 @@ export function mapStoreProduct(
   store = { id: "sacred-connection", name: "Sacred Connection" }
 ) {
   const { parentById = {}, nameById = {} } = categoryContext;
-  const options =
+  const rawOptions =
     product.type === "variable" && variations.length > 0
       ? variations
           .filter(
@@ -445,6 +450,10 @@ export function mapStoreProduct(
             stockQuantity: null,
           },
         ];
+  const options = rawOptions.map((option) => ({
+    ...option,
+    inStock: isOptionOrderable(option),
+  }));
 
   const cats = product.categories || [];
   const topCats = cats.filter((category) => !parentById[category.id]);

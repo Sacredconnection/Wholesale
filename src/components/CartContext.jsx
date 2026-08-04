@@ -5,6 +5,7 @@ import { useAuth } from './AuthContext';
 import {
   cartUnitPrice,
   normalizeQuantityForWeight,
+  orderableStockQuantity,
   optionPriceForUser,
   quantityStepForWeight,
 } from '@/lib/pricing';
@@ -90,6 +91,8 @@ export function CartProvider({ children }) {
     const selectedOption = product.options?.[optionIndex];
     if (!selectedOption) return null;
     const quantityStep = quantityStepForWeight(selectedOption.weightGrams);
+    const maximumQuantity = orderableStockQuantity(selectedOption);
+    if (maximumQuantity === 0) return null;
     const storeId = product.storeId || SACRED_STORE_ID;
     if (storeId !== SACRED_STORE_ID) return null;
 
@@ -105,14 +108,18 @@ export function CartProvider({ children }) {
       price: optionPriceForUser(selectedOption, user, product.category),
       weightGrams: selectedOption.weightGrams,
       quantityStep,
-      quantity: normalizeQuantityForWeight(
-        quantity,
-        selectedOption.weightGrams
-      ),
+      quantity: maximumQuantity == null
+        ? normalizeQuantityForWeight(quantity, selectedOption.weightGrams)
+        : Math.min(
+            maximumQuantity,
+            normalizeQuantityForWeight(quantity, selectedOption.weightGrams)
+          ),
       image: product.image,
       wcProductId: product.wcId || null,
       wcVariationId: selectedOption.wcVariationId || null,
       inStock: selectedOption.inStock !== false,
+      stockQuantity: selectedOption.stockQuantity ?? null,
+      backordersAllowed: selectedOption.backordersAllowed === true,
     };
   };
 
@@ -130,7 +137,13 @@ export function CartProvider({ children }) {
         const existingItem = nextCart.find((item) => item.cartKey === incoming.cartKey);
         if (existingItem) {
           existingItem.quantity += incoming.quantity;
+          const maximumQuantity = orderableStockQuantity(incoming);
+          if (maximumQuantity != null) {
+            existingItem.quantity = Math.min(existingItem.quantity, maximumQuantity);
+          }
           existingItem.inStock = incoming.inStock;
+          existingItem.stockQuantity = incoming.stockQuantity;
+          existingItem.backordersAllowed = incoming.backordersAllowed;
         } else {
           nextCart.push(incoming);
         }
@@ -167,10 +180,14 @@ export function CartProvider({ children }) {
               item.quantityStep || quantityStepForWeight(item.weightGrams);
             const direction = change < 0 ? -1 : 1;
             const nextQty = item.quantity + direction * quantityStep;
+            const maximumQuantity = orderableStockQuantity(item);
             return {
               ...item,
               quantityStep,
-              quantity: Math.max(quantityStep, nextQty),
+              quantity: Math.min(
+                maximumQuantity == null ? Number.POSITIVE_INFINITY : maximumQuantity,
+                Math.max(quantityStep, nextQty)
+              ),
             };
           }
           return item;

@@ -1,6 +1,10 @@
 "use client";
 
-import { optionPriceForUser, quantityStepForWeight } from "@/lib/pricing";
+import {
+  optionPriceForUser,
+  orderableStockQuantity,
+  quantityStepForWeight,
+} from "@/lib/pricing";
 import {
   catalogOrderItemToken,
   ORDER_ITEM_HEADER,
@@ -218,7 +222,13 @@ function catalogRows(products, user) {
           : option.backordersAllowed && Number(option.stockQuantity) === 0
             ? "Available on backorder"
           : Number.isFinite(Number(option.stockQuantity))
-            ? `${Math.max(0, Number(option.stockQuantity))} in stock`
+            ? (() => {
+                const quantityStep = quantityStepForWeight(option.weightGrams);
+                const orderableQuantity = orderableStockQuantity(option) || 0;
+                if (quantityStep === 1) return `${orderableQuantity} in stock`;
+                const packs = orderableQuantity / quantityStep;
+                return `${packs} ${packs === 1 ? "pack" : "packs"} available (${quantityStep} units per pack)`;
+              })()
             : "In stock",
       inStock: option.inStock !== false,
       backordersAllowed: option.backordersAllowed === true,
@@ -461,12 +471,9 @@ const formatCatalogSheet = (
     if (keyIndex.has("orderQuantity")) {
       const quantityCell = row.getCell(keyIndex.get("orderQuantity"));
       const step = Math.max(1, Number(item.quantityStep) || 1);
+      const orderableStock = orderableStockQuantity(item);
       const stockLimit =
-        !item.backordersAllowed &&
-        Number.isFinite(Number(item.stockQuantity)) &&
-        Number(item.stockQuantity) >= 0
-          ? Math.min(1000, Math.floor(Number(item.stockQuantity)))
-          : 1000;
+        orderableStock == null ? 1000 : Math.min(1000, orderableStock);
       const address = quantityCell.address;
       quantityCell.numFmt = "0";
       quantityCell.fill = {
