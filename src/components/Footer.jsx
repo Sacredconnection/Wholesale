@@ -85,7 +85,7 @@ export default function Footer() {
       <div className="border-t border-white/5 py-8">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row justify-between items-center gap-4 w-full">
           <p className="text-xs text-white/40 font-label-sm uppercase tracking-widest">
-            Absolute Chemical Purity &amp; Cultural Authenticity
+            Botanical Materials · Cultural Context
           </p>
           <div className="flex gap-6 text-white/30">
             <Leaf className="w-5 h-5 hover:text-[#82d6c5] transition-colors" aria-hidden="true" />

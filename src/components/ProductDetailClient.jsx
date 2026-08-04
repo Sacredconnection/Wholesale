@@ -47,7 +47,6 @@ function RelatedProductMedia({ product, href }) {
           <span className="relative mt-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#82d6c5]/75">
             Sacred Connection
           </span>
-          <span className="relative mt-1.5 text-[10px] leading-snug text-white/40">Image coming soon</span>
         </div>
       ) : (
         <img
@@ -336,9 +335,6 @@ export default function ProductDetailClient({ initialProduct }) {
                 </span>
                 <span className="relative mt-2 max-w-[16rem] font-headline-md text-lg font-bold leading-snug text-[#23403b]">
                   {product.name}
-                </span>
-                <span className="relative mt-2 text-xs text-[#23403b]/55">
-                  Product image coming soon
                 </span>
               </div>
             )}
