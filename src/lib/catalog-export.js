@@ -207,6 +207,7 @@ function catalogRows(products, user) {
     return options.map((option) => ({
       productId: product.id || "",
       product: product.name || "",
+      sku: option.sku || "",
       option: option.name || "Single format",
       weight: Number.isFinite(Number(option.weightGrams))
         ? Number(option.weightGrams)
@@ -247,23 +248,6 @@ const productsByEthnicity = (products) => {
   return [...groups.entries()].sort(([left], [right]) =>
     normalizeEthnicity(left).localeCompare(normalizeEthnicity(right))
   );
-};
-
-const worksheetName = (ethnicity, usedNames) => {
-  const cleaned = String(ethnicity || "Other Products")
-    .replace(/[\\/?*[\]:]/g, " ")
-    .replace(/^'+|'+$/g, "")
-    .replace(/\s+/g, " ")
-    .trim() || "Other Products";
-  let candidate = cleaned.slice(0, 31);
-  let suffix = 2;
-  while (usedNames.has(candidate.toLocaleLowerCase())) {
-    const suffixText = ` ${suffix}`;
-    candidate = `${cleaned.slice(0, 31 - suffixText.length)}${suffixText}`;
-    suffix += 1;
-  }
-  usedNames.add(candidate.toLocaleLowerCase());
-  return candidate;
 };
 
 const columnName = (index) => {
@@ -310,12 +294,17 @@ const formatCatalogSheet = (
   filterLabel,
   accentColor = DEFAULT_ETHNICITY_COLOR,
   generatedAtLabel = clientGenerationContext().label,
-  orderEnabled = false
+  orderEnabled = false,
+  sections = null
 ) => {
   const lastColumn = columnName(columns.length);
   const headerRowNumber = 6;
   const firstDataRow = headerRowNumber + 1;
-  const lastDataRow = Math.max(firstDataRow, firstDataRow + rows.length - 1);
+  const sectionRowCount = sections?.length || 0;
+  const lastDataRow = Math.max(
+    firstDataRow,
+    firstDataRow + rows.length + sectionRowCount - 1
+  );
   const accentArgb = excelArgb(accentColor);
   const accentTextArgb = excelArgb(buttonTextColor(accentColor));
   const accentBorderArgb = excelArgb(mixWithWhite(accentColor, 0.55));
@@ -411,8 +400,36 @@ const formatCatalogSheet = (
   });
 
   const keyIndex = new Map(columns.map((column, index) => [column.key, index + 1]));
+  const rowNumbers = new Map();
+  const sectionRowNumbers = new Set();
+  if (sections?.length) {
+    let cursor = firstDataRow;
+    sections.forEach((section) => {
+      sectionRowNumbers.add(cursor);
+      sheet.mergeCells(`A${cursor}:${lastColumn}${cursor}`);
+      const sectionCell = sheet.getCell(`A${cursor}`);
+      sectionCell.value = section.ethnicity;
+      sectionCell.font = {
+        bold: true,
+        size: 11,
+        color: { argb: excelArgb(buttonTextColor(section.accentColor)) },
+      };
+      sectionCell.fill = {
+        type: "pattern",
+        pattern: "solid",
+        fgColor: { argb: excelArgb(section.accentColor) },
+      };
+      sectionCell.alignment = { horizontal: "left", vertical: "middle" };
+      sheet.getRow(cursor).height = 24;
+      cursor += 1;
+      section.rows.forEach((item) => {
+        rowNumbers.set(item, cursor);
+        cursor += 1;
+      });
+    });
+  }
   rows.forEach((item, index) => {
-    const row = sheet.getRow(firstDataRow + index);
+    const row = sheet.getRow(rowNumbers.get(item) || firstDataRow + index);
     row.values = columns.map(({ key }) => item[key] ?? "");
     row.height = catalogRowHeight(item, columns);
     columns.forEach(({ key }, columnIndex) => {
@@ -497,6 +514,10 @@ const formatCatalogSheet = (
   });
 
   for (let rowNumber = 1; rowNumber <= lastDataRow; rowNumber += 1) {
+    if (sectionRowNumbers.has(rowNumber)) {
+      sheet.getRow(rowNumber).getCell(1).border = catalogGridBorder();
+      continue;
+    }
     for (let columnNumber = 1; columnNumber <= columns.length; columnNumber += 1) {
       const cell = sheet.getRow(rowNumber).getCell(columnNumber);
       const key = columns[columnNumber - 1]?.key;
@@ -515,10 +536,12 @@ const formatCatalogSheet = (
     };
   });
 
-  sheet.autoFilter = {
-    from: `A${headerRowNumber}`,
-    to: `${lastColumn}${lastDataRow}`,
-  };
+  if (!sections?.length) {
+    sheet.autoFilter = {
+      from: `A${headerRowNumber}`,
+      to: `${lastColumn}${lastDataRow}`,
+    };
+  }
   columns.forEach((column, index) => {
     if (column.hidden) sheet.getColumn(index + 1).hidden = true;
   });
@@ -563,47 +586,51 @@ export async function exportCatalogExcel({
     : [];
   const columns = [
     ...baseColumns,
+    { key: "sku", header: "SKU", width: 24 },
     ...pricingColumns,
     ...orderColumns,
     ...linkColumns,
     ...technicalColumns,
   ];
-  const usedNames = new Set();
   const protectionPassword =
     globalThis.crypto?.randomUUID?.() ||
     `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-  for (const [ethnicity, ethnicityProducts] of productsByEthnicity(products)) {
-    const rows = catalogRows(ethnicityProducts, user);
-    const accentColor = ethnicityColor({ tribe: ethnicity });
-    const sheet = workbook.addWorksheet(worksheetName(ethnicity, usedNames), {
-      properties: { tabColor: { argb: excelArgb(accentColor) } },
-      views: [{ state: "frozen", ySplit: 6, showGridLines: false }],
-      pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1 },
-    });
-    formatCatalogSheet(
-      sheet,
-      columns,
-      rows,
-      `${filterLabel} | Ethnicity: ${ethnicity}`,
-      accentColor,
-      generation.label,
-      orderEnabled
-    );
-    await sheet.protect(protectionPassword, {
-      spinCount: 10_000,
-      selectLockedCells: true,
-      selectUnlockedCells: orderEnabled,
-      formatCells: false,
-      formatColumns: false,
-      formatRows: false,
-      insertColumns: false,
-      insertRows: false,
-      deleteColumns: false,
-      deleteRows: false,
-      sort: false,
-      autoFilter: true,
-    });
-  }
+  const ethnicitySections = productsByEthnicity(products).map(([ethnicity, ethnicityProducts]) => ({
+    ethnicity,
+    accentColor: ethnicityColor({ tribe: ethnicity }),
+    rows: catalogRows(ethnicityProducts, user).sort((left, right) =>
+      String(left.sku).localeCompare(String(right.sku), undefined, { numeric: true, sensitivity: "base" })
+    ),
+  }));
+  const sheet = workbook.addWorksheet("Wholesale Order", {
+    properties: { tabColor: { argb: excelArgb(DEFAULT_ETHNICITY_COLOR) } },
+    views: [{ state: "frozen", ySplit: 6, showGridLines: false }],
+    pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1 },
+  });
+  formatCatalogSheet(
+    sheet,
+    columns,
+    ethnicitySections.flatMap((section) => section.rows),
+    filterLabel,
+    DEFAULT_ETHNICITY_COLOR,
+    generation.label,
+    orderEnabled,
+    ethnicitySections
+  );
+  await sheet.protect(protectionPassword, {
+    spinCount: 10_000,
+    selectLockedCells: true,
+    selectUnlockedCells: orderEnabled,
+    formatCells: false,
+    formatColumns: false,
+    formatRows: false,
+    insertColumns: false,
+    insertRows: false,
+    deleteColumns: false,
+    deleteRows: false,
+    sort: false,
+    autoFilter: true,
+  });
 
   if (orderEnabled) {
     const metadata = workbook.addWorksheet(ORDER_WORKBOOK_META_SHEET, {
