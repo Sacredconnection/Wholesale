@@ -293,18 +293,19 @@ export default function ProductDetailClient({ initialProduct }) {
                 />
               </div>
             ) : (
-              <div className="flex flex-col items-center justify-center gap-4 text-center px-8 relative z-10">
-                <div className="w-16 h-16 rounded-full bg-[#268072]/15 border border-[#268072]/30 flex items-center justify-center text-2xl text-[#82d6c5]">
-                  📷
+              <div className="relative z-10 flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#e9f2ee] px-8 text-center">
+                <div className="absolute inset-7 border border-[#268072]/15" aria-hidden="true" />
+                <div className="relative flex h-24 w-24 items-center justify-center rounded-full border border-[#268072]/25 bg-[#d9ebe5] text-2xl font-black tracking-[-0.12em] text-[#268072] shadow-sm">
+                  SC
                 </div>
-                <span className="text-[#82d6c5] text-xs font-bold uppercase tracking-widest block mt-2">
-                  No Image Uploaded
+                <span className="relative mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-[#268072]">
+                  Sacred Connection
                 </span>
-                <span className="text-[10px] text-white/35 font-mono leading-relaxed block max-w-xs">
-                  Upload a 900x900 jpg image to:<br />
-                  <code className="text-[#82d6c5] bg-black/40 px-1.5 py-0.5 rounded block mt-1.5 break-all select-all">
-                    /public/products/{product.photoFolder}/{product.photo}.jpg
-                  </code>
+                <span className="relative mt-2 max-w-[16rem] font-headline-md text-lg font-bold leading-snug text-[#23403b]">
+                  {product.name}
+                </span>
+                <span className="relative mt-2 text-xs text-[#23403b]/55">
+                  Product image coming soon
                 </span>
               </div>
             )}
