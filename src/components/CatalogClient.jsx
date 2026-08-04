@@ -477,6 +477,7 @@ export default function CatalogClient({ initialProducts = [] }) {
 
             {canUseOrderWorkbook ? (
               <>
+                <div className="hidden sm:contents">
                 <div className="group relative w-full sm:w-auto">
                   <button
                     type="button"
@@ -550,6 +551,7 @@ export default function CatalogClient({ initialProducts = [] }) {
                   >
                     Upload your completed order form to validate quantities and load them into your order sheet.
                   </span>
+                </div>
                 </div>
                 <button
                   onClick={() => setIsCartOpen(true)}
