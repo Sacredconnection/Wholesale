@@ -28,6 +28,39 @@ import {
   Globe
 } from "lucide-react";
 
+function RelatedProductMedia({ product, href }) {
+  const [imageUnavailable, setImageUnavailable] = useState(
+    !product.image || product.image === "/logo.svg"
+  );
+
+  return (
+    <Link
+      href={href}
+      className="relative grid aspect-square place-items-center overflow-hidden rounded-lg border border-white/5 bg-[#1a1a1a]"
+    >
+      {imageUnavailable ? (
+        <div className="relative flex h-full w-full flex-col items-center justify-center overflow-hidden bg-[#183b35] px-5 text-center">
+          <div className="absolute inset-4 border border-[#82d6c5]/10" aria-hidden="true" />
+          <div className="relative grid h-14 w-14 place-items-center rounded-full border border-[#82d6c5]/25 bg-[#82d6c5]/10 text-sm font-black tracking-[-0.1em] text-[#82d6c5]">
+            SC
+          </div>
+          <span className="relative mt-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#82d6c5]/75">
+            Sacred Connection
+          </span>
+          <span className="relative mt-1.5 text-[10px] leading-snug text-white/40">Image coming soon</span>
+        </div>
+      ) : (
+        <img
+          src={product.image}
+          alt={product.name}
+          className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+          onError={() => setImageUnavailable(true)}
+        />
+      )}
+    </Link>
+  );
+}
+
 export default function ProductDetailClient({ initialProduct }) {
   const searchParams = useSearchParams();
   const fromPage = searchParams.get("fromPage") || "1";
@@ -643,17 +676,10 @@ export default function ProductDetailClient({ initialProduct }) {
                   className="group flex min-w-[86%] snap-start flex-col gap-4 rounded-lg border border-white/5 bg-[#131313] p-5 text-left transition-all duration-300 hover:border-[#268072]/30 hover:shadow-lg hover:shadow-[#268072]/5 sm:min-w-[calc(50%_-_10px)] lg:min-w-[calc(25%_-_18px)]"
                 >
                   {/* Product Image */}
-                  <Link href={`/product/${p.slug}?fromPage=${fromPage}`} className="block aspect-square overflow-hidden rounded-lg bg-[#1a1a1a] border border-white/5 relative">
-                    <img
-                      src={p.image || "/logo.svg"}
-                      alt={p.name}
-                      className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
-                      onError={(e) => {
-                        e.target.src = "/logo.svg";
-                        e.target.className = "w-full h-full object-contain p-8 opacity-20";
-                      }}
-                    />
-                  </Link>
+                  <RelatedProductMedia
+                    product={p}
+                    href={`/product/${p.slug}?fromPage=${fromPage}`}
+                  />
                   <div className="flex flex-col gap-2">
                     {/* Product Title */}
                     <Link href={`/product/${p.slug}?fromPage=${fromPage}`} className="font-headline-md text-base font-bold text-white group-hover:text-[#82d6c5] transition-colors line-clamp-2 no-underline min-h-[48px] flex items-center">
