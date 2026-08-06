@@ -2,7 +2,7 @@
 
 /* eslint-disable @next/next/no-img-element -- Cart images use WooCommerce runtime URLs. */
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -23,7 +23,11 @@ import AuthGate from "@/components/AuthGate";
 import { useAuth } from "@/components/AuthContext";
 import { useCart } from "@/components/CartContext";
 import { COUNTRIES } from "@/lib/countries";
-import { orderMinimumStatus } from "@/lib/pricing";
+import {
+  needsBackorder,
+  orderableStockQuantity,
+  orderMinimumStatus,
+} from "@/lib/pricing";
 
 const EMPTY_ADDRESS = {
   street: "",
@@ -59,6 +63,16 @@ const ORDER_SUBMISSION_STAGES = [
 ];
 const ORDER_STAGE_DELAYS = [1_200, 3_200, 6_500, 11_000];
 const ORDER_STAGE_PROGRESS = [18, 38, 60, 82, 92];
+
+const cartStockKey = (item) =>
+  `${item.storeId || "sacred-connection"}:${item.wcProductId}:${item.wcVariationId || 0}`;
+
+const warningMatchesCartItem = (warning, item) =>
+  warning.key === cartStockKey(item) ||
+  (
+    warning.storeId === (item.storeId || "sacred-connection") &&
+    String(warning.sku || "").toLowerCase() === String(item.sku || "").toLowerCase()
+  );
 
 const addressLine = (address) =>
   [
@@ -366,6 +380,7 @@ export default function CheckoutPage() {
   const [billingMatchesShipping, setBillingMatchesShipping] = useState(true);
   const [confirmed, setConfirmed] = useState(false);
   const [error, setError] = useState("");
+  const [liveStockWarnings, setLiveStockWarnings] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStage, setSubmissionStage] = useState(0);
 
@@ -391,6 +406,37 @@ export default function CheckoutPage() {
     return () => timers.forEach((timer) => window.clearTimeout(timer));
   }, [isSubmitting]);
 
+  const stockWarnings = useMemo(() => {
+    const warnings = new Map();
+
+    cart.forEach((item) => {
+      if (!needsBackorder(item)) return;
+      const availableQuantity = orderableStockQuantity(item);
+      const key = cartStockKey(item);
+      warnings.set(key, {
+        key,
+        storeId: item.storeId,
+        storeName: item.storeName,
+        productId: item.wcProductId,
+        variationId: item.wcVariationId,
+        sku: item.sku,
+        productName: item.name,
+        optionName: item.optionName,
+        requestedQuantity: item.quantity,
+        availableQuantity,
+        reason: item.inStock === false ? "out_of_stock" : "insufficient_stock",
+      });
+    });
+
+    liveStockWarnings.forEach((warning) => {
+      if (cart.some((item) => warningMatchesCartItem(warning, item))) {
+        warnings.set(warning.key, warning);
+      }
+    });
+
+    return Array.from(warnings.values());
+  }, [cart, liveStockWarnings]);
+
   if (loading || !isLoggedIn || !user) return <AuthGate loading={loading} />;
 
   const discountPercentage = user.discountRate || 0;
@@ -401,7 +447,7 @@ export default function CheckoutPage() {
     finalTotal,
     cartTotalWeightGrams
   );
-  const hasBackorderItems = cart.some((item) => item.inStock === false);
+  const hasBackorderItems = stockWarnings.length > 0;
   const effectiveBillingAddress = billingMatchesShipping ? shippingAddress : billingAddress;
 
   const validateAddress = (address) =>
@@ -465,10 +511,23 @@ export default function CheckoutPage() {
             shippingAddress,
             billingAddress: effectiveBillingAddress,
           },
+          acceptedBackorderItems: stockWarnings.map((warning) => warning.key),
         }),
       });
       const data = await response.json().catch(() => ({}));
       if (!response.ok) {
+        if (
+          response.status === 409 &&
+          data.code === "stock_confirmation_required" &&
+          Array.isArray(data.stockWarnings)
+        ) {
+          orderIdempotencyKey.current = "";
+          setLiveStockWarnings(data.stockWarnings);
+          setConfirmed(false);
+          setStep(STEPS.length - 1);
+          window.scrollTo({ top: 0, behavior: "smooth" });
+          return;
+        }
         if (!data.uncertain) {
           orderIdempotencyKey.current = "";
         }
@@ -673,7 +732,9 @@ export default function CheckoutPage() {
                     </div>
                   </div>
 
-                  {hasBackorderItems && <StockBackorderNotice />}
+                  {hasBackorderItems && (
+                    <StockBackorderNotice items={stockWarnings} />
+                  )}
 
                   <div className="flex items-start gap-3 rounded-lg border border-[#268072]/25 bg-[#268072]/10 p-4">
                     <MessageCircleMore className="mt-0.5 h-4 w-4 shrink-0 text-[#82d6c5]" />
@@ -783,9 +844,9 @@ export default function CheckoutPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-bold text-white">{item.name}</p>
                       <p className="mt-1 text-[10px] text-white/40">{item.optionName} · Qty {item.quantity}</p>
-                      {item.inStock === false && (
+                      {stockWarnings.some((warning) => warningMatchesCartItem(warning, item)) && (
                         <p className="mt-1 text-[10px] font-bold text-amber-200">
-                          Out of stock · awaiting monthly restock
+                          Includes units awaiting monthly restock
                         </p>
                       )}
                     </div>

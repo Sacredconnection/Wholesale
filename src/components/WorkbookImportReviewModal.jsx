@@ -5,7 +5,12 @@
 import { useMemo, useRef, useState } from "react";
 import { Check, FileSpreadsheet, Layers3, Minus, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
-import { optionPriceForUser, quantityStepForWeight } from "@/lib/pricing";
+import {
+  maximumOrderQuantityForWeight,
+  needsBackorder,
+  optionPriceForUser,
+  quantityStepForWeight,
+} from "@/lib/pricing";
 
 export default function WorkbookImportReviewModal({
   selections,
@@ -35,36 +40,12 @@ export default function WorkbookImportReviewModal({
     return { units, value };
   }, [items, user]);
 
-  const stockConflicts = useMemo(() => {
-    if (importMode !== "add") return [];
-    return items.filter((item) => {
-      const option = item.product.options?.[item.optionIndex];
-      if (option?.backordersAllowed === true) return false;
-      const stock = Number(option?.stockQuantity);
-      if (!Number.isFinite(stock)) return false;
-      const storeId = item.product.storeId || "sacred-connection";
-      const currentQuantity = existingCart.find(
-        (cartItem) => cartItem.storeId === storeId && cartItem.sku === option?.sku
-      )?.quantity || 0;
-      return currentQuantity + item.quantity > stock;
-    });
-  }, [existingCart, importMode, items]);
-
   const changeQuantity = (itemIndex, direction) => {
     setItems((current) => current.map((item, index) => {
       if (index !== itemIndex) return item;
       const option = item.product.options?.[item.optionIndex];
       const step = quantityStepForWeight(option?.weightGrams);
-      const stock = Number(option?.stockQuantity);
-      const storeId = item.product.storeId || "sacred-connection";
-      const currentQuantity = importMode === "add"
-        ? existingCart.find(
-          (cartItem) => cartItem.storeId === storeId && cartItem.sku === option?.sku
-        )?.quantity || 0
-        : 0;
-      const maximum = option?.backordersAllowed === true || !Number.isFinite(stock)
-        ? Number.POSITIVE_INFINITY
-        : Math.max(step, Math.floor((stock - currentQuantity) / step) * step);
+      const maximum = maximumOrderQuantityForWeight(option?.weightGrams);
       return {
         ...item,
         quantity: Math.min(maximum, Math.max(step, item.quantity + direction * step)),
@@ -132,11 +113,6 @@ export default function WorkbookImportReviewModal({
                   </span>
                 </label>
               </div>
-              {stockConflicts.length > 0 && (
-                <p role="alert" className="mt-3 border-l-2 border-amber-200 bg-amber-200/10 px-4 py-3 text-xs leading-relaxed text-amber-50">
-                  Adding would exceed available stock for {stockConflicts.length} {stockConflicts.length === 1 ? "line" : "lines"}. Reduce the quantities or replace the current order.
-                </p>
-              )}
             </fieldset>
           )}
 
@@ -152,15 +128,18 @@ export default function WorkbookImportReviewModal({
                 const option = item.product.options?.[item.optionIndex];
                 const step = quantityStepForWeight(option?.weightGrams);
                 const price = optionPriceForUser(option, user, item.product.category);
-                const stock = Number(option?.stockQuantity);
                 const storeId = item.product.storeId || "sacred-connection";
                 const currentQuantity = importMode === "add"
                   ? existingCart.find(
                     (cartItem) => cartItem.storeId === storeId && cartItem.sku === option?.sku
                   )?.quantity || 0
                   : 0;
-                const atMaximum = option?.backordersAllowed !== true && Number.isFinite(stock)
-                  && currentQuantity + item.quantity + step > stock;
+                const requiresBackorder = needsBackorder(
+                  option,
+                  currentQuantity + item.quantity
+                );
+                const atMaximum =
+                  item.quantity + step > maximumOrderQuantityForWeight(option?.weightGrams);
                 return (
                   <li key={`${item.product.storeId || "sacred-connection"}:${option?.sku}`} className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <div className="flex min-w-0 gap-4">
@@ -176,6 +155,11 @@ export default function WorkbookImportReviewModal({
                         <h3 className="mt-1 truncate font-headline-md text-base font-bold text-white sm:text-lg">{item.product.name}</h3>
                         <p className="mt-1 text-xs text-white/55">{option?.name}</p>
                         <p className="mt-1 break-all font-mono text-[10px] text-white/35">SKU {option?.sku || "unavailable"}</p>
+                        {requiresBackorder && (
+                          <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-amber-200">
+                            Includes units awaiting restock
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -232,7 +216,7 @@ export default function WorkbookImportReviewModal({
             <button
               type="button"
               onClick={() => onConfirm(items, importMode)}
-              disabled={items.length === 0 || stockConflicts.length > 0}
+              disabled={items.length === 0}
               className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-sm bg-[#EC2300] px-6 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#c51d00] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5] disabled:cursor-not-allowed disabled:opacity-35 sm:flex-none"
             >
               <Check className="h-4 w-4" aria-hidden="true" />

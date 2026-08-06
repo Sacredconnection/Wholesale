@@ -2,10 +2,12 @@
 
 import { createContext, useContext, useState, useEffect, useMemo, useRef } from 'react';
 import { useAuth } from './AuthContext';
+import { useProducts } from './ProductsContext';
 import {
   cartUnitPrice,
+  maximumOrderQuantityForWeight,
+  needsBackorder,
   normalizeQuantityForWeight,
-  orderableStockQuantity,
   optionPriceForUser,
   quantityStepForWeight,
 } from '@/lib/pricing';
@@ -15,6 +17,7 @@ const SACRED_STORE_ID = "sacred-connection";
 
 export function CartProvider({ children }) {
   const { isLoggedIn, user, loading: authLoading } = useAuth();
+  const { products, loading: productsLoading } = useProducts();
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const cartHydrated = useRef(false);
@@ -79,6 +82,60 @@ export function CartProvider({ children }) {
     return () => window.clearTimeout(clearTimer);
   }, [authLoading, isCartHydrated, isLoggedIn]);
 
+  // Reconcile persisted cart availability with the freshly loaded catalog.
+  // This prevents an old localStorage snapshot from hiding a recent restock
+  // or showing a stale warning after stock changes in WooCommerce.
+  useEffect(() => {
+    if (!isCartHydrated || productsLoading || products.length === 0) return;
+
+    const liveOptions = new Map();
+    products.forEach((product) => {
+      (product.options || []).forEach((option) => {
+        const sku = String(option.sku || "").toLowerCase();
+        if (!sku) return;
+        liveOptions.set(
+          `${product.storeId || SACRED_STORE_ID}:${sku}`,
+          { product, option }
+        );
+      });
+    });
+
+    const reconcileTimer = window.setTimeout(() => {
+      setCart((currentCart) => {
+        let changed = false;
+        const nextCart = currentCart.map((item) => {
+          const live = liveOptions.get(
+            `${item.storeId || SACRED_STORE_ID}:${String(item.sku || "").toLowerCase()}`
+          );
+          if (!live) return item;
+
+          const nextAvailability = {
+            inStock: live.option.inStock !== false,
+            stockQuantity: live.option.stockQuantity ?? null,
+            backordersAllowed: live.option.backordersAllowed === true,
+            wcProductId: live.product.wcId || item.wcProductId || null,
+            wcVariationId: live.option.wcVariationId || null,
+          };
+          if (
+            item.inStock === nextAvailability.inStock &&
+            item.stockQuantity === nextAvailability.stockQuantity &&
+            item.backordersAllowed === nextAvailability.backordersAllowed &&
+            item.wcProductId === nextAvailability.wcProductId &&
+            item.wcVariationId === nextAvailability.wcVariationId
+          ) {
+            return item;
+          }
+          changed = true;
+          return { ...item, ...nextAvailability };
+        });
+
+        return changed ? nextCart : currentCart;
+      });
+    }, 0);
+
+    return () => window.clearTimeout(reconcileTimer);
+  }, [isCartHydrated, products, productsLoading]);
+
   const cartItemFromSelection = (product, optionIndex, quantity) => {
     if (
       !product ||
@@ -91,8 +148,7 @@ export function CartProvider({ children }) {
     const selectedOption = product.options?.[optionIndex];
     if (!selectedOption) return null;
     const quantityStep = quantityStepForWeight(selectedOption.weightGrams);
-    const maximumQuantity = orderableStockQuantity(selectedOption);
-    if (maximumQuantity === 0) return null;
+    const maximumQuantity = maximumOrderQuantityForWeight(selectedOption.weightGrams);
     const storeId = product.storeId || SACRED_STORE_ID;
     if (storeId !== SACRED_STORE_ID) return null;
 
@@ -108,12 +164,10 @@ export function CartProvider({ children }) {
       price: optionPriceForUser(selectedOption, user, product.category),
       weightGrams: selectedOption.weightGrams,
       quantityStep,
-      quantity: maximumQuantity == null
-        ? normalizeQuantityForWeight(quantity, selectedOption.weightGrams)
-        : Math.min(
-            maximumQuantity,
-            normalizeQuantityForWeight(quantity, selectedOption.weightGrams)
-          ),
+      quantity: Math.min(
+        maximumQuantity,
+        normalizeQuantityForWeight(quantity, selectedOption.weightGrams)
+      ),
       image: product.image,
       wcProductId: product.wcId || null,
       wcVariationId: selectedOption.wcVariationId || null,
@@ -137,10 +191,10 @@ export function CartProvider({ children }) {
         const existingItem = nextCart.find((item) => item.cartKey === incoming.cartKey);
         if (existingItem) {
           existingItem.quantity += incoming.quantity;
-          const maximumQuantity = orderableStockQuantity(incoming);
-          if (maximumQuantity != null) {
-            existingItem.quantity = Math.min(existingItem.quantity, maximumQuantity);
-          }
+          existingItem.quantity = Math.min(
+            existingItem.quantity,
+            maximumOrderQuantityForWeight(incoming.weightGrams)
+          );
           existingItem.inStock = incoming.inStock;
           existingItem.stockQuantity = incoming.stockQuantity;
           existingItem.backordersAllowed = incoming.backordersAllowed;
@@ -180,12 +234,12 @@ export function CartProvider({ children }) {
               item.quantityStep || quantityStepForWeight(item.weightGrams);
             const direction = change < 0 ? -1 : 1;
             const nextQty = item.quantity + direction * quantityStep;
-            const maximumQuantity = orderableStockQuantity(item);
+            const maximumQuantity = maximumOrderQuantityForWeight(item.weightGrams);
             return {
               ...item,
               quantityStep,
               quantity: Math.min(
-                maximumQuantity == null ? Number.POSITIVE_INFINITY : maximumQuantity,
+                maximumQuantity,
                 Math.max(quantityStep, nextQty)
               ),
             };
@@ -225,6 +279,7 @@ export function CartProvider({ children }) {
     return cart.map((item) => ({
       ...item,
       price: cartUnitPrice(item, user, cartTotalWeightGrams),
+      needsBackorder: needsBackorder(item),
     }));
   }, [cart, user, cartTotalWeightGrams]);
 

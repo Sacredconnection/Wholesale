@@ -11,6 +11,8 @@ import LoginModal from "@/components/LoginModal";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useProducts } from "@/components/ProductsContext";
 import {
+  maximumOrderQuantityForWeight,
+  needsBackorder,
   optionPriceForUser,
   orderableStockQuantity,
   quantityStepForWeight,
@@ -238,15 +240,15 @@ export default function ProductDetailClient({ initialProduct }) {
 
   const selectedOption = product.options[selectedOptIdx];
   const quantityStep = activeQuantityStep;
-  const maximumQuantity = orderableStockQuantity(selectedOption);
-  const canIncreaseQuantity =
-    maximumQuantity == null || quantity + quantityStep <= maximumQuantity;
+  const availableQuantity = orderableStockQuantity(selectedOption);
+  const maximumQuantity = maximumOrderQuantityForWeight(selectedOption?.weightGrams);
+  const canIncreaseQuantity = quantity + quantityStep <= maximumQuantity;
+  const requiresBackorder = needsBackorder(selectedOption, quantity);
   const canPurchase = Boolean(
     isLoggedIn &&
       user &&
       product.pricingVisible === true &&
-      selectedOption?.price != null &&
-      selectedOption?.inStock !== false
+      selectedOption?.price != null
   );
   const productDescription = product.description || "Wholesale botanical product sourced through equitable fair-trade agreements with Amazonian community associations and prepared using established local production methods.";
   const hasLongDescription = productDescription.length > 280;
@@ -495,12 +497,12 @@ export default function ProductDetailClient({ initialProduct }) {
                 </div>
               )}
 
-              {selectedOption?.inStock === false && <StockBackorderNotice />}
+              {requiresBackorder && <StockBackorderNotice />}
               {quantityStep > 1 && selectedOption && (
                 <p className="text-[10px] font-semibold text-[#82d6c5]">
                   This {Math.round(selectedOption.weightGrams)}g tin is sold in
                   multiples of {quantityStep} units.
-                  {maximumQuantity != null && ` ${maximumQuantity / quantityStep} ${maximumQuantity / quantityStep === 1 ? "pack" : "packs"} available.`}
+                  {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now; additional packs can be requested for restock.`}
                 </p>
               )}
 
@@ -540,7 +542,7 @@ export default function ProductDetailClient({ initialProduct }) {
                     <button
                       onClick={() =>
                         setQuantity((previous) => Math.min(
-                          maximumQuantity == null ? Number.POSITIVE_INFINITY : maximumQuantity,
+                          maximumQuantity,
                           previous + quantityStep
                         ))
                       }
@@ -567,7 +569,7 @@ export default function ProductDetailClient({ initialProduct }) {
                     {addedAt
                       ? "Added to order"
                       : product.optionsLoaded
-                      ? selectedOption?.inStock === false
+                      ? requiresBackorder
                         ? "Order for restock"
                         : "Add to Basket"
                       : "Loading options..."}

@@ -155,9 +155,9 @@ export default function CartDrawer() {
                                 Multiples of {item.quantityStep}
                               </span>
                             )}
-                            {item.inStock === false && (
+                            {item.needsBackorder && (
                               <span className="rounded-sm border border-amber-300/30 bg-amber-300/10 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-amber-200">
-                                Out of stock · awaiting restock
+                                Includes units awaiting restock
                               </span>
                             )}
                           </div>

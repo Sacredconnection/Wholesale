@@ -1,6 +1,15 @@
 import { Clock3 } from "lucide-react";
 
-export default function StockBackorderNotice({ compact = false, className = "" }) {
+export default function StockBackorderNotice({
+  compact = false,
+  className = "",
+  items = [],
+}) {
+  const detailedItems = Array.isArray(items) ? items.filter(Boolean) : [];
+  const hasPartialAvailability = detailedItems.some(
+    (item) => Number(item.availableQuantity) > 0
+  );
+
   return (
     <div
       role="status"
@@ -11,9 +20,27 @@ export default function StockBackorderNotice({ compact = false, className = "" }
     >
       <Clock3 className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} mt-0.5 shrink-0 text-amber-300`} />
       <p>
-        <strong className="font-black text-amber-200">Currently out of stock — available to order.</strong>{" "}
-        Restocks arrive approximately once a month, so this item may take about one month
-        before it is ready to ship.
+        <strong className="font-black text-amber-200">
+          {hasPartialAvailability
+            ? "Some requested units need restocking — available to order."
+            : "Currently out of stock — available to order."}
+        </strong>{" "}
+        Restocks arrive approximately once a month, so {detailedItems.length > 1 ? "these items" : "this item"} may take about one month
+        before {detailedItems.length > 1 ? "they are" : "it is"} ready to ship.
+        {detailedItems.length > 0 && (
+          <span className="mt-2 block">
+            {detailedItems.map((item) => (
+              <span key={item.key} className="mt-1 block text-amber-50">
+                <strong>{item.productName}</strong>
+                {item.optionName ? ` · ${item.optionName}` : ""}
+                {item.sku ? ` · SKU ${item.sku}` : ""}
+                {item.availableQuantity != null
+                  ? ` · ${item.availableQuantity} available now / ${item.requestedQuantity} requested`
+                  : ` · ${item.requestedQuantity} requested`}
+              </span>
+            ))}
+          </span>
+        )}
       </p>
     </div>
   );

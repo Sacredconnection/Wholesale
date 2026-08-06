@@ -4,6 +4,7 @@
 // Minimum wholesale order value in USD. The storefront uses USD throughout,
 // and the same threshold is enforced again when an order is registered.
 export const MIN_ORDER_AMOUNT = 500;
+export const MAX_ORDER_ITEM_QUANTITY = 1000;
 
 // Some approved accounts use a weight-based order minimum instead of the
 // standard dollar minimum. The server adds `minimumOrderWeightGrams` to those
@@ -38,10 +39,12 @@ export function quantityStepForWeight(weightGrams) {
   return 1;
 }
 
-// A variation with tracked stock below its required case multiple cannot be
-// purchased, even when WooCommerce still reports it as "in stock".
+// Current stock that can fill complete wholesale packs. This is availability
+// information only: the portal also accepts order requests for the next
+// restock, so callers must not use this value as a purchasing limit.
 export function orderableStockQuantity(option) {
-  if (!option || option.backordersAllowed === true) return null;
+  if (!option) return null;
+  if (option.stockQuantity == null || option.stockQuantity === "") return null;
   const stockQuantity = Number(option.stockQuantity);
   if (!Number.isFinite(stockQuantity) || stockQuantity < 0) return null;
   const quantityStep = quantityStepForWeight(option.weightGrams);
@@ -50,9 +53,27 @@ export function orderableStockQuantity(option) {
 
 export function isOptionOrderable(option) {
   if (!option || option.inStock === false) return false;
-  if (option.backordersAllowed === true) return true;
   const orderableQuantity = orderableStockQuantity(option);
   return orderableQuantity == null || orderableQuantity > 0;
+}
+
+export function maximumOrderQuantityForWeight(weightGrams) {
+  const quantityStep = quantityStepForWeight(weightGrams);
+  return (
+    Math.floor(MAX_ORDER_ITEM_QUANTITY / quantityStep) * quantityStep
+  );
+}
+
+export function needsBackorder(option, quantity = option?.quantity) {
+  if (!option) return false;
+  if (option.inStock === false) return true;
+  const requestedQuantity = Number(quantity);
+  const availableQuantity = orderableStockQuantity(option);
+  return (
+    Number.isFinite(requestedQuantity) &&
+    availableQuantity != null &&
+    requestedQuantity > availableQuantity
+  );
 }
 
 export function normalizeQuantityForWeight(quantity, weightGrams) {

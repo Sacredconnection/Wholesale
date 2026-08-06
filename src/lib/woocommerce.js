@@ -352,7 +352,7 @@ export async function getProductVariations(
 // SKU lookup matches both products and variations (variations come back with
 // type "variation" and a parent_id). Uncached — used while creating orders.
 const ORDER_PRODUCT_FIELDS =
-  "id,parent_id,name,sku,price,weight,attributes,meta_data,categories";
+  "id,parent_id,name,sku,price,weight,attributes,meta_data,categories,stock_status,stock_quantity";
 
 export async function findProductBySku(sku, storeId = PRIMARY_STORE_ID) {
   const { data } = await wcFetch(storeId, "products", {

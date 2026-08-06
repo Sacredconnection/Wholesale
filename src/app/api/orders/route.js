@@ -21,9 +21,10 @@ import {
   toWcAddress,
 } from "@/lib/wc-mappers";
 import {
-  isOptionOrderable,
   isValidQuantityForWeight,
+  MAX_ORDER_ITEM_QUANTITY,
   NEW_CUSTOMER_ROLE,
+  orderableStockQuantity,
   orderMinimumStatus,
   progressivePerGramRate,
   progressiveTableKeyFor,
@@ -228,6 +229,17 @@ export async function POST(request) {
   }
 
   const { items = [] } = body;
+  if (
+    body.acceptedBackorderItems != null &&
+    (!Array.isArray(body.acceptedBackorderItems) || body.acceptedBackorderItems.length > 100)
+  ) {
+    return securityError("Invalid backorder confirmation.", 400);
+  }
+  const acceptedBackorderItems = new Set(
+    (body.acceptedBackorderItems || [])
+      .map((key) => cleanText(key, 200))
+      .filter(Boolean)
+  );
   const checkout =
     body.checkout && typeof body.checkout === "object" && !Array.isArray(body.checkout)
       ? {
@@ -316,8 +328,15 @@ export async function POST(request) {
       const requestedProductId = Number(item.wcProductId);
       const requestedVariationId = Number(item.wcVariationId);
       const sku = cleanText(item.sku, 100);
-      if (!Number.isSafeInteger(quantity) || quantity < 1 || quantity > 1000) {
-        return securityError("Every item quantity must be between 1 and 1000.", 400);
+      if (
+        !Number.isSafeInteger(quantity) ||
+        quantity < 1 ||
+        quantity > MAX_ORDER_ITEM_QUANTITY
+      ) {
+        return securityError(
+          `Every item quantity must be between 1 and ${MAX_ORDER_ITEM_QUANTITY}.`,
+          400
+        );
       }
       if (
         (item.wcProductId && (!Number.isSafeInteger(requestedProductId) || requestedProductId < 1)) ||
@@ -348,20 +367,23 @@ export async function POST(request) {
         sku,
       }) => {
         let payload = null;
+        let parentProduct = null;
         let productId = null;
         let variationId = null;
         let categories = [];
         if (requestedProductId && requestedVariationId) {
-          const [variation, parentProduct] = await Promise.all([
+          const [variation, loadedParentProduct] = await Promise.all([
             getVariation(storeId, requestedProductId, requestedVariationId),
             getParentProduct(storeId, requestedProductId),
           ]);
           payload = variation;
+          parentProduct = loadedParentProduct;
           productId = requestedProductId;
           variationId = requestedVariationId;
           categories = parentProduct.categories;
         } else if (requestedProductId) {
           payload = await getParentProduct(storeId, requestedProductId);
+          parentProduct = payload;
           productId = requestedProductId;
           categories = payload.categories;
         } else if (sku) {
@@ -370,9 +392,13 @@ export async function POST(request) {
             payload = found;
             productId = found.parent_id || found.id;
             variationId = found.parent_id ? found.id : null;
-            categories = variationId
-              ? (await getParentProduct(storeId, productId)).categories
-              : found.categories;
+            if (variationId) {
+              parentProduct = await getParentProduct(storeId, productId);
+              categories = parentProduct.categories;
+            } else {
+              parentProduct = found;
+              categories = found.categories;
+            }
           }
         }
 
@@ -388,26 +414,29 @@ export async function POST(request) {
         const weightGrams = extractWeightGrams(optionText, payload.weight) || 0;
         const stockQuantity =
           payload.stock_quantity == null ? null : Number(payload.stock_quantity);
+        const stockStatus = payload.stock_status || "instock";
+        const availableQuantity = orderableStockQuantity({
+          stockQuantity,
+          weightGrams,
+        });
         return {
           entry: {
             store,
             productId,
             variationId,
+            sku: cleanText(payload.sku || sku, 100),
+            productName: cleanText(parentProduct?.name || payload.name, 200),
+            optionName: cleanText(optionText, 160),
             quantity,
             weightGrams,
             tableKey: tableKeyFromCategories(categories),
             rolePrice: role ? roleBasedPrices(payload.meta_data)[role] : undefined,
             basePrice: parseFloat(payload.price) || 0,
-            inStock: isOptionOrderable({
-              inStock: payload.stock_status !== "outofstock",
-              stockQuantity,
-              weightGrams,
-              backordersAllowed:
-                payload.backorders === "yes" || payload.backorders === "notify",
-            }),
+            inStock:
+              stockStatus === "instock" &&
+              (availableQuantity == null || availableQuantity > 0),
+            stockStatus,
             stockQuantity,
-            backordersAllowed:
-              payload.backorders === "yes" || payload.backorders === "notify",
           },
           lineWeightGrams: weightGrams * quantity,
         };
@@ -444,13 +473,6 @@ export async function POST(request) {
         { status: 422 }
       );
     }
-    const unavailableItems = resolved.filter((entry) => entry.inStock === false);
-    if (unavailableItems.length > 0) {
-      return Response.json(
-        { error: "One or more products are now out of stock. Refresh your catalog and try again." },
-        { status: 422 }
-      );
-    }
     const quantityByStockItem = new Map();
     resolved.forEach((entry) => {
       const key = `${entry.store.id}:${entry.productId}:${entry.variationId || 0}`;
@@ -459,21 +481,43 @@ export async function POST(request) {
         (quantityByStockItem.get(key) || 0) + entry.quantity
       );
     });
-    const stockExceeded = resolved.filter((entry) => {
-      if (
-        entry.backordersAllowed ||
-        !Number.isFinite(entry.stockQuantity) ||
-        entry.stockQuantity < 0
-      ) {
-        return false;
-      }
+    const backorderWarnings = resolved.flatMap((entry) => {
       const key = `${entry.store.id}:${entry.productId}:${entry.variationId || 0}`;
-      return quantityByStockItem.get(key) > entry.stockQuantity;
+      const requestedQuantity = quantityByStockItem.get(key);
+      const availableQuantity = orderableStockQuantity(entry);
+      const isUnavailable = entry.inStock === false;
+      const exceedsAvailableStock =
+        availableQuantity != null && requestedQuantity > availableQuantity;
+      if (!isUnavailable && !exceedsAvailableStock) return [];
+      return [{
+        key,
+        storeId: entry.store.id,
+        storeName: entry.store.name,
+        productId: entry.productId,
+        variationId: entry.variationId,
+        sku: entry.sku,
+        productName: entry.productName,
+        optionName: entry.optionName,
+        requestedQuantity,
+        availableQuantity,
+        reason: isUnavailable ? "out_of_stock" : "insufficient_stock",
+      }];
     });
-    if (stockExceeded.length > 0) {
+    const uniqueBackorderWarnings = Array.from(
+      new Map(backorderWarnings.map((warning) => [warning.key, warning])).values()
+    );
+    const unacceptedBackorders = uniqueBackorderWarnings.filter(
+      (warning) => !acceptedBackorderItems.has(warning.key)
+    );
+    if (unacceptedBackorders.length > 0) {
       return Response.json(
-        { error: "One or more requested quantities exceed the current stock. Refresh your catalog and try again." },
-        { status: 422 }
+        {
+          code: "stock_confirmation_required",
+          error:
+            "Availability changed for one or more items. Review the restock notice, then confirm the order again.",
+          stockWarnings: uniqueBackorderWarnings,
+        },
+        { status: 409 }
       );
     }
 
@@ -577,6 +621,9 @@ export async function POST(request) {
     const creationResults = await Promise.allSettled(
       storesInOrder.map(async (store) => {
         const appliedRates = {};
+        const storeBackorderWarnings = uniqueBackorderWarnings.filter(
+          (warning) => warning.storeId === store.id
+        );
         const lineItems = entriesByStore.get(store.id).map((entry) => {
           const rate = isProgressive
             ? progressivePerGramRate(totalWeightGrams, entry.tableKey)
@@ -611,13 +658,28 @@ export async function POST(request) {
           billing,
           shipping,
           line_items: lineItems,
-          customer_note: orderCustomerNote(),
+          customer_note: [
+            orderCustomerNote(),
+            storeBackorderWarnings.length > 0
+              ? `Items awaiting restock: ${storeBackorderWarnings
+                  .map((warning) => `${warning.productName} (${warning.optionName}) × ${warning.requestedQuantity}`)
+                  .join(", ")}. Final availability and lead time will be confirmed by our team.`
+              : "",
+          ].filter(Boolean).join("\n\n"),
           meta_data: [
             { key: "sc_channel", value: "wholesale-portal" },
             { key: "sc_source_store", value: store.id },
             { key: "sc_request_reference", value: requestReference },
             { key: "sc_access_level", value: role || "none (base prices)" },
             { key: "sc_total_weight_grams", value: String(Math.round(totalWeightGrams)) },
+            ...(storeBackorderWarnings.length > 0
+              ? [{
+                  key: "sc_backorder_items",
+                  value: storeBackorderWarnings
+                    .map((warning) => `${warning.sku || warning.productName} × ${warning.requestedQuantity}`)
+                    .join(" | "),
+                }]
+              : []),
             ...(Object.keys(appliedRates).length > 0
               ? [{
                   key: "sc_per_gram_rate",

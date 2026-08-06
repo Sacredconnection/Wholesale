@@ -5,6 +5,8 @@ import { Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 import {
+  maximumOrderQuantityForWeight,
+  needsBackorder,
   orderableStockQuantity,
   optionPriceForUser,
   quantityStepForWeight,
@@ -60,9 +62,10 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
 
   const selectedOption = resolvedProduct?.options[selectedOptionIndex];
   const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
-  const maximumQuantity = orderableStockQuantity(selectedOption);
-  const canIncreaseQuantity =
-    maximumQuantity == null || quantity + quantityStep <= maximumQuantity;
+  const availableQuantity = orderableStockQuantity(selectedOption);
+  const maximumQuantity = maximumOrderQuantityForWeight(selectedOption?.weightGrams);
+  const canIncreaseQuantity = quantity + quantityStep <= maximumQuantity;
+  const requiresBackorder = needsBackorder(selectedOption, quantity);
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, resolvedProduct.category)
     : null;
@@ -70,7 +73,7 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
     price == null ? null : price * quantityStep;
   const selectedTotal =
     price == null ? null : price * quantity;
-  const canAdd = selectedOption?.inStock !== false && maximumQuantity !== 0;
+  const canAdd = Boolean(selectedOption);
 
   const handleAdd = () => {
     if (resolvedProduct && selectedOption && canAdd) {
@@ -145,11 +148,12 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
               </select>
             </div>
 
-            {selectedOption?.inStock === false && <StockBackorderNotice />}
+            {requiresBackorder && <StockBackorderNotice />}
             {quantityStep > 1 && selectedOption && (
               <p className="text-[10px] font-semibold text-[#82d6c5]">
                 This {Math.round(selectedOption.weightGrams)}g tin is sold in
                 multiples of {quantityStep} units.
+                {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now; additional packs can be requested for restock.`}
               </p>
             )}
 
@@ -173,7 +177,7 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
               <div className="flex items-center rounded-sm border border-white/10 bg-[#101010]">
                 <button type="button" onClick={() => setQuantity((value) => Math.max(quantityStep, value - quantityStep))} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Decrease quantity"><Minus className="h-4 w-4" /></button>
                 <span className="w-10 text-center text-sm font-bold text-white">{quantity}</span>
-                <button type="button" onClick={() => setQuantity((value) => Math.min(maximumQuantity == null ? Number.POSITIVE_INFINITY : maximumQuantity, value + quantityStep))} disabled={!canIncreaseQuantity} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-25" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setQuantity((value) => Math.min(maximumQuantity, value + quantityStep))} disabled={!canIncreaseQuantity} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-25" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
               </div>
               {quantityStep > 1 && quantity > quantityStep && selectedTotal != null && (
                 <p className="w-full border-t border-white/5 pt-3 text-right text-[10px] font-semibold text-white/50">

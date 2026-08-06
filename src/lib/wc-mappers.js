@@ -143,7 +143,7 @@ export function mapVariationToOption(variation) {
     sku: variation.sku || String(variation.id),
     weightGrams: extractWeightGrams(name, variation.weight),
     wcVariationId: variation.id,
-    inStock: variation.stock_status !== "outofstock",
+    inStock: variation.stock_status === "instock",
     stockStatus: variation.stock_status || "instock",
     backordersAllowed:
       variation.backorders === "yes" || variation.backorders === "notify",
@@ -351,7 +351,7 @@ export function mapProduct(
             sku: product.sku || String(product.id),
             weightGrams: extractWeightGrams(product.name, product.weight),
             wcVariationId: null,
-            inStock: product.stock_status !== "outofstock",
+            inStock: product.stock_status === "instock",
             stockStatus: product.stock_status || "instock",
             backordersAllowed:
               product.backorders === "yes" || product.backorders === "notify",

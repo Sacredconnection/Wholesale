@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  MAX_ORDER_ITEM_QUANTITY,
   optionPriceForUser,
   orderableStockQuantity,
   quantityStepForWeight,
@@ -208,39 +209,44 @@ function catalogRows(products, user) {
   return products.flatMap((product) => {
     const options = product.options?.length ? product.options : [{}];
 
-    return options.map((option) => ({
-      productId: product.id || "",
-      product: product.name || "",
-      sku: option.sku || "",
-      option: option.name || "Single format",
-      weight: Number.isFinite(Number(option.weightGrams))
-        ? Number(option.weightGrams)
-        : null,
-      availability:
-        option.inStock === false
-          ? "Out of stock"
-          : option.backordersAllowed && Number(option.stockQuantity) === 0
-            ? "Available on backorder"
-          : Number.isFinite(Number(option.stockQuantity))
-            ? (() => {
-                const quantityStep = quantityStepForWeight(option.weightGrams);
-                const orderableQuantity = orderableStockQuantity(option) || 0;
-                if (quantityStep === 1) return `${orderableQuantity} in stock`;
-                const packs = orderableQuantity / quantityStep;
-                return `${packs} ${packs === 1 ? "pack" : "packs"} available (${quantityStep} units per pack)`;
-              })()
-            : "In stock",
-      inStock: option.inStock !== false,
-      backordersAllowed: option.backordersAllowed === true,
-      stockQuantity: Number.isFinite(Number(option.stockQuantity))
-        ? Number(option.stockQuantity)
-        : null,
-      price: user ? optionPriceForUser(option, user, product.category) : null,
-      orderQuantity: "",
-      importItem: catalogOrderItemToken(product, option),
-      quantityStep: quantityStepForWeight(option.weightGrams),
-      productUrl: product.productUrl || "",
-    }));
+    return options.map((option) => {
+      const hasKnownStock =
+        option.stockQuantity != null &&
+        option.stockQuantity !== "" &&
+        Number.isFinite(Number(option.stockQuantity));
+
+      return {
+        productId: product.id || "",
+        product: product.name || "",
+        sku: option.sku || "",
+        option: option.name || "Single format",
+        weight: Number.isFinite(Number(option.weightGrams))
+          ? Number(option.weightGrams)
+          : null,
+        availability:
+          option.inStock === false
+            ? "Out of stock — available to order"
+            : option.backordersAllowed && hasKnownStock && Number(option.stockQuantity) === 0
+              ? "Available on backorder"
+              : hasKnownStock
+                ? (() => {
+                    const quantityStep = quantityStepForWeight(option.weightGrams);
+                    const orderableQuantity = orderableStockQuantity(option) || 0;
+                    if (quantityStep === 1) return `${orderableQuantity} in stock`;
+                    const packs = orderableQuantity / quantityStep;
+                    return `${packs} ${packs === 1 ? "pack" : "packs"} available (${quantityStep} units per pack)`;
+                  })()
+                : "In stock",
+        inStock: option.inStock !== false,
+        backordersAllowed: option.backordersAllowed === true,
+        stockQuantity: hasKnownStock ? Number(option.stockQuantity) : null,
+        price: user ? optionPriceForUser(option, user, product.category) : null,
+        orderQuantity: "",
+        importItem: catalogOrderItemToken(product, option),
+        quantityStep: quantityStepForWeight(option.weightGrams),
+        productUrl: product.productUrl || "",
+      };
+    });
   });
 }
 
@@ -471,18 +477,16 @@ const formatCatalogSheet = (
     if (keyIndex.has("orderQuantity")) {
       const quantityCell = row.getCell(keyIndex.get("orderQuantity"));
       const step = Math.max(1, Number(item.quantityStep) || 1);
-      const orderableStock = orderableStockQuantity(item);
-      const stockLimit =
-        orderableStock == null ? 1000 : Math.min(1000, orderableStock);
+      const stockLimit = MAX_ORDER_ITEM_QUANTITY;
       const address = quantityCell.address;
       quantityCell.numFmt = "0";
       quantityCell.fill = {
         type: "pattern",
         pattern: "solid",
-        fgColor: { argb: item.inStock ? "FFFFE699" : "FFF1F1F1" },
+        fgColor: { argb: item.inStock ? "FFFFE699" : "FFFFE4B5" },
       };
-      quantityCell.protection = { locked: !item.inStock };
-      if (item.inStock) quantityCell.dataValidation = {
+      quantityCell.protection = { locked: false };
+      quantityCell.dataValidation = {
         type: "custom",
         allowBlank: true,
         formulae: [

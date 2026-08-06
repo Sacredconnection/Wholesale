@@ -7,6 +7,8 @@ import { useCart } from "@/components/CartContext";
 import { useProducts } from "@/components/ProductsContext";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import {
+  maximumOrderQuantityForWeight,
+  needsBackorder,
   optionPriceForUser,
   orderableStockQuantity,
   quantityStepForWeight,
@@ -78,9 +80,10 @@ export default function ProductPurchaseControls({
   const activeProduct = product.optionsLoaded ? product : resolvedProduct;
   const selectedOption = activeProduct?.options[selectedOptionIndex];
   const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
-  const maximumQuantity = orderableStockQuantity(selectedOption);
-  const canIncreaseQuantity =
-    maximumQuantity == null || quantity + quantityStep <= maximumQuantity;
+  const availableQuantity = orderableStockQuantity(selectedOption);
+  const maximumQuantity = maximumOrderQuantityForWeight(selectedOption?.weightGrams);
+  const canIncreaseQuantity = quantity + quantityStep <= maximumQuantity;
+  const requiresBackorder = needsBackorder(selectedOption, quantity);
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, activeProduct.category)
     : null;
@@ -88,7 +91,7 @@ export default function ProductPurchaseControls({
     price == null ? null : price * quantityStep;
   const selectedTotal =
     price == null ? null : price * quantity;
-  const canAdd = Boolean(selectedOption && selectedOption.inStock !== false && !error);
+  const canAdd = Boolean(selectedOption && !error);
 
   const handleAdd = () => {
     if (!activeProduct || !canAdd) return;
@@ -138,12 +141,12 @@ export default function ProductPurchaseControls({
         </select>
       </label>
 
-      {selectedOption?.inStock === false && <StockBackorderNotice compact={compact} />}
+      {requiresBackorder && <StockBackorderNotice compact={compact} />}
       {quantityStep > 1 && selectedOption && (
         <p className="text-[9px] font-semibold leading-relaxed text-[#82d6c5]">
           This {Math.round(selectedOption.weightGrams)}g tin is sold in multiples
           of {quantityStep} units.
-          {maximumQuantity != null && ` ${maximumQuantity / quantityStep} ${maximumQuantity / quantityStep === 1 ? "pack" : "packs"} available.`}
+          {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now; additional packs can be requested for restock.`}
         </p>
       )}
 
@@ -213,7 +216,7 @@ export default function ProductPurchaseControls({
               type="button"
               onClick={() =>
                 setQuantity((value) => Math.min(
-                  maximumQuantity == null ? Number.POSITIVE_INFINITY : maximumQuantity,
+                  maximumQuantity,
                   value + quantityStep
                 ))
               }

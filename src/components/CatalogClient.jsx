@@ -31,7 +31,7 @@ import { useProducts } from "@/components/ProductsContext";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
 import { downloadDigitalCatalogPdf, exportCatalogExcel } from "@/lib/catalog-export";
 import { readCatalogOrderWorkbook } from "@/lib/catalog-order-workbook";
-import { isValidQuantityForWeight, orderableStockQuantity } from "@/lib/pricing";
+import { isValidQuantityForWeight } from "@/lib/pricing";
 
 // Normalize string for accent-insensitive comparison
 // Strips diacritics, lowercases and trims — used ONLY for comparison, never for display
@@ -351,19 +351,6 @@ export default function CatalogClient({ initialProducts = [] }) {
         );
         if (!match) {
           errors.push(`${item.source}: product is no longer available.`);
-          return [];
-        }
-        if (match.option.inStock === false) {
-          errors.push(`${item.source}: this product is currently out of stock.`);
-          return [];
-        }
-        const currentStock = orderableStockQuantity(match.option);
-        if (
-          match.option.backordersAllowed !== true &&
-          Number.isFinite(currentStock) &&
-          item.quantity > currentStock
-        ) {
-          errors.push(`${item.source}: only ${currentStock} unit(s) are currently available.`);
           return [];
         }
         if (!isValidQuantityForWeight(item.quantity, match.option.weightGrams)) {
