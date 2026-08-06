@@ -7,14 +7,9 @@ import { ArrowRight } from 'lucide-react';
 
 const BANNERS = [
   {
-    desktopSrc: "/banner/hero-banner.webp",
-    mobileSrc: "/banner/hero-mobile/hero-banner-mobile.webp",
+    desktopSrc: "/banner/sacred-connection-hero/sacred-connection-hero-desktop.webp",
+    mobileSrc: "/banner/sacred-connection-hero/sacred-connection-hero-mobile.webp",
     alt: "Misty Amazonian forest canopy at dawn"
-  },
-  {
-    desktopSrc: "/banner/hero-banner-01.webp",
-    mobileSrc: "/banner/hero-mobile/hero-banner-01-mobile.webp",
-    alt: "Amazonian botanicals and forest scenery"
   }
 ];
 
@@ -22,6 +17,7 @@ export default function Hero() {
   const [activeIdx, setActiveIdx] = useState(0);
 
   useEffect(() => {
+    if (BANNERS.length < 2) return undefined;
     const timer = setInterval(() => {
       setActiveIdx((prev) => (prev + 1) % BANNERS.length);
     }, 6000);
@@ -61,7 +57,7 @@ export default function Hero() {
       </div>
 
       {/* Hero Section Content */}
-      <section className="relative z-10 w-full -translate-y-48 py-10 sm:-translate-y-12 sm:py-14 md:translate-y-0 md:py-16 lg:py-24">
+      <section className="relative z-10 w-full py-10 sm:-translate-y-12 sm:py-14 md:translate-y-0 md:py-16 lg:py-24">
         <div className="mx-auto flex w-full max-w-7xl animate-fade-in-up flex-col items-center gap-4 px-4 text-center sm:gap-5 sm:px-6 md:items-start md:gap-6 md:text-left lg:px-8">
           
           <div className="hero-tribe-badge inline-flex items-center gap-3 rounded-full border border-white/15 bg-black/25 p-1.5 pr-4 shadow-[0_12px_35px_rgba(0,0,0,0.22),inset_0_1px_0_rgba(255,255,255,0.08)] backdrop-blur-xl">
@@ -111,18 +107,20 @@ export default function Hero() {
       </div>
 
       {/* Carousel dots indicators */}
-      <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
-        {BANNERS.map((_, idx) => (
-          <button
-            key={idx}
-            onClick={() => setActiveIdx(idx)}
-            className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer border-0 p-0 ${
-              activeIdx === idx ? 'bg-[#82d6c5] w-6' : 'bg-white/30 hover:bg-white/50'
-            }`}
-            aria-label={`Go to slide ${idx + 1}`}
-          />
-        ))}
-      </div>
+      {BANNERS.length > 1 && (
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-20 flex gap-2">
+          {BANNERS.map((_, idx) => (
+            <button
+              key={idx}
+              onClick={() => setActiveIdx(idx)}
+              className={`w-2.5 h-2.5 rounded-full transition-all duration-300 cursor-pointer border-0 p-0 ${
+                activeIdx === idx ? 'bg-[#82d6c5] w-6' : 'bg-white/30 hover:bg-white/50'
+              }`}
+              aria-label={`Go to slide ${idx + 1}`}
+            />
+          ))}
+        </div>
+      )}
     </div>
   );
 }

@@ -24,7 +24,7 @@ export const metadata = {
     url: SITE_URL,
     images: [
       {
-        url: "/banner/hero-banner.webp",
+        url: "/banner/sacred-connection-hero/sacred-connection-hero-desktop.webp",
         alt: "Sacred Connection Wholesale - Amazon Canopy",
       }
     ],
@@ -33,7 +33,7 @@ export const metadata = {
     card: "summary_large_image",
     title: "Sacred Connection Wholesale | B2B Portal",
     description: "Direct fair-trade sourcing of traditional Amazonian botanical products for wholesale partners.",
-    images: ["/banner/hero-banner.webp"],
+    images: ["/banner/sacred-connection-hero/sacred-connection-hero-desktop.webp"],
   },
   robots: {
     index: true,

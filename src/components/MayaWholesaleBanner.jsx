@@ -16,23 +16,23 @@ export default function MayaWholesaleBanner() {
         aria-hidden="true"
       />
       <div className="relative z-10 mx-auto flex w-full max-w-7xl items-center px-4 sm:px-6 lg:px-8">
-        <div className="relative w-full max-w-3xl text-left lg:w-[58%]">
+        <div className="relative w-full max-w-3xl text-center md:text-left lg:w-[58%]">
           <Image
             src="/banner/maya-wholesale/logo-maya-wholesale.svg"
             alt="Maya Ethnobotanicals"
             width={600}
             height={210}
             unoptimized
-            className="h-auto w-60 object-contain object-left sm:w-[300px]"
+            className="mx-auto h-auto w-48 object-contain object-center sm:w-60 md:mx-0 md:object-left"
           />
           <div>
             <h2
               id="maya-wholesale-banner-title"
-              className="mt-7 max-w-2xl text-2xl font-black leading-tight text-white sm:text-3xl"
+              className="mx-auto mt-7 max-w-2xl text-2xl font-black leading-tight text-white md:mx-0 sm:text-3xl"
             >
               Expand your business with authentic ethnobotanicals
             </h2>
-            <p className="mt-3 max-w-2xl text-sm leading-6 text-white/60 sm:text-base">
+            <p className="mx-auto mt-3 max-w-2xl text-sm leading-6 text-white/60 md:mx-0 sm:text-base">
               Explore wholesale ethnobotanical herbs, plant medicines,
               superfoods and natural incense selected for professional use and
               global supply.
