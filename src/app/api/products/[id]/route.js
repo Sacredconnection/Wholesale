@@ -8,6 +8,7 @@ import {
 import { getRequiredCommerceStores, isCommerceStoreConfigured } from "@/lib/commerce-stores";
 import {
   buildCategoryContext,
+  isAdminCustomer,
   isApprovedWholesaleCustomer,
   mapProductForRole,
   stripProductPricing,
@@ -66,15 +67,15 @@ export async function GET(request, { params }) {
       );
     }
 
-    const [customer, wcProduct] = await Promise.all([
-      getCustomerByEmail(session.email),
-      getProductBySlug(identity.slug, identity.store.id),
-    ]);
-    if (!wcProduct) return Response.json({ error: "Product not found." }, { status: 404 });
+    const customer = await getCustomerByEmail(session.email);
     const revealPricing = Boolean(
       isApprovedWholesaleCustomer(customer) &&
         customer.id === session.customerId
     );
+    const wcProduct = await getProductBySlug(identity.slug, identity.store.id, {
+      includePrivate: revealPricing && isAdminCustomer(customer),
+    });
+    if (!wcProduct) return Response.json({ error: "Product not found." }, { status: 404 });
 
     const [variations, categories] = await Promise.all([
       wcProduct.type === "variable"

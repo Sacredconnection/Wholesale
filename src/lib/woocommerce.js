@@ -268,44 +268,63 @@ export async function getPublicStoreCatalog(storeId = PRIMARY_STORE_ID, { revali
 
 // ── Catalog ─────────────────────────────────────────────────────────
 
-export async function getAllProducts(storeId = PRIMARY_STORE_ID, { revalidate } = {}) {
+export async function getAllProducts(
+  storeId = PRIMARY_STORE_ID,
+  { revalidate, includePrivate = false } = {}
+) {
   const { catalogLanguage } = getCommerceStore(storeId);
   const tags = [getWooCommerceCatalogCacheTag(storeId)];
   const productParams = {
     per_page: 100,
-    status: "publish",
     ...(catalogLanguage ? { lang: catalogLanguage } : {}),
     _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data,catalog_visibility,stock_status,stock_quantity,date_modified_gmt",
   };
-  const { data: firstPage, headers } = await wcFetch(storeId, "products", {
-    revalidate,
-    tags,
-    params: { ...productParams, page: 1 },
-  });
-  const totalPages = Number(headers.get("x-wp-totalpages") || 1);
-  if (totalPages <= 1) {
-    return firstPage.filter((product) => product.catalog_visibility !== "hidden");
+
+  async function getProductsWithStatus(status) {
+    const { data: firstPage, headers } = await wcFetch(storeId, "products", {
+      revalidate,
+      tags,
+      params: { ...productParams, status, page: 1 },
+    });
+    const totalPages = Number(headers.get("x-wp-totalpages") || 1);
+    if (totalPages <= 1) return firstPage;
+
+    const remainingPages = await Promise.all(
+      Array.from({ length: totalPages - 1 }, (_, index) => index + 2).map(async (page) => {
+        const { data } = await wcFetch(storeId, "products", {
+          revalidate,
+          tags,
+          params: { ...productParams, status, page },
+        });
+        return data;
+      })
+    );
+    return [firstPage, ...remainingPages].flat();
   }
 
-  const remainingPages = await Promise.all(
-    Array.from({ length: totalPages - 1 }, (_, index) => index + 2).map(async (page) => {
-      const { data } = await wcFetch(storeId, "products", {
-        revalidate,
-        tags,
-        params: { ...productParams, page },
-      });
-      return data;
-    })
+  const productsByStatus = await Promise.all(
+    ["publish", ...(includePrivate ? ["private"] : [])].map(getProductsWithStatus)
   );
-
-  return [firstPage, ...remainingPages]
+  return productsByStatus
     .flat()
     .filter((product) => product.catalog_visibility !== "hidden");
 }
 
-export async function getProductBySlug(slug, storeId = PRIMARY_STORE_ID) {
-  const { data } = await wcFetch(storeId, "products", { params: { slug, status: "publish" } });
-  return data[0] || null;
+export async function getProductBySlug(
+  slug,
+  storeId = PRIMARY_STORE_ID,
+  { includePrivate = false } = {}
+) {
+  const statuses = ["publish", ...(includePrivate ? ["private"] : [])];
+  const products = await Promise.all(
+    statuses.map(async (status) => {
+      const { data } = await wcFetch(storeId, "products", {
+        params: { slug, status },
+      });
+      return data;
+    })
+  );
+  return products.flat()[0] || null;
 }
 
 export async function getProductVariations(

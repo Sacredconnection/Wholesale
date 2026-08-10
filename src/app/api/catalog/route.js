@@ -11,6 +11,7 @@ import {
 } from "@/lib/woocommerce";
 import {
   buildCategoryContext,
+  isAdminCustomer,
   isApprovedWholesaleCustomer,
   mapProductForRole,
   mapStoreProduct,
@@ -117,7 +118,10 @@ async function resolveCustomer() {
 
 async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
   const [wcProducts, categories] = await Promise.all([
-    getAllProducts(store.id, catalogFetchOptions),
+    getAllProducts(store.id, {
+      ...catalogFetchOptions,
+      includePrivate: isAdminCustomer(customer),
+    }),
     getCategories(store.id, catalogFetchOptions),
   ]);
   const categoryContext = buildCategoryContext(categories);

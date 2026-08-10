@@ -11,6 +11,7 @@ import {
 } from "@/lib/commerce-stores";
 import {
   buildCategoryContext,
+  isAdminCustomer,
   isApprovedWholesaleCustomer,
   mapProductForRole,
   stripProductPricing,
@@ -28,9 +29,9 @@ const catalogCacheSeconds = (() => {
   const value = Number(process.env.WC_REVALIDATE_SECONDS);
   return Number.isFinite(value) && value >= 30 ? value : 300;
 })();
-async function loadStoreCatalog(storeId, storeName, role, revealPricing) {
+async function loadStoreCatalog(storeId, storeName, role, revealPricing, includePrivate) {
   const [wcProducts, categories] = await Promise.all([
-    getAllProducts(storeId),
+    getAllProducts(storeId, { includePrivate }),
     getCategories(storeId),
   ]);
   const categoryContext = buildCategoryContext(categories);
@@ -105,7 +106,8 @@ export async function GET(request) {
               store.id,
               store.name,
               customer.role,
-              true
+              true,
+              isAdminCustomer(customer)
             )
           : loadPublicStoreProducts(store)
       )

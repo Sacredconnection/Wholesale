@@ -10,6 +10,7 @@ const DEFAULT_APPROVED_WHOLESALE_ROLES = [
   "wholesale customer",
   "wholesale buyer",
   "shop manager",
+  "admin",
   "administrator",
 ];
 
@@ -237,8 +238,15 @@ const customerMeta = (customer, key) => {
 
 export function isApprovedWholesaleCustomer(customer) {
   return Boolean(
-    customer && approvedWholesaleRoles().has(normalizeRole(customer.role))
+    customer &&
+      (isAdminCustomer(customer) ||
+        approvedWholesaleRoles().has(normalizeRole(customer.role)))
   );
+}
+
+export function isAdminCustomer(customer) {
+  const role = normalizeRole(customer?.role);
+  return role === "admin" || role === "administrator";
 }
 
 const MINIMUM_ORDER_WEIGHT_BY_EMAIL = new Map([
@@ -279,7 +287,7 @@ export function mapCustomerToUser(customer) {
       profileAvatar === "__none__"
         ? null
         : profileAvatar || customer.avatar_url || null,
-    isAdmin: customer.role === "administrator",
+    isAdmin: isAdminCustomer(customer),
     shippingAddress: fromWcAddress(customer.shipping),
     billingAddress: fromWcAddress(customer.billing),
   };
