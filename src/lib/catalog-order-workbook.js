@@ -122,13 +122,13 @@ export async function readCatalogOrderWorkbook(file) {
         throw new Error("The spreadsheet contains too many rows to import safely.");
       }
       const row = sheet.getRow(rowNumber);
-      // Category divider rows have a label in the first column but no hidden
-      // product reference. Ignore them before reading the quantity so stray
-      // values in those rows cannot prevent the remaining products from being
-      // imported.
+      const itemCell = row.getCell(itemColumn);
+      // Category divider rows are merged across the entire row. ExcelJS exposes
+      // the category label through every cell in that merge, including the
+      // hidden product-reference column, so detect the merge rather than its
+      // value. Ignore it before validating any quantity.
       const isCategoryDivider =
-        String(cellScalar(row.getCell(1)) || "").trim() !== "" &&
-        String(cellScalar(row.getCell(itemColumn)) || "").trim() === "";
+        itemCell.isMerged && itemCell.master?.address !== itemCell.address;
       if (isCategoryDivider) {
         continue;
       }
