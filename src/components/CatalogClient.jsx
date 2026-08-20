@@ -55,7 +55,19 @@ const getPaginationItems = (currentPage, totalPages) => {
   items.push(totalPages);
   return items;
 };
-export default function CatalogClient({ initialProducts = [] }) {
+
+const catalogPageHref = (page, tribe) => {
+  const params = new URLSearchParams();
+  if (page > 1) params.set("page", String(page));
+  if (tribe !== "All") params.set("tribe", tribe.toLowerCase());
+  const query = params.toString();
+  return query ? `/catalog?${query}` : "/catalog";
+};
+
+export default function CatalogClient({
+  initialProducts = [],
+  initialPage = 1,
+}) {
   const {
     products: liveProducts,
     loading: liveProductsLoading,
@@ -85,7 +97,7 @@ export default function CatalogClient({ initialProducts = [] }) {
   const [tribe, setTribe] = useState("All");
 
   // Pagination State
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(initialPage);
   const itemsPerPage = 8;
 
   // Read URL query parameters to set initial tribe filter and page
@@ -745,29 +757,44 @@ export default function CatalogClient({ initialProducts = [] }) {
           {/* Pagination Controls */}
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 overflow-hidden border-t border-white/5 px-2 py-8 sm:gap-4 mt-6">
-              <button
-                onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-                disabled={currentPage === 1}
-                aria-label="Previous catalog page"
-                className="p-3 bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 text-white border border-white/10 rounded-sm transition-colors cursor-pointer disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
+              {currentPage === 1 ? (
+                <span
+                  aria-disabled="true"
+                  aria-label="Previous catalog page"
+                  className="cursor-not-allowed rounded-sm border border-white/10 bg-white/5 p-3 text-white opacity-40"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </span>
+              ) : (
+                <Link
+                  href={catalogPageHref(currentPage - 1, tribe)}
+                  prefetch={false}
+                  scroll={false}
+                  onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                  aria-label="Previous catalog page"
+                  className="rounded-sm border border-white/10 bg-white/5 p-3 text-white transition-colors hover:bg-white/10"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Link>
+              )}
               <div className="flex items-center gap-2 sm:hidden">
                 {mobilePageNumbers.map((page) => (
-                  <button
+                  <Link
                     key={page}
+                    href={catalogPageHref(page, tribe)}
+                    prefetch={false}
+                    scroll={false}
                     onClick={() => setCurrentPage(page)}
                     aria-label={`Go to catalog page ${page}`}
                     aria-current={currentPage === page ? "page" : undefined}
-                    className={`h-10 w-10 rounded-sm border font-mono text-xs font-bold transition-all cursor-pointer ${
+                    className={`flex h-10 w-10 items-center justify-center rounded-sm border font-mono text-xs font-bold transition-all ${
                       currentPage === page
                         ? "bg-[#268072] text-white border-[#268072]"
                         : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white"
                     }`}
                   >
                     {page}
-                  </button>
+                  </Link>
                 ))}
               </div>
 
@@ -778,31 +805,46 @@ export default function CatalogClient({ initialProducts = [] }) {
                       &hellip;
                     </span>
                   ) : (
-                    <button
+                    <Link
                       key={item}
+                      href={catalogPageHref(item, tribe)}
+                      prefetch={false}
+                      scroll={false}
                       onClick={() => setCurrentPage(item)}
                       aria-label={`Go to catalog page ${item}`}
                       aria-current={currentPage === item ? "page" : undefined}
-                      className={`h-10 w-10 shrink-0 rounded-sm border font-mono text-xs font-bold transition-all cursor-pointer ${
+                      className={`flex h-10 w-10 shrink-0 items-center justify-center rounded-sm border font-mono text-xs font-bold transition-all ${
                         currentPage === item
                           ? "bg-[#268072] text-white border-[#268072]"
                           : "bg-white/5 text-white/60 border-white/10 hover:bg-white/10 hover:text-white"
                       }`}
                     >
                       {item}
-                    </button>
+                    </Link>
                   )
                 )}
               </div>
 
-              <button
-                onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-                disabled={currentPage === totalPages}
-                aria-label="Next catalog page"
-                className="p-3 bg-white/5 hover:bg-white/10 disabled:opacity-40 disabled:hover:bg-white/5 text-white border border-white/10 rounded-sm transition-colors cursor-pointer disabled:cursor-not-allowed"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+              {currentPage === totalPages ? (
+                <span
+                  aria-disabled="true"
+                  aria-label="Next catalog page"
+                  className="cursor-not-allowed rounded-sm border border-white/10 bg-white/5 p-3 text-white opacity-40"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </span>
+              ) : (
+                <Link
+                  href={catalogPageHref(currentPage + 1, tribe)}
+                  prefetch={false}
+                  scroll={false}
+                  onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                  aria-label="Next catalog page"
+                  className="rounded-sm border border-white/10 bg-white/5 p-3 text-white transition-colors hover:bg-white/10"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              )}
             </div>
           )}
 
