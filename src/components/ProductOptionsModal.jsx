@@ -6,7 +6,9 @@ import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 import {
   maximumOrderQuantityForWeight,
+  isValidQuantityForWeight,
   needsBackorder,
+  normalizeQuantityForWeight,
   orderableStockQuantity,
   optionPriceForUser,
   quantityStepForWeight,
@@ -15,7 +17,7 @@ import {
 export default function ProductOptionsModal({ product, user, onClose, onAddToCart }) {
   const [resolvedProduct, setResolvedProduct] = useState(null);
   const [selectedOptionIndex, setSelectedOptionIndex] = useState(0);
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState("1");
   const [error, setError] = useState("");
   const dialogRef = useRef(null);
   const closeButtonRef = useRef(null);
@@ -41,9 +43,9 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
         if (!cancelled) {
           setResolvedProduct(data.product);
           setSelectedOptionIndex(0);
-          setQuantity(
+          setQuantity(String(
             quantityStepForWeight(data.product.options?.[0]?.weightGrams)
-          );
+          ));
         }
       } catch (loadError) {
         if (!cancelled) {
@@ -64,20 +66,46 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
   const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
   const availableQuantity = orderableStockQuantity(selectedOption);
   const maximumQuantity = maximumOrderQuantityForWeight(selectedOption?.weightGrams);
-  const canIncreaseQuantity = quantity + quantityStep <= maximumQuantity;
-  const requiresBackorder = needsBackorder(selectedOption, quantity);
+  const numericQuantity = Number(quantity);
+  const isQuantityValid =
+    isValidQuantityForWeight(numericQuantity, selectedOption?.weightGrams) &&
+    numericQuantity <= maximumQuantity;
+  const canIncreaseQuantity =
+    isQuantityValid && numericQuantity + quantityStep <= maximumQuantity;
+  const requiresBackorder = needsBackorder(
+    selectedOption,
+    isQuantityValid ? numericQuantity : 0
+  );
   const price = selectedOption
     ? optionPriceForUser(selectedOption, user, resolvedProduct.category)
     : null;
   const minimumPackTotal =
     price == null ? null : price * quantityStep;
   const selectedTotal =
-    price == null ? null : price * quantity;
-  const canAdd = Boolean(selectedOption);
+    price == null || !isQuantityValid ? null : price * numericQuantity;
+  const canAdd = Boolean(selectedOption && isQuantityValid);
+
+  const changeQuantity = (direction) => {
+    const baseQuantity = isQuantityValid ? numericQuantity : 0;
+    const nextQuantity = Math.min(
+      maximumQuantity,
+      Math.max(quantityStep, baseQuantity + direction * quantityStep)
+    );
+    setQuantity(String(nextQuantity));
+  };
+
+  const normalizeQuantity = () => {
+    if (isQuantityValid) return;
+    const normalized = Math.min(
+      maximumQuantity,
+      normalizeQuantityForWeight(numericQuantity, selectedOption?.weightGrams)
+    );
+    setQuantity(String(normalized));
+  };
 
   const handleAdd = () => {
     if (resolvedProduct && selectedOption && canAdd) {
-      onAddToCart(resolvedProduct, selectedOptionIndex, quantity);
+      onAddToCart(resolvedProduct, selectedOptionIndex, numericQuantity);
     }
   };
 
@@ -131,11 +159,11 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
                 onChange={(event) => {
                   const nextIndex = Number(event.target.value);
                   setSelectedOptionIndex(nextIndex);
-                  setQuantity(
+                  setQuantity(String(
                     quantityStepForWeight(
                       resolvedProduct.options[nextIndex]?.weightGrams
                     )
-                  );
+                  ));
                 }}
                 className="w-full rounded-sm border border-white/10 bg-[#101010] px-4 py-3 text-sm text-white outline-none focus:border-[#268072]"
               >
@@ -175,13 +203,34 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
                 )}
               </div>
               <div className="flex items-center rounded-sm border border-white/10 bg-[#101010]">
-                <button type="button" onClick={() => setQuantity((value) => Math.max(quantityStep, value - quantityStep))} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Decrease quantity"><Minus className="h-4 w-4" /></button>
-                <span className="w-10 text-center text-sm font-bold text-white">{quantity}</span>
-                <button type="button" onClick={() => setQuantity((value) => Math.min(maximumQuantity, value + quantityStep))} disabled={!canIncreaseQuantity} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-25" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
+                <button type="button" onClick={() => changeQuantity(-1)} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white" aria-label="Decrease quantity"><Minus className="h-4 w-4" /></button>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  role="spinbutton"
+                  value={quantity}
+                  onChange={(event) => {
+                    if (/^\d*$/.test(event.target.value)) {
+                      setQuantity(event.target.value);
+                    }
+                  }}
+                  onBlur={normalizeQuantity}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter") event.currentTarget.blur();
+                  }}
+                  aria-label={`Quantity of ${product.name}`}
+                  aria-invalid={!isQuantityValid}
+                  aria-valuemin={quantityStep}
+                  aria-valuemax={maximumQuantity}
+                  aria-valuenow={isQuantityValid ? numericQuantity : undefined}
+                  className="w-14 border-x border-y-0 border-white/10 bg-transparent px-1 py-3 text-center text-sm font-bold text-white outline-none focus:bg-white/5 focus:ring-1 focus:ring-inset focus:ring-[#268072]"
+                />
+                <button type="button" onClick={() => changeQuantity(1)} disabled={!canIncreaseQuantity} className="cursor-pointer border-0 bg-transparent p-3 text-white/60 hover:text-white disabled:cursor-not-allowed disabled:opacity-25" aria-label="Increase quantity"><Plus className="h-4 w-4" /></button>
               </div>
-              {quantityStep > 1 && quantity > quantityStep && selectedTotal != null && (
+              {quantityStep > 1 && numericQuantity > quantityStep && selectedTotal != null && (
                 <p className="w-full border-t border-white/5 pt-3 text-right text-[10px] font-semibold text-white/50">
-                  {quantity} units selected:{" "}
+                  {numericQuantity} units selected:{" "}
                   <strong className="text-white">${selectedTotal.toFixed(2)}</strong>
                 </p>
               )}
