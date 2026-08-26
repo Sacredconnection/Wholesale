@@ -55,7 +55,7 @@ async function loadStoreCatalog(storeId, storeName, role, revealPricing, include
 
 const getCachedStoreCatalog = unstable_cache(
   loadStoreCatalog,
-  ["sacred-connection-catalog-v4"],
+  ["sacred-connection-catalog-v5"],
   { revalidate: catalogCacheSeconds, tags: ["woocommerce-catalog"] }
 );
 

@@ -226,7 +226,10 @@ const normalizedCategoryName = (value) =>
     .trim()
     .toLowerCase();
 
-const INDIGENOUS_RAPE_CATEGORY = "rape indigenous";
+const INDIGENOUS_RAPE_CATEGORIES = new Set([
+  "indigenous rape",
+  "rape indigenous",
+]);
 
 // Indigenous Rapé is a grouping category in WooCommerce. Its child category
 // (or the Tribe attribute when WooCommerce omits the child assignment from the
@@ -253,7 +256,7 @@ export function resolveCatalogTaxonomy(
       "Uncategorized"
   );
 
-  if (normalizedCategoryName(rootCategory) === INDIGENOUS_RAPE_CATEGORY) {
+  if (INDIGENOUS_RAPE_CATEGORIES.has(normalizedCategoryName(rootCategory))) {
     const promotedCategory = decodeHtmlEntities(
       (firstSubcategory &&
         categoryBelowTopLevelName(
