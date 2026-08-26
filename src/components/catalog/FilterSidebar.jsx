@@ -25,16 +25,8 @@ export default function FilterSidebar({
       tribe: value,
     });
   const showTribe = filters.category !== allValue && tribes.length > 0;
-  const normalizedCategory = String(filters.category || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase();
-  const isIndigenousRape = normalizedCategory === "rape indigenous";
-  const tribeLabel = isIndigenousRape ? "Indigenous Tribe" : "Product Type";
-  const allTribesLabel = isIndigenousRape
-    ? "All Tribes"
-    : "All Product Types";
+  const tribeLabel = "Product Type";
+  const allTribesLabel = "All Product Types";
 
   return (
     <aside className="flex flex-col gap-5 rounded-xl border border-white/5 bg-[#1a1a1a] p-5 sm:gap-6 sm:p-6 lg:p-8">

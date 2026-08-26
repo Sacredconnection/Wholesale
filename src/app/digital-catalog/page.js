@@ -54,14 +54,6 @@ function pageList(currentPage, totalPages) {
   });
 }
 
-function isIndigenousRapeCategory(category) {
-  return String(category || "")
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .trim()
-    .toLowerCase() === "rape indigenous";
-}
-
 export default function CatalogPage() {
   const { isLoggedIn, user } = useAuth();
   const { addToCart } = useCart();
@@ -183,13 +175,7 @@ export default function CatalogPage() {
     const labels = [];
     if (filters.category) labels.push(`Category: ${filters.category}`);
     if (filters.tribe) {
-      labels.push(
-        `${
-          isIndigenousRapeCategory(filters.category)
-            ? "Indigenous Tribe"
-            : "Product Type"
-        }: ${filters.tribe}`
-      );
+      labels.push(`Product Type: ${filters.tribe}`);
     }
     return labels.length ? labels.join(" | ") : "Complete catalog";
   };

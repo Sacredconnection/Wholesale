@@ -185,9 +185,7 @@ const mapStoreVariationToOption = (variation) => {
   };
 };
 
-// Pre-computes category hierarchy info used by mapProduct: which categories
-// are subcategories (their names double as the tribe list, e.g. "Huni Kuin"
-// under "Rapé Indigenous").
+// Pre-computes the WooCommerce category hierarchy used by the catalog facets.
 export function buildCategoryContext(categories = []) {
   const parentById = {};
   const nameById = {};
@@ -208,6 +206,76 @@ const topLevelCategoryName = (categoryId, parentById, nameById) => {
   }
   return nameById[id] || null;
 };
+
+const categoryBelowTopLevelName = (categoryId, parentById, nameById) => {
+  let id = categoryId;
+  for (
+    let depth = 0;
+    depth < 10 && parentById[id] && parentById[parentById[id]];
+    depth += 1
+  ) {
+    id = parentById[id];
+  }
+  return nameById[id] || null;
+};
+
+const normalizedCategoryName = (value) =>
+  String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLowerCase();
+
+const INDIGENOUS_RAPE_CATEGORY = "rape indigenous";
+
+// Indigenous Rapé is a grouping category in WooCommerce. Its child
+// category is the useful storefront facet. Other roots, including Sacred
+// Connection, retain their child as the compound Product Type filter.
+export function resolveCatalogTaxonomy(
+  categories = [],
+  categoryContext = {},
+  attributeTribe = ""
+) {
+  const { parentById = {}, nameById = {} } = categoryContext;
+  const topCategories = categories.filter(
+    (category) => !parentById[category.id]
+  );
+  const subcategories = categories.filter(
+    (category) => parentById[category.id]
+  );
+  const firstSubcategory = subcategories[0];
+  const rootCategory = decodeHtmlEntities(
+    topCategories[0]?.name ||
+      (firstSubcategory &&
+        topLevelCategoryName(firstSubcategory.id, parentById, nameById)) ||
+      categories[0]?.name ||
+      "Uncategorized"
+  );
+
+  if (
+    normalizedCategoryName(rootCategory) === INDIGENOUS_RAPE_CATEGORY &&
+    firstSubcategory?.name
+  ) {
+    const promotedCategory = decodeHtmlEntities(
+      categoryBelowTopLevelName(
+        firstSubcategory.id,
+        parentById,
+        nameById
+      ) || firstSubcategory.name
+    );
+    return {
+      category: promotedCategory,
+      // Matching values suppress the now-redundant second selector while
+      // preserving existing tribe links and exports.
+      tribe: promotedCategory,
+    };
+  }
+
+  return {
+    category: rootCategory,
+    tribe: decodeHtmlEntities(attributeTribe || firstSubcategory?.name || ""),
+  };
+}
 
 // Internal address shape ↔ WooCommerce address shape
 export const toWcAddress = (address = {}) => ({
@@ -381,22 +449,11 @@ export function mapProduct(
       ? trackedQuantities.reduce((total, quantity) => total + quantity, 0)
       : null;
 
-  // Category hierarchy: top-level categories ("Rapé Indigenous", "Sacred
-  // Connection") are the product category; subcategories are the tribe.
   const cats = product.categories || [];
-  const topCats = cats.filter((c) => !parentById[c.id]);
-  const subCats = cats.filter((c) => parentById[c.id]);
-
-  const tribe = decodeHtmlEntities(
-    attributeOption(product.attributes, "tribe") ||
-      subCats[0]?.name ||
-      ""
-  );
-  const category = decodeHtmlEntities(
-    topCats[0]?.name ||
-      (subCats[0] && topLevelCategoryName(subCats[0].id, parentById, nameById)) ||
-      cats[0]?.name ||
-      "Uncategorized"
+  const taxonomy = resolveCatalogTaxonomy(
+    cats,
+    { parentById, nameById },
+    attributeOption(product.attributes, "tribe")
   );
 
   return {
@@ -411,8 +468,8 @@ export function mapProduct(
     optionsLoaded: product.type !== "variable" || variations.length > 0,
     name: decodeHtmlEntities(product.name),
     sku: product.sku || String(product.id),
-    category,
-    tribe,
+    category: taxonomy.category,
+    tribe: taxonomy.tribe,
     image: product.images?.[0]?.src || null,
     images: (product.images || []).map((img) => img.src),
     description: stripHtml(product.short_description) || stripHtml(product.description),
@@ -465,18 +522,10 @@ export function mapStoreProduct(
   }));
 
   const cats = product.categories || [];
-  const topCats = cats.filter((category) => !parentById[category.id]);
-  const subCats = cats.filter((category) => parentById[category.id]);
-  const tribe = decodeHtmlEntities(
-    attributeOption(product.attributes, "tribe") ||
-      subCats[0]?.name ||
-      ""
-  );
-  const category = decodeHtmlEntities(
-    topCats[0]?.name ||
-      (subCats[0] && topLevelCategoryName(subCats[0].id, parentById, nameById)) ||
-      cats[0]?.name ||
-      "Uncategorized"
+  const taxonomy = resolveCatalogTaxonomy(
+    cats,
+    { parentById, nameById },
+    attributeOption(product.attributes, "tribe")
   );
 
   return {
@@ -490,8 +539,8 @@ export function mapStoreProduct(
     optionsLoaded: product.type !== "variable" || variations.length > 0,
     name: decodeHtmlEntities(product.name),
     sku: product.sku || String(product.id),
-    category,
-    tribe,
+    category: taxonomy.category,
+    tribe: taxonomy.tribe,
     image: product.images?.[0]?.src || null,
     images: (product.images || []).map((image) => image.src),
     description: stripHtml(product.short_description) || stripHtml(product.description),
