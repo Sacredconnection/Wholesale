@@ -228,9 +228,10 @@ const normalizedCategoryName = (value) =>
 
 const INDIGENOUS_RAPE_CATEGORY = "rape indigenous";
 
-// Indigenous Rapé is a grouping category in WooCommerce. Its child
-// category is the useful storefront facet. Other roots, including Sacred
-// Connection, retain their child as the compound Product Type filter.
+// Indigenous Rapé is a grouping category in WooCommerce. Its child category
+// (or the Tribe attribute when WooCommerce omits the child assignment from the
+// product payload) is the useful storefront facet. Other roots, including
+// Sacred Connection, retain their child as the compound Product Type filter.
 export function resolveCatalogTaxonomy(
   categories = [],
   categoryContext = {},
@@ -252,17 +253,20 @@ export function resolveCatalogTaxonomy(
       "Uncategorized"
   );
 
-  if (
-    normalizedCategoryName(rootCategory) === INDIGENOUS_RAPE_CATEGORY &&
-    firstSubcategory?.name
-  ) {
+  if (normalizedCategoryName(rootCategory) === INDIGENOUS_RAPE_CATEGORY) {
     const promotedCategory = decodeHtmlEntities(
-      categoryBelowTopLevelName(
-        firstSubcategory.id,
-        parentById,
-        nameById
-      ) || firstSubcategory.name
+      (firstSubcategory &&
+        categoryBelowTopLevelName(
+          firstSubcategory.id,
+          parentById,
+          nameById
+        )) ||
+        firstSubcategory?.name ||
+        attributeTribe
     );
+    if (!promotedCategory) {
+      return { category: rootCategory, tribe: "" };
+    }
     return {
       category: promotedCategory,
       // Matching values suppress the now-redundant second selector while
