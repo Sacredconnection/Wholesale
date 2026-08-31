@@ -804,7 +804,7 @@ function drawStoreBrand(pdf, logo, x, y, width = 45) {
 }
 
 function drawSharedCatalogBrand(pdf, logo, x, y) {
-  const logoWidth = 36;
+  const logoWidth = 42;
   drawStoreBrand(pdf, logo, x, y, logoWidth);
 }
 
@@ -866,43 +866,71 @@ function drawContactIcon(pdf, type, x, y, contactIcons) {
 }
 
 function drawCoverContactInfo(pdf, contactIcons) {
-  const iconX = 116;
-  const textX = 128;
+  const footerTop = 232;
+  pdf.setFillColor(12, 50, 43);
+  pdf.rect(0, footerTop, 210, 65, "F");
+  pdf.setDrawColor(130, 214, 197);
+  pdf.setLineWidth(0.45);
+  pdf.line(16, footerTop, 194, footerTop);
 
-  const rows = [
+  const columns = [
     {
       type: "email",
+      iconX: 16,
+      textX: 26,
       values: ["info@sacredconnection.co"],
-      y: 238,
+      y: 243,
       url: "mailto:info@sacredconnection.co",
-      linkHeight: 10,
+      linkX: 14,
+      linkWidth: 53,
+      linkHeight: 18,
     },
     {
       type: "phone",
+      iconX: 78,
+      textX: 88,
       values: ["+1 (818) 306-0568"],
-      y: 251.5,
+      y: 243,
       url: "tel:+18183060568",
-      linkHeight: 10,
+      linkX: 76,
+      linkWidth: 50,
+      linkHeight: 18,
     },
     {
       type: "location",
-      values: ["2301 Stampede Ave", "Cody, WY - 82414", "USA"],
-      y: 265,
+      iconX: 136,
+      textX: 146,
+      values: ["2301 Stampede Ave", "Cody, WY 82414, USA"],
+      y: 241.5,
       url: "https://www.google.com/maps/search/?api=1&query=2301+Stampede+Ave+Cody+WY+82414+USA",
-      linkHeight: 19,
+      linkX: 134,
+      linkWidth: 61,
+      linkHeight: 23,
     },
   ];
 
-  rows.forEach((row) => {
-    drawContactIcon(pdf, row.type, iconX, row.y, contactIcons);
+  pdf.setDrawColor(65, 112, 103);
+  pdf.setLineWidth(0.3);
+  pdf.line(70, 242, 70, 263);
+  pdf.line(128, 242, 128, 263);
+
+  columns.forEach((column) => {
+    drawContactIcon(pdf, column.type, column.iconX, column.y, contactIcons);
     pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(6.7);
+    pdf.setFontSize(6.3);
     pdf.setTextColor(255, 255, 255);
-    row.values.forEach((value, index) => {
-      pdf.text(value, textX, row.y + 5.2 + index * 4.5);
+    column.values.forEach((value, index) => {
+      pdf.text(value, column.textX, column.y + 5.2 + index * 4.5);
     });
-    pdf.link(iconX - 1, row.y - 1, 79, row.linkHeight, { url: row.url });
+    pdf.link(column.linkX, column.y - 1, column.linkWidth, column.linkHeight, {
+      url: column.url,
+    });
   });
+
+  pdf.setFont("helvetica", "bold");
+  pdf.setFontSize(7);
+  pdf.setTextColor(255, 255, 255);
+  pdf.text("SACRED CONNECTION", 16, 280);
 }
 
 function drawGenerationStamp(pdf, generatedAtLabel, { darkBackground = false } = {}) {
@@ -924,15 +952,11 @@ function drawPdfCover(
   filterLabel,
   generatedAtLabel
 ) {
-  const categoryCount = new Set(products.map((product) => product.category).filter(Boolean)).size;
-  const traditionCount = new Set(products.map((product) => product.tribe).filter(Boolean)).size;
   const normalizedFilterLabel = String(filterLabel || "").trim();
   const isCompleteCatalog =
     !normalizedFilterLabel ||
     normalizedFilterLabel.toLowerCase() === "complete catalog";
-  const scopeEyebrow = isCompleteCatalog
-    ? "CATALOG EDITION"
-    : "FILTER PATH";
+  const scopeEyebrow = isCompleteCatalog ? "" : "FILTER PATH";
   const scopeTitle = isCompleteCatalog
     ? "COMPLETE CATALOG"
     : normalizedFilterLabel.replace(/\s*\|\s*/g, " / ");
@@ -978,10 +1002,13 @@ function drawPdfCover(
     { lineHeightFactor: 1.45 }
   );
 
+  if (scopeEyebrow) {
+    pdf.setFont("helvetica", "bold");
+    pdf.setFontSize(7.5);
+    pdf.setTextColor(130, 214, 197);
+    pdf.text(scopeEyebrow, 16, 153);
+  }
   pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(7.5);
-  pdf.setTextColor(130, 214, 197);
-  pdf.text(scopeEyebrow, 16, 153);
   pdf.setFontSize(scopeFontSize);
   pdf.setTextColor(255, 255, 255);
   const scopeLines = truncatePdfLines(
@@ -991,7 +1018,9 @@ function drawPdfCover(
     3
   );
   const scopeLineHeight = scopeFontSize * 0.3528 * 1.08;
-  const scopeStartY = 169 - ((scopeLines.length - 1) * scopeLineHeight) / 2;
+  const scopeStartY =
+    (isCompleteCatalog ? 161 : 169) -
+    ((scopeLines.length - 1) * scopeLineHeight) / 2;
   pdf.text(
     scopeLines,
     16,
@@ -999,33 +1028,7 @@ function drawPdfCover(
     { lineHeightFactor: 1.08 }
   );
 
-  pdf.setFillColor(255, 255, 255);
-  pdf.roundedRect(16, 180, 178, 48, 2.5, 2.5, "F");
-  const stats = [
-    [String(traditionCount), "TRADITIONS"],
-    [String(products.length), "PRODUCTS"],
-    [String(categoryCount), "CATEGORIES"],
-  ];
-  stats.forEach(([value, label], index) => {
-    const x = 45 + index * 59;
-    if (index) {
-      pdf.setDrawColor(220, 229, 226);
-      pdf.line(x - 29, 191, x - 29, 217);
-    }
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(20);
-    pdf.setTextColor(38, 128, 114);
-    pdf.text(value, x, 201, { align: "center" });
-    pdf.setFontSize(7);
-    pdf.setTextColor(83, 105, 98);
-    pdf.text(label, x, 213, { align: "center" });
-  });
-
   drawCoverContactInfo(pdf, contactIcons);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(255, 255, 255);
-  pdf.text("SACRED CONNECTION", 16, 278);
   drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
 }
 
