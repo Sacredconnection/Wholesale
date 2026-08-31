@@ -723,11 +723,48 @@ async function fetchPdfProductImage(url) {
   const response = await fetch(url, { cache: "no-store" });
   if (!response.ok) throw new Error(`PDF product image failed with status ${response.status}.`);
   const payload = await response.json();
-  if (payload?.format !== "PNG" || typeof payload.base64 !== "string" || !payload.base64) {
+  const sourceMimeType =
+    payload?.mimeType ||
+    ({
+      JPEG: "image/jpeg",
+      PNG: "image/png",
+      WEBP: "image/webp",
+    }[payload?.format] || "");
+  if (
+    !["JPEG", "PNG", "WEBP"].includes(payload?.format) ||
+    !sourceMimeType ||
+    typeof payload.base64 !== "string" ||
+    !payload.base64
+  ) {
     throw new Error("PDF product image payload is invalid.");
   }
+
+  const sourceDataUrl = `data:${sourceMimeType};base64,${payload.base64}`;
+  const image = new Image();
+  image.decoding = "async";
+  const loaded = new Promise((resolve, reject) => {
+    image.onload = resolve;
+    image.onerror = () => reject(new Error("PDF product image could not be decoded."));
+  });
+  image.src = sourceDataUrl;
+  await loaded;
+
+  const canvas = document.createElement("canvas");
+  const size = 240;
+  canvas.width = size;
+  canvas.height = size;
+  const context = canvas.getContext("2d");
+  if (!context || !image.naturalWidth || !image.naturalHeight) {
+    throw new Error("PDF product image could not be rendered.");
+  }
+
+  const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
+  const width = image.naturalWidth * scale;
+  const height = image.naturalHeight * scale;
+  context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
+
   return {
-    dataUrl: `data:image/png;base64,${payload.base64}`,
+    dataUrl: canvas.toDataURL("image/png"),
     format: "PNG",
   };
 }

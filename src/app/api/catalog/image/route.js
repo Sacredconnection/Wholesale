@@ -1,6 +1,5 @@
 import { getCommerceStoreOrigins } from "@/lib/commerce-stores";
 import { enforceRateLimit, rateLimitIdentity } from "@/lib/abuse-protection";
-import sharp from "sharp";
 import {
   isLocalDevUpstreamEnabled,
   proxyLocalDevUpstream,
@@ -10,6 +9,11 @@ export const runtime = "nodejs";
 
 const MAX_IMAGE_BYTES = 8 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
+const IMAGE_FORMATS = {
+  "image/jpeg": "JPEG",
+  "image/png": "PNG",
+  "image/webp": "WEBP",
+};
 
 const decodeLegacyUtf8Sequence = (sequence) =>
   Buffer.from(
@@ -54,11 +58,43 @@ async function readLimitedResponseBody(response) {
   return Buffer.concat(chunks, totalBytes);
 }
 
+async function optimizeImage(image) {
+  try {
+    // Keep the native image dependency optional at module load time. Some
+    // serverless deployments can serve the route but fail to initialize the
+    // native sharp binding, which used to turn every image request into a 500.
+    const sharpModule = await import("sharp");
+    const sharp = sharpModule.default || sharpModule;
+    const optimized = await sharp(image, {
+      failOn: "error",
+      limitInputPixels: 25_000_000,
+    })
+      .rotate()
+      .resize(240, 240, { fit: "cover", position: "centre" })
+      .png({ compressionLevel: 9, adaptiveFiltering: true })
+      .toBuffer();
+
+    return {
+      buffer: optimized,
+      contentType: "image/png",
+      format: "PNG",
+    };
+  } catch (error) {
+    console.warn(
+      "Catalog image optimization unavailable; returning the original image:",
+      error instanceof Error ? error.message : error
+    );
+    return null;
+  }
+}
+
 export async function GET(request) {
   try {
     const rateLimit = await enforceRateLimit(request, {
       namespace: "catalog-image",
-      limit: 90,
+      // A complete catalog currently contains 94 distinct product images;
+      // leave headroom so one export does not rate-limit its own final pages.
+      limit: 180,
       windowSeconds: 60,
       identity: rateLimitIdentity(request),
     });
@@ -105,14 +141,12 @@ export async function GET(request) {
 
     const image = await readLimitedResponseBody(response);
 
-    const optimized = await sharp(image, {
-      failOn: "warning",
-      limitInputPixels: 25_000_000,
-    })
-      .rotate()
-      .resize(240, 240, { fit: "cover", position: "centre" })
-      .png({ compressionLevel: 9, adaptiveFiltering: true })
-      .toBuffer();
+    const optimized =
+      (await optimizeImage(image)) || {
+        buffer: image,
+        contentType,
+        format: IMAGE_FORMATS[contentType],
+      };
 
     const cacheHeaders = {
       "Cache-Control": "public, max-age=86400, stale-while-revalidate=604800",
@@ -120,18 +154,19 @@ export async function GET(request) {
     };
 
     if (wantsImageResponse) {
-      return new Response(optimized, {
+      return new Response(optimized.buffer, {
         headers: {
           ...cacheHeaders,
-          "Content-Type": "image/png",
+          "Content-Type": optimized.contentType,
         },
       });
     }
 
     return Response.json(
       {
-        format: "PNG",
-        base64: optimized.toString("base64"),
+        format: optimized.format,
+        mimeType: optimized.contentType,
+        base64: optimized.buffer.toString("base64"),
       },
       { headers: cacheHeaders }
     );
