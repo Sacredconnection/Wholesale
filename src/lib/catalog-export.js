@@ -1483,7 +1483,6 @@ function drawIndexPage(pdf, {
   generatedAtLabel,
 }) {
   const theme = storePdfTheme(storeId);
-  const medicineGreen = ethnicityColor({ tribe: "Medicina Sagrada" });
   pdf.setFillColor(26, 26, 26);
   pdf.rect(0, 0, 210, 28, "F");
   drawStoreBrand(pdf, logo, 12, 6.5, 36);
@@ -1509,26 +1508,18 @@ function drawIndexPage(pdf, {
     rows.forEach((row) => {
       if (row.type === "category") {
         const categoryY = y + (row.gapBefore || 0);
-        const useMedicineGreen =
-          storeId === "sacred-connection" &&
-          normalizeEthnicity(row.label) ===
-            normalizeEthnicity("Sacred Connection");
+        const categoryAccent =
+          ETHNICITY_COLORS[normalizeEthnicity(row.label)] || theme.primary;
         if (row.gapBefore) {
           pdf.setDrawColor(211, 224, 220);
           pdf.setLineWidth(0.2);
           pdf.line(x, y + 2, x + width, y + 2);
         }
-        pdf.setFillColor(
-          ...(useMedicineGreen
-            ? mixWithWhite(medicineGreen, 0.86)
-            : theme.primary)
-        );
+        pdf.setFillColor(...categoryAccent);
         pdf.roundedRect(x, categoryY, width, 9, 1, 1, "F");
         pdf.setFont("helvetica", "bold");
         pdf.setFontSize(8);
-        pdf.setTextColor(
-          ...(useMedicineGreen ? medicineGreen : [255, 255, 255])
-        );
+        pdf.setTextColor(...buttonTextColor(categoryAccent));
         pdf.text(
           truncatePdfLines(
             pdf,
