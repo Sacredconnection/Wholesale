@@ -4,7 +4,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { ArrowUpRight, Check, LockKeyhole, ShoppingBag } from "lucide-react";
+import { Check, LockKeyhole, ShoppingBag } from "lucide-react";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
 
 export default function ProductCard({
@@ -84,7 +84,6 @@ export default function ProductCard({
               </h2>
             </Link>
           </div>
-          <ArrowUpRight className="mt-1 h-4 w-4 shrink-0 text-white/25 transition-colors group-hover:text-[#82d6c5]" aria-hidden="true" />
         </div>
 
         <div className={isDescriptionExpanded ? "" : "min-h-28 sm:min-h-28 xl:min-h-[4.5rem]"}>
