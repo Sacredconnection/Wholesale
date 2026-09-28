@@ -54,12 +54,6 @@ export async function POST(request) {
   const firstName = cleanText(body.firstName, 80);
   const lastName = cleanText(body.lastName, 80);
   const company = cleanText(body.company, 120);
-  const suppliedEin = cleanText(body.taxId, 20);
-  const einDigits = suppliedEin.replace(/\D/g, "");
-  const ein =
-    /^\d{2}-?\d{7}$/.test(suppliedEin) && einDigits.length === 9
-      ? `${einDigits.slice(0, 2)}-${einDigits.slice(2)}`
-      : "";
   const phone = cleanText(body.phone, 40);
   const shippingAddress = cleanAddress(body.shippingAddress);
   const billingAddress = cleanAddress(body.billingAddress);
@@ -73,9 +67,6 @@ export async function POST(request) {
       "Wholesale registration is available only to registered businesses.",
       400
     );
-  }
-  if (!ein || !/^\d{2}-\d{7}$/.test(ein)) {
-    return securityError("A valid 9-digit EIN is required.", 400);
   }
   if (!firstName || !shippingAddress.street || !shippingAddress.city || !shippingAddress.country || !phone) {
     return securityError("Required account and address fields are missing.", 400);
@@ -107,8 +98,6 @@ export async function POST(request) {
         { key: "sc_channel", value: "wholesale-portal" },
         { key: "sc_approval_status", value: "pending" },
         { key: "sc_business_type", value: "registered-business" },
-        { key: "sc_ein", value: ein },
-        { key: "billing_ein", value: ein },
       ],
     });
 

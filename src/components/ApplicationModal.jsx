@@ -9,7 +9,6 @@ export default function ApplicationModal({ isOpen, onClose }) {
   const [formData, setFormData] = useState({
     fullName: '',
     businessName: '',
-    taxId: '',
     email: '',
     phone: '',
     volume: 'medium',
@@ -43,9 +42,6 @@ export default function ApplicationModal({ isOpen, onClose }) {
     const tempErrors = {};
     if (!formData.fullName.trim()) tempErrors.fullName = 'Full Name is required';
     if (!formData.businessName.trim()) tempErrors.businessName = 'Business Name is required';
-    if (!/^\d{2}-?\d{7}$/.test(formData.taxId.trim())) {
-      tempErrors.taxId = 'A valid 9-digit EIN is required';
-    }
     if (!formData.email.trim()) {
       tempErrors.email = 'Email address is required';
     } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
@@ -83,7 +79,6 @@ export default function ApplicationModal({ isOpen, onClose }) {
     setFormData({
       fullName: '',
       businessName: '',
-      taxId: '',
       email: '',
       phone: '',
       volume: 'medium',
@@ -190,27 +185,6 @@ export default function ApplicationModal({ isOpen, onClose }) {
                   className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors"
                 />
                 {errors.businessName && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.businessName}</span>}
-              </div>
-
-              {/* Tax ID */}
-              <div className="flex flex-col gap-1.5">
-                <label htmlFor="application-tax-id" className="text-[10px] font-mono text-white/60 uppercase tracking-wider font-label-sm">
-                  EIN
-                </label>
-                <input 
-                  id="application-tax-id"
-                  type="text" 
-                  name="taxId"
-                  inputMode="numeric"
-                  maxLength={10}
-                  pattern="\d{2}-?\d{7}"
-                  required
-                  value={formData.taxId}
-                  onChange={handleChange}
-                  placeholder="12-3456789"
-                  className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors"
-                />
-                {errors.taxId && <span role="alert" className="text-xs text-[#ffb4ab]">{errors.taxId}</span>}
               </div>
 
               {/* Contact Grid */}

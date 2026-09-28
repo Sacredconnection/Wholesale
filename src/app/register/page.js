@@ -22,7 +22,6 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     username: "",
     company: "",
-    ein: "",
     email: "",
     password: "",
     address: "",
@@ -51,9 +50,6 @@ export default function RegisterPage() {
   const validate = () => {
     if (!form.username.trim()) return "Authorized contact name is required.";
     if (!form.company.trim()) return "Registered business name is required.";
-    if (!/^\d{2}-?\d{7}$/.test(form.ein.trim())) {
-      return "Enter a valid 9-digit EIN, for example 12-3456789.";
-    }
     if (!form.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) return "A valid email address is required.";
     if (!form.password || form.password.length < 12 || form.password.length > 128) {
       return "Password must contain between 12 and 128 characters.";
@@ -88,7 +84,6 @@ export default function RegisterPage() {
         country: form.country,
         company: form.company.trim(),
         businessType: "Registered Business",
-        taxId: form.ein.trim(),
         monthlyVolume: "Under $1,000",
         website: "",
         avatar: null,
@@ -202,30 +197,6 @@ export default function RegisterPage() {
                     className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors w-full"
                     required
                   />
-                </div>
-
-                {/* EIN */}
-                <div className="flex flex-col gap-1.5">
-                  <label htmlFor="register-ein" className="text-[10px] font-mono uppercase text-white/60 tracking-wider font-label-sm">
-                    EIN
-                  </label>
-                  <input
-                    id="register-ein"
-                    name="ein"
-                    type="text"
-                    inputMode="numeric"
-                    maxLength={10}
-                    value={form.ein}
-                    onChange={set("ein")}
-                    placeholder="12-3456789"
-                    pattern="\d{2}-?\d{7}"
-                    aria-describedby="register-ein-help"
-                    className="bg-[#131313] border border-white/10 focus:border-[#268072] text-sm text-white px-4 py-3 rounded-sm outline-none transition-colors w-full"
-                    required
-                  />
-                  <p id="register-ein-help" className="text-[10px] leading-relaxed text-white/35">
-                    Wholesale registration is available only to registered businesses.
-                  </p>
                 </div>
 
                 {/* Email */}
