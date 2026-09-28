@@ -162,18 +162,31 @@ export async function sendApplicationApprovedEmail(customer) {
       intro: `Hello ${firstName},`,
       body: `
         <p style="margin:0 0 18px;font-size:15px;line-height:1.7;color:#b8bfbc;">
-          Your wholesale registration has been approved. You can now sign in to view the catalog, access your partner pricing, and place wholesale orders.
+          Your wholesale registration has been approved. Set your password before signing in to view the catalog, access your partner pricing, and place wholesale orders.
         </p>
+        <ol style="margin:0 0 24px;padding-left:22px;font-size:15px;line-height:1.8;color:#d0d7d4;">
+          <li>Open the wholesale portal sign-in screen using the button below.</li>
+          <li>Click <strong>Forgot your password?</strong></li>
+          <li>Enter the email address you used to register your wholesale account.</li>
+          <li>Open the password reset email and follow the link to choose a new password. If it does not arrive, check your spam or junk folder.</li>
+          <li>Return to the wholesale portal and sign in with your email address and new password.</li>
+        </ol>
         <div style="margin-top:24px;padding:18px 20px;background:#163731;border:1px solid #315b53;border-radius:6px;">
           <div style="font-size:11px;font-weight:800;color:#82d6c5;letter-spacing:1.2px;text-transform:uppercase;">Partner access level</div>
           <p style="margin:9px 0 0;font-size:18px;font-weight:800;color:#ffffff;">${escapeHtml(accessLevel)}</p>
         </div>`,
-      actionLabel: "Access wholesale portal",
+      actionLabel: "Open sign-in to set your password",
       actionUrl: loginUrl,
     }),
     text:
       `Hello ${customer.first_name || customer.username || "Partner"},\n\n` +
       `Your Sacred Connection wholesale registration has been approved. Your partner access level is ${accessLevel}.\n\n` +
-      `Sign in: ${loginUrl}\n\nQuestions? Contact ${DEFAULT_REPLY_TO}.`,
+      "To set your password:\n" +
+      `1. Open the sign-in screen: ${loginUrl}\n` +
+      '2. Click "Forgot your password?".\n' +
+      "3. Enter the email address you used to register.\n" +
+      "4. Follow the link in the password reset email to choose a new password. Check spam or junk if needed.\n" +
+      "5. Return to the wholesale portal and sign in with your email and new password.\n\n" +
+      `Questions? Contact ${DEFAULT_REPLY_TO}.`,
   });
 }
