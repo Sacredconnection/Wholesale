@@ -85,7 +85,7 @@ export function isTransactionalEmailConfigured() {
   return Boolean(process.env.RESEND_API_KEY && process.env.TRANSACTIONAL_EMAIL_FROM);
 }
 
-async function sendTransactionalEmail({ to, subject, html, text, idempotencyKey }) {
+async function sendTransactionalEmail({ to, bcc, subject, html, text, idempotencyKey }) {
   const apiKey = process.env.RESEND_API_KEY;
   const from = process.env.TRANSACTIONAL_EMAIL_FROM;
   if (!apiKey || !from) {
@@ -102,6 +102,7 @@ async function sendTransactionalEmail({ to, subject, html, text, idempotencyKey 
     body: JSON.stringify({
       from,
       to: [to],
+      ...(bcc?.length ? { bcc } : {}),
       reply_to: process.env.TRANSACTIONAL_EMAIL_REPLY_TO || DEFAULT_REPLY_TO,
       subject,
       html,
@@ -122,6 +123,7 @@ export async function sendApplicationReceivedEmail(customer) {
   const subject = "We received your Sacred Connection wholesale application";
   return sendTransactionalEmail({
     to: customer.email,
+    bcc: ["wholesale@sacredconnection.co"],
     subject,
     idempotencyKey: `wholesale-application-received/${customer.id}`,
     html: emailLayout({
