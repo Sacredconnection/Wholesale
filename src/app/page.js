@@ -2,12 +2,12 @@ import HomeClient from "@/components/HomeClient";
 import { SITE_URL } from "@/lib/site-config";
 
 export const metadata = {
-  title: "Sacred Connection Wholesale | B2B Portal",
-  description: "Direct fair-trade sourcing of traditional Amazonian botanical products. Access our verified B2B wholesale platform.",
+  title: "Amazonian Botanicals for Europe | Wholesale Europa",
+  description: "Explore Amazonian botanicals for European businesses. Browse retail and bulk formats, apply for trade access and plan orders with Wholesale Europa.",
   keywords: [
     "sacred connection",
-    "rapeh wholesale",
-    "Amazonian botanicals",
+    "rapeh wholesale Europe",
+    "Amazonian botanicals Europe",
     "traditional botanical products",
     "responsible wholesale sourcing",
     "indigenous direct trade",
@@ -16,23 +16,23 @@ export const metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Sacred Connection Wholesale | B2B Portal",
-    description: "Responsibly sourced Amazonian botanical products supplied through direct fair-trade relationships.",
+    title: "Amazonian Botanicals for Europe | Wholesale Europa",
+    description: "Botanical collections for European retailers: explore product origins, compare wholesale formats and apply for a business account.",
     type: "website",
-    locale: "en_US",
-    siteName: "Sacred Connection Wholesale",
+    locale: "en_GB",
+    siteName: "Sacred Connection Wholesale Europa",
     url: SITE_URL,
     images: [
       {
         url: "/banner/sacred-connection-hero/sacred-connection-hero-desktop.webp",
-        alt: "Sacred Connection Wholesale - Amazon Canopy",
+        alt: "Sacred Connection Wholesale Europa - Amazon Canopy",
       }
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Sacred Connection Wholesale | B2B Portal",
-    description: "Direct fair-trade sourcing of traditional Amazonian botanical products for wholesale partners.",
+    title: "Amazonian Botanicals for Europe | Wholesale Europa",
+    description: "Discover Wholesale Europa, the Sacred Connection B2B portal for European botanical retailers and trade buyers.",
     images: ["/banner/sacred-connection-hero/sacred-connection-hero-desktop.webp"],
   },
   robots: {
@@ -47,21 +47,22 @@ export default function Page() {
       "@context": "https://schema.org",
       "@type": "Organization",
       "@id": `${SITE_URL}/#organization`,
-      "name": "Sacred Connection Wholesale",
+      "name": "Sacred Connection Wholesale Europa",
       "url": SITE_URL,
       "logo": `${SITE_URL}/logo.svg`,
-      "description": "Direct fair-trade sourcing of traditional Amazonian botanical products. Access our verified B2B wholesale platform.",
+      "description": "Explore Amazonian botanicals for European businesses. Browse retail and bulk formats, apply for trade access and plan orders with Wholesale Europa.",
+      "areaServed": { "@type": "Place", "name": "Europe" },
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "B2B Support",
-        "email": "support@sacredconnection.com"
+        "email": "info@sacredconnection.co"
       }
     },
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
       "@id": `${SITE_URL}/#website`,
-      "name": "Sacred Connection Wholesale | B2B Portal",
+      "name": "Amazonian Botanicals for Europe | Wholesale Europa",
       "url": SITE_URL
     }
   ];

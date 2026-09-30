@@ -6,7 +6,7 @@ import Header from '@/components/Header';
 import Hero from '@/components/Hero';
 import TrustBar from '@/components/TrustBar';
 import WholesaleFormats from '@/components/WholesaleFormats';
-import LineageShowcase from '@/components/LineageShowcase';
+
 import Onboarding from '@/components/Onboarding';
 import NGOSection from '@/components/NGOSection';
 import RetailRedirectSection from '@/components/RetailRedirectSection';
@@ -54,9 +54,6 @@ export default function HomeClient() {
 
           {/* B2B Onboarding Steps */}
           <Onboarding />
-
-          {/* Tribe Lineage Details */}
-          <LineageShowcase />
 
           {/* Product volumes and packaging formats */}
           <WholesaleFormats />

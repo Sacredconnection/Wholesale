@@ -45,14 +45,15 @@ export default function Header({ onOpenLogin }) {
     <header className="site-header theme-dark-zone sticky top-0 z-50 w-full border-b-2 border-[#268072] bg-[#212121] shadow-lg shadow-black/15">
       <div className="mx-auto flex min-h-[4.5rem] w-full max-w-7xl items-center justify-between px-4 sm:min-h-[5.5rem] sm:px-6 lg:min-h-24 lg:px-8">
         {/* Logotipo (Left) */}
-        <Link className="group flex self-stretch shrink-0 items-center" href="/" onClick={handleHomeClick}>
+        <Link className="group flex self-stretch shrink-0 flex-col justify-center items-center" href="/" onClick={handleHomeClick}>
           <Image
             src="/logo.svg"
-            alt="Sacred Connection Wholesale Logo"
+            alt="Sacred Connection Wholesale Europa Logo"
             width={200}
             height={72}
             className="h-10 sm:h-12 lg:h-14 w-auto transition-all duration-300 group-hover:opacity-90"
           />
+          <span className="text-[9px] font-bold uppercase tracking-[0.24em] text-[#82d6c5]">Wholesale Europa</span>
         </Link>
 
         {/* Navigation Links (Center - Desktop Only) */}

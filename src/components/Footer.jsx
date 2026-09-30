@@ -30,7 +30,7 @@ export default function Footer() {
             >
               <Image
                 src="/logo.svg"
-                alt="Sacred Connection Wholesale Logo"
+                alt="Sacred Connection Wholesale Europa Logo"
                 width={200}
                 height={72}
                 className="h-14 md:h-16 w-auto"
@@ -38,11 +38,11 @@ export default function Footer() {
             </Link>
           </div>
           <p className="font-body-md text-base text-white/50 leading-relaxed">
-            © {new Date().getFullYear()} Sacred Connection Wholesale. Committed to ethical fair-trade sourcing and indigenous preservation.
+            © {new Date().getFullYear()} Sacred Connection Wholesale Europa. Amazonian botanicals and wholesale collections for European retailers and trade partners.
           </p>
           <div className="flex items-center gap-2 text-xs font-bold tracking-widest text-[#82d6c5] uppercase font-label-sm">
             <ShieldCheck className="w-4 h-4" />
-            Fair-Trade Certified Disclosure
+            European B2B Portal
           </div>
         </div>
 

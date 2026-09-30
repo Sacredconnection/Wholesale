@@ -1,6 +1,6 @@
 import "server-only";
 
-const DEFAULT_PORTAL_URL = "https://wholesale.sacred-snuff.com";
+const DEFAULT_PORTAL_URL = "https://wholesale.sacredconnection.eu";
 const DEFAULT_REPLY_TO = "info@sacredconnection.co";
 
 const escapeHtml = (value) =>

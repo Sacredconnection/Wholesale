@@ -1,5 +1,5 @@
 export const metadata = {
-  title: "Checkout | Sacred Connection Wholesale",
+  title: "Checkout | Sacred Connection Wholesale Europa",
   description: "Review and confirm a Sacred Connection wholesale order.",
   robots: {
     index: false,

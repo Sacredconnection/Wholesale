@@ -70,16 +70,16 @@ export default function Hero() {
               className="h-7 w-7 shrink-0 object-contain"
             />
             <span className="text-[10px] font-bold uppercase tracking-[0.18em] text-white/90 sm:text-[11px] font-label-sm">
-              10 Authentic Tribes
+              Wholesale Europa
             </span>
           </div>
           
           <h1 className="max-w-xl text-[2rem] font-black leading-[1.02] tracking-tighter text-white sm:text-4xl md:max-w-3xl md:text-6xl md:leading-[0.98] lg:text-7xl font-headline-lg">
-            <span className="text-[#82d6c5]">Quality and Traceability</span> in Every Blend.
+            <span className="text-[#82d6c5]">Amazonian Botanicals.</span> Wholesale for Europe.
           </h1>
           
           <p className="max-w-md text-base font-normal leading-relaxed text-white/75 sm:text-lg md:max-w-2xl md:text-xl md:text-white/70 font-body-lg">
-            Responsibly sourced botanical blends for global retailers and wholesale partners through direct fair-trade distribution.
+            Explore botanical blends, retail packs and bulk formats for European businesses. Build your assortment with Sacred Connection Wholesale Europa.
           </p>
           
           <div className="hidden w-full max-w-sm flex-col items-stretch gap-4 pt-3 sm:w-auto sm:max-w-none sm:flex-row sm:items-center md:flex md:pt-4">
@@ -87,7 +87,7 @@ export default function Hero() {
               href="/register"
               className="bg-[#d02000] hover:bg-[#b71a00] text-white text-sm font-bold tracking-wide px-7 sm:px-10 py-4 sm:py-5 rounded-sm shadow-lg shadow-[#d02000]/10 hover:shadow-[#d02000]/20 transition-all duration-300 flex items-center justify-center gap-3 group font-label-sm uppercase no-underline cursor-pointer border-0"
             >
-              Register B2B Account
+              Apply for Trade Access
               <ArrowRight className="w-4 h-4 transform group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
@@ -101,7 +101,7 @@ export default function Hero() {
           href="/register"
           className="mx-auto flex w-full max-w-xs items-center justify-center gap-3 rounded-sm border-0 bg-[#d02000] px-7 py-4 text-sm font-bold uppercase tracking-wide text-white no-underline shadow-lg shadow-[#d02000]/10 transition-all duration-300 hover:bg-[#b71a00] hover:shadow-[#d02000]/20 font-label-sm"
         >
-          Register B2B Account
+          Apply for Trade Access
           <ArrowRight className="h-4 w-4" />
         </Link>
       </div>

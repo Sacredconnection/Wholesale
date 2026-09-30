@@ -9,7 +9,7 @@ export default function CheckoutHeader() {
         <div className="flex min-w-0 items-center gap-4">
           <Image
             src="/logo.svg"
-            alt="Sacred Connection Wholesale"
+            alt="Sacred Connection Wholesale Europa"
             width={200}
             height={72}
             priority

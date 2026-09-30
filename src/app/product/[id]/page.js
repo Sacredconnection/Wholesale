@@ -11,8 +11,7 @@ const canonicalSlug = (identifier) =>
     : String(identifier || "");
 
 const descriptionFor = (product) =>
-  (product?.description ||
-    `${product?.name || "Product"} from the Sacred Connection wholesale catalog.`)
+  `Wholesale Europa: ${product?.name || "Amazonian botanicals"} for European trade buyers. ${product?.description || "Explore product details and apply for business pricing."}`
     .replace(/\s+/g, " ")
     .trim()
     .slice(0, 160);
@@ -23,7 +22,7 @@ export async function generateMetadata({ params }) {
   const product = await getPublicProductBySlug(slug).catch(() => null);
   if (!product) {
     return {
-      title: "Product Not Found | Sacred Connection Wholesale",
+      title: "Product Not Found | Sacred Connection Wholesale Europa",
       robots: { index: false, follow: false },
     };
   }
@@ -31,7 +30,7 @@ export async function generateMetadata({ params }) {
   const canonical = `/product/${product.slug}`;
   const description = descriptionFor(product);
   return {
-    title: `${product.name} | Sacred Connection Wholesale`,
+    title: `${product.name} | Sacred Connection Wholesale Europa`,
     description,
     alternates: { canonical },
     openGraph: {

@@ -7,17 +7,17 @@ const steps = [
   {
     num: "01",
     title: "Register B2B Account",
-    desc: "Fill out the 3-step registration form with your identity, business information, and secure password.",
+    desc: "Introduce your business, country and contact details through our registration form.",
   },
   {
     num: "02",
     title: "Vetting & Approval",
-    desc: "Our compliance team reviews your business credentials and tax ID/business license within 48 hours.",
+    desc: "Our team reviews your business details before granting access to partner pricing.",
   },
   {
     num: "03",
     title: "Access Wholesale Portal",
-    desc: "Once approved, log in with your credentials to unlock bulk prices and custom discounts.",
+    desc: "Sign in after approval to compare formats, check availability and prepare your wholesale order.",
   },
 ];
 
@@ -96,10 +96,10 @@ export default function Onboarding() {
           style={visible ? { animation: 'stepFadeUp 0.6s cubic-bezier(0.22,1,0.36,1) 0s forwards' } : {}}
         >
           <h2 className="font-headline-lg text-2xl sm:text-3xl font-black tracking-tighter text-white mb-2">
-            Streamlined Wholesale Access
+            Trade Access for European Businesses
           </h2>
           <p className="font-body-md text-sm sm:text-base leading-relaxed text-white/70">
-            Join our network of premium retailers and holistic practitioners. Our vetting process ensures ethical alignment and dedicated support for your business.
+            Create a business account with Wholesale Europa to explore trade pricing and plan your botanical assortment for the European market.
           </p>
         </div>
 

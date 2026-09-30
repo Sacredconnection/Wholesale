@@ -17,18 +17,20 @@ const canonicalForPage = (page) =>
   page > 1 ? `/catalog?page=${page}` : "/catalog";
 
 const catalogDescription =
-  "Explore our public wholesale assortment. Partner pricing is shown only after approved account login.";
+  "Explore Amazonian botanical collections for European trade buyers. Compare formats and sign in with an approved account for wholesale pricing.";
 
 export async function generateMetadata({ searchParams }) {
   const query = await searchParams;
   const page = requestedPage(query.page);
 
   return {
+    title: `Europe Wholesale Catalog${page > 1 ? ` - Page ${page}` : ""} | Wholesale Europa`,
+    description: catalogDescription,
     alternates: {
       canonical: canonicalForPage(page),
     },
     openGraph: {
-      title: "Wholesale Product Catalog | Sacred Connection",
+      title: "Europe Wholesale Catalog | Sacred Connection",
       description: catalogDescription,
       type: "website",
       url: canonicalForPage(page),

@@ -6,8 +6,8 @@ import EditorialPage, {
 } from '@/components/EditorialPage';
 
 export const metadata = {
-  title: 'Shipping & Returns Policy | Sacred Connection Wholesale',
-  description: 'Review shipping, delivery, inspection, return, and claim guidelines for Sacred Connection Wholesale orders.',
+  title: 'Shipping & Returns Policy | Sacred Connection Wholesale Europa',
+  description: 'Review shipping, delivery, inspection, return, and claim guidelines for Sacred Connection Wholesale Europa orders.',
   alternates: {
     canonical: '/shipping-and-returns-policy',
   },
@@ -36,7 +36,7 @@ export default function ShippingAndReturnsPolicyPage() {
     >
       <EditorialNotice title="Wholesale orders">
         <p>
-          This policy applies to purchases made through Sacred Connection Wholesale. Specific terms shown in an accepted quote, invoice, or written order confirmation take precedence where they differ from this general policy.
+          This policy applies to purchases made through Sacred Connection Wholesale Europa. Specific terms shown in an accepted quote, invoice, or written order confirmation take precedence where they differ from this general policy.
         </p>
       </EditorialNotice>
 

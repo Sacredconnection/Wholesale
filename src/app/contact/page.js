@@ -61,7 +61,7 @@ export default function ContactPage() {
     setLoading(true);
     setError("");
 
-    const subject = encodeURIComponent(`[B2B Support] ${normalizedForm.subject.slice(0, 120)}`);
+    const subject = encodeURIComponent(`[Wholesale Europa] ${normalizedForm.subject.slice(0, 120)}`);
     const body = encodeURIComponent(
       `Name: ${normalizedForm.name}\nEmail: ${normalizedForm.email}\n\n${normalizedForm.message}`
     );
@@ -86,10 +86,10 @@ export default function ContactPage() {
             Get In Touch
           </span>
           <h1 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white">
-            B2B Support &amp; Contact
+            Contact Wholesale Europa
           </h1>
           <p className="font-body-md text-base text-white/60 max-w-2xl mt-2 leading-relaxed">
-            Have questions about our wholesale catalog, shipping terms, or tribal partnership agreements? Our support team is here to assist you.
+            Planning a wholesale order for your business in Europe? Share your destination, preferred products and quantities so our team can discuss availability and shipping options.
           </p>
         </div>
 
@@ -188,7 +188,7 @@ export default function ContactPage() {
                   maxLength={2000}
                   value={form.message}
                   onChange={handleChange("message")}
-                  placeholder="Tell us about your store, volume requirements, or inquiry..."
+                  placeholder="Tell us your country, business type, products and estimated quantities..."
                   rows="5"
                   className="bg-[#131313] border border-white/10 rounded px-4 py-3 text-sm text-white placeholder-white/30 focus:border-[#268072] outline-none transition-colors resize-none"
                   required

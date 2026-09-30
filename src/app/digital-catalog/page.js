@@ -328,7 +328,7 @@ export default function CatalogPage() {
               Wholesale Digital Catalog
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-              Explore Sacred Connection products, then refine the catalog by category and product type or indigenous tribe.
+              Explore the Wholesale Europa collection for your European business. Compare products by category, product type and origin before planning your trade order.
             </p>
           </div>
 

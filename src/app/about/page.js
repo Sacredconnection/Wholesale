@@ -6,8 +6,8 @@ import EditorialPage, {
 } from '@/components/EditorialPage';
 
 export const metadata = {
-  title: 'About | Sacred Connection Wholesale',
-  description: 'Discover the purpose, values, and partnership approach behind Sacred Connection Wholesale.',
+  title: 'About | Sacred Connection Wholesale Europa',
+  description: 'Meet Wholesale Europa: the Sacred Connection portal for European retailers exploring Amazonian botanicals, bulk formats and trade partnerships.',
   alternates: {
     canonical: '/about',
   },
@@ -41,9 +41,9 @@ const values = [
 export default function AboutPage() {
   return (
     <EditorialPage
-      eyebrow="Our story"
-      title="Trade rooted in connection."
-      description="Sacred Connection Wholesale exists to connect thoughtful businesses with carefully selected products, while honoring the people, knowledge, and places behind them."
+      eyebrow="About Wholesale Europa"
+      title="Amazonian roots. A European focus."
+      description="Sacred Connection Wholesale Europa connects European trade buyers with Amazonian botanical collections, product information and business account access."
       icon={Compass}
       navigation={navigation}
       bannerImage="/banners/editorial/about-banner.webp"
@@ -51,7 +51,7 @@ export default function AboutPage() {
     >
       <EditorialSection id="our-purpose" number="01" title="Our purpose">
         <p>
-          We created Sacred Connection Wholesale for retailers and practitioners who care about more than a product on a shelf. Our purpose is to support responsible access to meaningful goods through professional, transparent, and human-centered wholesale relationships.
+          Wholesale Europa is the European edition of our B2B portal. It helps retailers and professional buyers explore botanical ranges, compare retail and bulk formats, and prepare orders around the needs of their business.
         </p>
         <p>
           We work to bring greater context to every collection: where products come from, how they should be handled, and what makes them valuable to the people who use them. This approach helps our partners buy with intention and speak about their assortment with clarity.
@@ -98,7 +98,7 @@ export default function AboutPage() {
           Our wholesale program is designed for established retailers, studios, practitioners, and aligned organizations. Approved partners receive access to trade information, product availability, and ordering support suited to their business.
         </p>
         <p>
-          Every partnership begins with understanding. Tell us about your store, your customers, and what you hope to offer; we will help you explore whether our collections are the right fit.
+          Tell us where your business operates in Europe, which collections interest you and the quantities you are considering. Contact our team to discuss availability and destination-specific shipping details before confirming an order.
         </p>
         <EditorialContact>
           <p>

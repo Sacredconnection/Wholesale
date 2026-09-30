@@ -16,10 +16,10 @@ const roboto = Roboto({
 
 export const metadata = {
   metadataBase: new URL(SITE_URL),
-  title: "Sacred Connection Wholesale | B2B Portal",
+  title: "Amazonian Botanicals for Europe | Wholesale Europa",
   description:
-    "Direct fair-trade sourcing of traditional Amazonian botanicals and responsibly produced goods for wholesale partners.",
-  applicationName: "Sacred Connection Wholesale",
+    "Sacred Connection Wholesale Europa: Amazonian botanicals, retail formats and bulk collections for European businesses.",
+  applicationName: "Sacred Connection Wholesale Europa",
   robots: { index: true, follow: true },
 };
 

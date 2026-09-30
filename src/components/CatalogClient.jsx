@@ -451,7 +451,7 @@ export default function CatalogClient({
               B2B Portal
             </div>
             <h1 className="font-headline-lg text-3xl sm:text-4xl md:text-5xl font-black tracking-tighter text-white">
-              Wholesale Product Catalog
+              Europe Wholesale Catalog
             </h1>
             <p className="font-body-md text-base text-white/60 max-w-2xl mt-2 leading-relaxed">
               Explore our current wholesale assortment. Approved partners can sign in to view their pricing and build an order.

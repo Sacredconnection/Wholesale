@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "My Account | Sacred Connection Wholesale",
+  title: "My Account | Sacred Connection Wholesale Europa",
   description:
-    "Manage your Sacred Connection Wholesale partner profile, addresses, account details, and wholesale orders.",
+    "Manage your Sacred Connection Wholesale Europa partner profile, addresses, account details, and wholesale orders.",
   robots: {
     index: false,
     follow: false,

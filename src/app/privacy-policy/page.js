@@ -6,8 +6,8 @@ import EditorialPage, {
 } from '@/components/EditorialPage';
 
 export const metadata = {
-  title: 'Privacy Policy | Sacred Connection Wholesale',
-  description: 'Learn how Sacred Connection Wholesale collects, uses, protects, and shares personal information.',
+  title: 'Privacy Policy | Sacred Connection Wholesale Europa',
+  description: 'Learn how Sacred Connection Wholesale Europa collects, uses, protects, and shares personal information.',
   alternates: {
     canonical: '/privacy-policy',
   },
@@ -39,7 +39,7 @@ export default function PrivacyPolicyPage() {
     >
       <EditorialSection id="scope" number="01" title="Scope of this policy">
         <p>
-          This Privacy Policy applies when you visit the Sacred Connection Wholesale website, create or use a wholesale account, contact us, request information, or place an order. In this policy, “we,” “us,” and “our” refer to Sacred Connection Wholesale.
+          This Privacy Policy applies when you visit the Sacred Connection Wholesale Europa website, create or use a wholesale account, contact us, request information, or place an order. In this policy, “we,” “us,” and “our” refer to Sacred Connection Wholesale Europa.
         </p>
         <p>
           It does not govern the independent privacy practices of third-party websites or services that may be linked from our website. We encourage you to review their policies before providing information to them.
