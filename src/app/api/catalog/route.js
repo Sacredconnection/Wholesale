@@ -242,9 +242,8 @@ export async function GET(request) {
     return proxyLocalDevUpstream(request);
   }
   const requestedPage = pageNumber(searchParams.get("page"));
-  const catalogFetchOptions = {
-    revalidate: exportAll || orderWorkbook ? 0 : undefined,
-  };
+  // Catalog responses are private/no-store; always bypass the upstream Woo/Next fetch cache so price and variation updates appear immediately.
+  const catalogFetchOptions = { revalidate: 0 };
 
   try {
     let customer = null;
