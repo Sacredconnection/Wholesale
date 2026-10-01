@@ -13,7 +13,7 @@ export const metadata = {
     url: "/catalog",
   },
   robots: {
-    index: true,
+    index: false,
     follow: true,
   },
 };

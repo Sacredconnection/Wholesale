@@ -1,3 +1,4 @@
+import { checkCatalogAccess } from "@/lib/catalog-access";
 import { unstable_cache } from "next/cache";
 import {
   getAllProducts,
@@ -67,6 +68,8 @@ export async function GET(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
+  const accessError = await checkCatalogAccess(request);
+  if (accessError) return accessError;
   if (isLocalDevUpstreamEnabled()) {
     return proxyLocalDevUpstream(request);
   }

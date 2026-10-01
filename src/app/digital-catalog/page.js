@@ -12,6 +12,7 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
+import CatalogAccessGate from "@/components/CatalogAccessGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
@@ -55,6 +56,10 @@ function pageList(currentPage, totalPages) {
 }
 
 export default function CatalogPage() {
+  return <CatalogAccessGate><AuthenticatedCatalog /></CatalogAccessGate>;
+}
+
+function AuthenticatedCatalog() {
   const { isLoggedIn, user } = useAuth();
   const { addToCart } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);

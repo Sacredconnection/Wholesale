@@ -1,9 +1,7 @@
 import CatalogClient from "@/components/CatalogClient";
-import { getPublicCatalogProducts } from "@/lib/public-catalog";
+import CatalogAccessGate from "@/components/CatalogAccessGate";
 
 export const revalidate = 300;
-
-const PRODUCTS_PER_PAGE = 8;
 
 const firstQueryValue = (value) =>
   Array.isArray(value) ? value[0] : value;
@@ -41,21 +39,8 @@ export async function generateMetadata({ searchParams }) {
 export default async function CatalogPage({ searchParams }) {
   const query = await searchParams;
   const page = requestedPage(query.page);
-  let products = [];
-  try {
-    products = await getPublicCatalogProducts();
-  } catch (error) {
-    console.error("Unable to pre-render the public catalog:", error);
-  }
-
-  const totalPages = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE));
-  const initialPage = Math.min(page, totalPages);
 
   return (
-    <CatalogClient
-      key={`catalog-page-${initialPage}`}
-      initialProducts={products}
-      initialPage={initialPage}
-    />
+    <CatalogAccessGate><CatalogClient key={`catalog-page-${page}`} initialPage={page} /></CatalogAccessGate>
   );
 }

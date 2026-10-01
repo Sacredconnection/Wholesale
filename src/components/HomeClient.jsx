@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/components/AuthContext';
 import Header from '@/components/Header';
+import USStoreSection from '@/components/USStoreSection';
 import Hero from '@/components/Hero';
 import TrustBar from '@/components/TrustBar';
 import WholesaleFormats from '@/components/WholesaleFormats';
@@ -53,6 +54,8 @@ export default function HomeClient() {
           )}
 
           {/* B2B Onboarding Steps */}
+          <USStoreSection />
+
           <Onboarding />
 
           {/* Product volumes and packaging formats */}
