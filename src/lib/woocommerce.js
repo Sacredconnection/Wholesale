@@ -277,7 +277,7 @@ export async function getAllProducts(
   const productParams = {
     per_page: 100,
     ...(catalogLanguage ? { lang: catalogLanguage } : {}),
-    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data,catalog_visibility,stock_status,stock_quantity,date_modified_gmt",
+    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data,status,catalog_visibility,stock_status,stock_quantity,date_modified_gmt",
   };
 
   async function getProductsWithStatus(status) {
@@ -307,7 +307,11 @@ export async function getAllProducts(
   );
   return productsByStatus
     .flat()
-    .filter((product) => product.catalog_visibility !== "hidden");
+    .filter(
+      (product) =>
+        product.catalog_visibility !== "hidden" ||
+        (includePrivate && product.status === "private")
+    );
 }
 
 export async function getProductBySlug(
