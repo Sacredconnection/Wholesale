@@ -328,6 +328,7 @@ const MINIMUM_ORDER_WEIGHT_BY_EMAIL = new Map([
   ["garrywilco@gmail.com", 250],
   ["natachafigueira@hotmail.com", 250],
   ["jwalsh32390@gmail.com", 250],
+  ["ramzysam@gmail.com", 250],
 ]);
 
 // Maps a WooCommerce customer to the user shape the UI stores in AuthContext.
