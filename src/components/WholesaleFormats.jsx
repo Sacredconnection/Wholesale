@@ -15,7 +15,7 @@ const FORMATS = [
   {
     title: "Wholesale Supply Bags",
     category: "Bulk formats",
-    description: "Bulk packaging for European trade buyers planning refill ranges and larger assortments.",
+    description: "Secure high-volume packaging for refill programs, established retailers, and global distribution.",
     image: "/wholesale-formats/wholesale-bags.webp",
     imageAlt: "Sacred Connection wholesale supply bags",
     sizes: [
@@ -39,10 +39,10 @@ export default function WholesaleFormats() {
           id="wholesale-formats-title"
           className="mb-3 font-headline-lg text-3xl font-black tracking-tighter text-white sm:mb-4 sm:text-4xl md:text-5xl"
         >
-          Retail &amp; Bulk Formats for Your Business
+          Product Formats &amp; Wholesale Volumes
         </h2>
         <p className="max-w-2xl font-body-md text-base font-normal leading-relaxed text-white/70 sm:text-lg">
-          Plan your European retail assortment with compact tins and wholesale bags up to 1kg. Compare formats against your shelf space, product range and order volumes.
+          Protective packaging options for retail display and bulk supply, from compact tins to 1kg wholesale bags.
         </p>
         <div className="mt-5 flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-bold uppercase tracking-[0.14em] text-white/45 font-label-sm">
           <span>Blends</span>

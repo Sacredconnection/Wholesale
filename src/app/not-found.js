@@ -22,7 +22,7 @@ export default function NotFound() {
         </h1>
         <p className="mx-auto mt-5 max-w-lg text-base leading-7 text-[#D1D9D5]">
           The page may have moved or the address may be incorrect. Return to the
-          homepage to continue exploring Sacred Connection Wholesale Europa.
+          homepage to continue exploring Sacred Connection Wholesale.
         </p>
         <Link
           href="/"

@@ -1,6 +1,6 @@
 "use client";
 
-// Loads the catalog only after account authentication.
+// Preloads the public catalog and upgrades it with partner pricing after login.
 
 import { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/components/AuthContext";
@@ -61,7 +61,7 @@ export function ProductsProvider({ children }) {
   useEffect(() => {
     let cancelled = false;
 
-    if (authLoading || !isLoggedIn) return () => {};
+    if (authLoading) return () => {};
     async function loadCatalog() {
       setLoading(true);
       setProducts([]);
@@ -107,7 +107,7 @@ export function ProductsProvider({ children }) {
   }, [authLoading, invalidateSession, isLoggedIn, reloadKey]);
 
   return (
-    <ProductsContext.Provider value={{ products: isLoggedIn ? products : [], loading: authLoading || (isLoggedIn && loading), error, warning, reload, resolveProduct }}>
+    <ProductsContext.Provider value={{ products, loading, error, warning, reload, resolveProduct }}>
       {children}
     </ProductsContext.Provider>
   );

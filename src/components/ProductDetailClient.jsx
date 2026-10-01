@@ -71,7 +71,8 @@ export default function ProductDetailClient({ initialProduct }) {
   const { isLoggedIn, user } = useAuth();
   const { products, loading: productsLoading } = useProducts();
 
-  // Resolve the route identifier through the authenticated catalog API.
+  // Start with the server-rendered public product, then upgrade it with
+  // account-specific pricing after authentication is restored.
   const liveProduct = products.find(
     (p) =>
       p.slug === initialProduct?.slug ||
@@ -90,7 +91,7 @@ export default function ProductDetailClient({ initialProduct }) {
     (isLoggedIn
       ? resolvedProduct?.pricingVisible === true
       : resolvedProduct?.pricingVisible !== true);
-  const product = resolvedPricingMatches ? resolvedProduct : catalogProduct?.name ? catalogProduct : null;
+  const product = resolvedPricingMatches ? resolvedProduct : catalogProduct;
 
   useEffect(() => {
     const hasCorrectPricing =
@@ -201,7 +202,7 @@ export default function ProductDetailClient({ initialProduct }) {
   );
   // Product not in the static catalog yet — it may exist only in WooCommerce,
   // so hold off on "not found" until the live catalog finishes loading.
-  if (!product && (productsLoading || !productLoadError)) {
+  if (!product && productsLoading) {
     return (
       <div id="top" className="site-background-page bg-[#23403B] text-[#e5e2e1] min-h-screen flex flex-col font-sans antialiased justify-between">
         <Header onOpenLogin={() => setIsLoginOpen(true)} />

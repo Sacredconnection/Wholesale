@@ -1,4 +1,3 @@
-import { checkCatalogAccess } from "@/lib/catalog-access";
 import {
   getCategories,
   getCustomerByEmail,
@@ -41,8 +40,6 @@ export async function GET(request, { params }) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
-  const accessError = await checkCatalogAccess(request);
-  if (accessError) return accessError;
   if (isLocalDevUpstreamEnabled()) {
     return proxyLocalDevUpstream(request);
   }

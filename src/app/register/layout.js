@@ -1,7 +1,7 @@
 export const metadata = {
-  title: "B2B Registration | Sacred Connection Wholesale Europa",
+  title: "B2B Registration | Sacred Connection Wholesale",
   description:
-    "Register your European business with Wholesale Europa. Submit your company details for review and access wholesale pricing after approval.",
+    "Apply for a Sacred Connection Wholesale account and submit your business details for B2B partner review.",
   alternates: {
     canonical: "/register",
   },

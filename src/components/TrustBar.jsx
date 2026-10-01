@@ -75,10 +75,10 @@ export default function TrustBar() {
             </div>
             <div>
               <h2 className="text-base font-bold leading-snug tracking-tight text-white font-headline-md lg:text-lg">
-                Amazonian collections for European retailers.
+                Expand your business with premium, sustainably harvested products from the HEART OF AMAZON.
               </h2>
               <p className="mt-3 text-xs leading-relaxed text-white/50 font-body-md sm:text-sm">
-                Discover botanical collections with the product context your business needs. Wholesale Europa brings browsing, trade account access and order planning together for buyers in Europe.
+                Sacred Connection partners directly with indigenous tribes and artisans to bring you high-quality rapés, incenses, and herbal remedies rooted in tradition. Experience the perfect balance of unmatched quality, ethical sourcing, and competitive pricing with us.
               </p>
             </div>
           </div>
@@ -95,12 +95,12 @@ export default function TrustBar() {
             </div>
             <div>
               <h2 className="text-base font-bold leading-snug text-white font-headline-md lg:text-lg">
-                Why Sacred Connection Wholesale Europa?
+                Why Sacred Connection Wholesale?
               </h2>
               <ul className="mt-3 list-disc space-y-2 pl-5 text-xs leading-relaxed text-white/50 font-body-md marker:text-[#82d6c5] sm:text-sm">
                 <li>Authentic products sourced from indigenous communities.</li>
                 <li>Direct partnerships with Amazonian artisans.</li>
-                <li>Wholesale enquiries tailored to your business and destination.</li>
+                <li>Dedicated support for wholesale partners.</li>
               </ul>
             </div>
           </div>

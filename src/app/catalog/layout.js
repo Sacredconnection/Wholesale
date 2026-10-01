@@ -1,19 +1,19 @@
 export const metadata = {
-  title: "Wholesale Catalog | Sacred Connection Wholesale Europa",
+  title: "Wholesale Catalog | Sacred Connection Wholesale",
   description:
-    "Browse Amazonian botanicals, retail tins and bulk formats for European businesses. Access partner pricing through an approved Wholesale Europa account.",
+    "Browse Sacred Connection's wholesale catalog, available product formats, indigenous lineages, and responsibly sourced Amazonian botanicals. Approved partners can sign in for private pricing.",
   alternates: {
     canonical: "/catalog",
   },
   openGraph: {
-    title: "Europe Wholesale Catalog | Sacred Connection",
+    title: "Wholesale Product Catalog | Sacred Connection",
     description:
-      "Explore Amazonian botanical collections for European trade buyers. Compare formats and sign in with an approved account for wholesale pricing.",
+      "Explore our public wholesale assortment. Partner pricing is shown only after approved account login.",
     type: "website",
     url: "/catalog",
   },
   robots: {
-    index: false,
+    index: true,
     follow: true,
   },
 };

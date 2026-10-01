@@ -1,8 +1,7 @@
 export const metadata = {
-  robots: { index: false, follow: false },
-  title: "Digital Catalog | Sacred Connection Wholesale Europa",
+  title: "Digital Catalog | Sacred Connection Wholesale",
   description:
-    "Discover the Wholesale Europa digital catalog: Amazonian botanicals, retail packs and bulk collections for European trade buyers.",
+    "Explore the public Sacred Connection digital catalog with product search and category filters.",
   alternates: {
     canonical: "/digital-catalog",
   },

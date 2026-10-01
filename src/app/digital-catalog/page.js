@@ -12,7 +12,6 @@ import {
   RefreshCw,
   X,
 } from "lucide-react";
-import CatalogAccessGate from "@/components/CatalogAccessGate";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
@@ -56,10 +55,6 @@ function pageList(currentPage, totalPages) {
 }
 
 export default function CatalogPage() {
-  return <CatalogAccessGate><AuthenticatedCatalog /></CatalogAccessGate>;
-}
-
-function AuthenticatedCatalog() {
   const { isLoggedIn, user } = useAuth();
   const { addToCart } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
@@ -333,7 +328,7 @@ function AuthenticatedCatalog() {
               Wholesale Digital Catalog
             </h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-white/55 sm:text-lg">
-              Explore the Wholesale Europa collection for your European business. Compare products by category, product type and origin before planning your trade order.
+              Explore Sacred Connection products, then refine the catalog by category and product type or indigenous tribe.
             </p>
           </div>
 

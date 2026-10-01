@@ -1,4 +1,3 @@
-import { checkCatalogAccess } from "@/lib/catalog-access";
 import { readFile } from "node:fs/promises";
 import {
   getAllProducts,
@@ -223,8 +222,6 @@ export async function GET(request) {
     identity: rateLimitIdentity(request),
   });
   if (rateLimit) return rateLimit;
-  const accessError = await checkCatalogAccess(request);
-  if (accessError) return accessError;
   // Local development stores the approved upstream session in a bridge cookie,
   // not in the production session store. Let the authenticated proxy validate
   // that session with the upstream instead of rejecting it locally.
