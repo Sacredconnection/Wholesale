@@ -82,7 +82,7 @@ export function CartProvider({ children }) {
     return () => window.clearTimeout(clearTimer);
   }, [authLoading, isCartHydrated, isLoggedIn]);
 
-  // Reconcile persisted cart availability with the freshly loaded catalog.
+  // Reconcile persisted cart prices and availability with the freshly loaded catalog.
   // This prevents an old localStorage snapshot from hiding a recent restock
   // or showing a stale warning after stock changes in WooCommerce.
   useEffect(() => {
@@ -110,6 +110,9 @@ export function CartProvider({ children }) {
           if (!live) return item;
 
           const nextAvailability = {
+            price: live.product.pricingVisible === true
+              ? optionPriceForUser(live.option, user)
+              : item.price,
             inStock: live.option.inStock !== false,
             stockQuantity: live.option.stockQuantity ?? null,
             backordersAllowed: live.option.backordersAllowed === true,
@@ -117,6 +120,7 @@ export function CartProvider({ children }) {
             wcVariationId: live.option.wcVariationId || null,
           };
           if (
+            item.price === nextAvailability.price &&
             item.inStock === nextAvailability.inStock &&
             item.stockQuantity === nextAvailability.stockQuantity &&
             item.backordersAllowed === nextAvailability.backordersAllowed &&
@@ -134,7 +138,7 @@ export function CartProvider({ children }) {
     }, 0);
 
     return () => window.clearTimeout(reconcileTimer);
-  }, [isCartHydrated, products, productsLoading]);
+  }, [isCartHydrated, products, productsLoading, user]);
 
   const cartItemFromSelection = (product, optionIndex, quantity) => {
     if (
@@ -272,16 +276,14 @@ export function CartProvider({ children }) {
     return cart.reduce((total, item) => total + (item.weightGrams || 0) * item.quantity, 0);
   }, [cart]);
 
-  // Effective prices: New Customer items are re-rated by the total order
-  // weight tier (progressive per-gram pricing); other levels keep the price
-  // captured when the item was added.
+  // Keep the WooCommerce unit price regardless of total order weight.
   const pricedCart = useMemo(() => {
     return cart.map((item) => ({
       ...item,
-      price: cartUnitPrice(item, user, cartTotalWeightGrams),
+      price: cartUnitPrice(item),
       needsBackorder: needsBackorder(item),
     }));
-  }, [cart, user, cartTotalWeightGrams]);
+  }, [cart]);
 
   const cartSubtotal = useMemo(() => {
     return pricedCart.reduce((total, item) => total + item.price * item.quantity, 0);

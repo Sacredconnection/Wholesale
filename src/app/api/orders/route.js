@@ -23,11 +23,8 @@ import {
 import {
   isValidQuantityForWeight,
   MAX_ORDER_ITEM_QUANTITY,
-  NEW_CUSTOMER_ROLE,
   orderableStockQuantity,
   orderMinimumStatus,
-  progressivePerGramRate,
-  progressiveTableKeyFor,
 } from "@/lib/pricing";
 import { createHash } from "node:crypto";
 import {
@@ -312,11 +309,6 @@ export async function POST(request) {
       }
       return skuCache.get(key);
     };
-    const tableKeyFromCategories = (categories = []) =>
-      categories.some((category) => progressiveTableKeyFor(category.name) === "shamanic")
-        ? "shamanic"
-        : "default";
-
     for (const item of items) {
       if (!item || typeof item !== "object") return securityError("Invalid order item.", 400);
 
@@ -370,7 +362,6 @@ export async function POST(request) {
         let parentProduct = null;
         let productId = null;
         let variationId = null;
-        let categories = [];
         if (requestedProductId && requestedVariationId) {
           const [variation, loadedParentProduct] = await Promise.all([
             getVariation(storeId, requestedProductId, requestedVariationId),
@@ -380,12 +371,10 @@ export async function POST(request) {
           parentProduct = loadedParentProduct;
           productId = requestedProductId;
           variationId = requestedVariationId;
-          categories = parentProduct.categories;
         } else if (requestedProductId) {
           payload = await getParentProduct(storeId, requestedProductId);
           parentProduct = payload;
           productId = requestedProductId;
-          categories = payload.categories;
         } else if (sku) {
           const found = await getBySku(storeId, sku);
           if (found) {
@@ -394,10 +383,8 @@ export async function POST(request) {
             variationId = found.parent_id ? found.id : null;
             if (variationId) {
               parentProduct = await getParentProduct(storeId, productId);
-              categories = parentProduct.categories;
             } else {
               parentProduct = found;
-              categories = found.categories;
             }
           }
         }
@@ -429,7 +416,6 @@ export async function POST(request) {
             optionName: cleanText(optionText, 160),
             quantity,
             weightGrams,
-            tableKey: tableKeyFromCategories(categories),
             rolePrice: role ? roleBasedPrices(payload.meta_data)[role] : undefined,
             basePrice: parseFloat(payload.price) || 0,
             inStock:
@@ -521,17 +507,8 @@ export async function POST(request) {
       );
     }
 
-    const isProgressive = role === NEW_CUSTOMER_ROLE;
     const estimatedSubtotal = resolved.reduce((total, entry) => {
-      const rate = isProgressive
-        ? progressivePerGramRate(totalWeightGrams, entry.tableKey)
-        : null;
-      const unitPrice =
-        rate != null && entry.weightGrams > 0
-          ? entry.weightGrams * rate
-          : entry.rolePrice != null
-            ? entry.rolePrice
-            : entry.basePrice;
+      const unitPrice = entry.rolePrice ?? entry.basePrice;
       return total + unitPrice * entry.quantity;
     }, 0);
     const discountRate = Math.min(
@@ -620,21 +597,11 @@ export async function POST(request) {
     orderCreationStarted = true;
     const creationResults = await Promise.allSettled(
       storesInOrder.map(async (store) => {
-        const appliedRates = {};
         const storeBackorderWarnings = uniqueBackorderWarnings.filter(
           (warning) => warning.storeId === store.id
         );
         const lineItems = entriesByStore.get(store.id).map((entry) => {
-          const rate = isProgressive
-            ? progressivePerGramRate(totalWeightGrams, entry.tableKey)
-            : null;
-          const unitPrice =
-            rate != null && entry.weightGrams > 0
-              ? entry.weightGrams * rate
-              : entry.rolePrice != null
-                ? entry.rolePrice
-                : entry.basePrice;
-          if (rate != null && entry.weightGrams > 0) appliedRates[entry.tableKey] = rate;
+          const unitPrice = entry.rolePrice ?? entry.basePrice;
           const lineTotal = (
             unitPrice *
             entry.quantity *
@@ -678,14 +645,6 @@ export async function POST(request) {
                   value: storeBackorderWarnings
                     .map((warning) => `${warning.sku || warning.productName} × ${warning.requestedQuantity}`)
                     .join(" | "),
-                }]
-              : []),
-            ...(Object.keys(appliedRates).length > 0
-              ? [{
-                  key: "sc_per_gram_rate",
-                  value: Object.entries(appliedRates)
-                    .map(([table, rate]) => `${table}: $${rate.toFixed(2)}/g`)
-                    .join(" · "),
                 }]
               : []),
             ...(customer.accountId

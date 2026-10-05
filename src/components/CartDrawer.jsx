@@ -9,7 +9,7 @@ import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
 import ProductRecommendations from './ProductRecommendations';
 import { ShoppingBag, X, Minus, Plus, ArrowRight, CircleDollarSign, Scale } from 'lucide-react';
-import { NEW_CUSTOMER_ROLE, orderMinimumStatus, progressivePerGramRate, progressiveTableKeyFor } from '@/lib/pricing';
+import { orderMinimumStatus } from '@/lib/pricing';
 import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
 export default function CartDrawer() {
@@ -48,19 +48,6 @@ export default function CartDrawer() {
     cartTotalWeightGrams
   );
   const MinimumIcon = minimumStatus.type === "weight" ? Scale : CircleDollarSign;
-
-  // Progressive per-gram tiers applied to New Customer orders (by total
-  // weight) — one rate per product line present in the cart.
-  const perGramRates =
-    isLoggedIn && user?.role === NEW_CUSTOMER_ROLE
-      ? [...new Set(cart.filter((i) => i.weightGrams > 0).map((i) => progressiveTableKeyFor(i.category)))]
-          .map((tableKey) => ({
-            tableKey,
-            label: tableKey === "shamanic" ? "SHAMANIC" : "INDIGENOUS",
-            rate: progressivePerGramRate(cartTotalWeightGrams, tableKey),
-          }))
-          .filter((r) => r.rate != null)
-      : [];
 
   const handleCheckout = () => {
     if (!isLoggedIn || !user) {
@@ -242,13 +229,6 @@ export default function CartDrawer() {
                     }
                   </span>
                 </div>
-
-                {perGramRates.map(({ tableKey, label, rate }) => (
-                  <div key={tableKey} className="flex justify-between items-center text-xs text-[#82d6c5] font-mono">
-                    <span>VOLUME RATE: {label}</span>
-                    <span className="font-bold">${rate.toFixed(2)}/g</span>
-                  </div>
-                ))}
 
                 {/* Minimum order indicator */}
                 {cart.length > 0 && !minimumStatus.meetsMinimum && (
