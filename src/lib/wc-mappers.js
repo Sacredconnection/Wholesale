@@ -325,6 +325,7 @@ export function isAdminCustomer(customer) {
 }
 
 const MINIMUM_ORDER_WEIGHT_BY_EMAIL = new Map([
+  ["e_barcala@yahoo.com", 250],
   ["garrywilco@gmail.com", 250],
   ["natachafigueira@hotmail.com", 250],
   ["jwalsh32390@gmail.com", 250],
