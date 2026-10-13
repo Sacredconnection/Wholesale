@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 
 export default function FilterSidebar({
@@ -11,6 +12,7 @@ export default function FilterSidebar({
   disabled = false,
   allValue = "",
 }) {
+  const id = useId();
   const updateSearch = (value) =>
     onChange({ ...filters, search: value });
   const updateCategory = (value) =>
@@ -42,7 +44,7 @@ export default function FilterSidebar({
       >
         <div className="flex w-full min-w-0 flex-col gap-2">
           <label
-            htmlFor="catalog-search"
+            htmlFor={`${id}-search`}
             className="text-xs font-semibold uppercase tracking-wide text-white/55"
           >
             Search
@@ -53,7 +55,7 @@ export default function FilterSidebar({
               aria-hidden="true"
             />
             <input
-              id="catalog-search"
+              id={`${id}-search`}
               type="text"
               value={filters.search || ""}
               onChange={(event) => updateSearch(event.target.value)}
@@ -66,14 +68,14 @@ export default function FilterSidebar({
 
         <div className="flex w-full min-w-0 flex-col gap-2">
           <label
-            htmlFor="catalog-category"
+            htmlFor={`${id}-category`}
             className="text-xs font-semibold uppercase tracking-wide text-white/55"
           >
             Category
           </label>
           <div className="relative">
             <select
-              id="catalog-category"
+              id={`${id}-category`}
               value={filters.category}
               disabled={disabled}
               onChange={(event) => updateCategory(event.target.value)}
@@ -96,14 +98,14 @@ export default function FilterSidebar({
         {showTribe && (
           <div className="flex w-full min-w-0 flex-col gap-2">
             <label
-              htmlFor="catalog-tribe"
+              htmlFor={`${id}-tribe`}
               className="text-xs font-semibold uppercase tracking-wide text-white/55"
             >
               {tribeLabel}
             </label>
             <div className="relative">
               <select
-                id="catalog-tribe"
+                id={`${id}-tribe`}
                 value={filters.tribe}
                 disabled={disabled}
                 onChange={(event) => updateTribe(event.target.value)}

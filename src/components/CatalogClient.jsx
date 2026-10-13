@@ -7,6 +7,7 @@ import Link from "next/link";
 import Header from "@/components/Header";
 import LoginModal from "@/components/LoginModal";
 import CatalogPdfExportDialog from "@/components/CatalogPdfExportDialog";
+import CatalogExcelExportDialog from "@/components/CatalogExcelExportDialog";
 import ShelfButton from "@/components/ShelfButton";
 import ProductPurchaseControls from "@/components/ProductPurchaseControls";
 import WorkbookImportReviewModal from "@/components/WorkbookImportReviewModal";
@@ -28,7 +29,6 @@ import {
 
 import { useProducts } from "@/components/ProductsContext";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
-import { exportCatalogExcel } from "@/lib/catalog-export";
 import { readCatalogOrderWorkbook } from "@/lib/catalog-order-workbook";
 import { orderQuantityError } from "@/lib/pricing";
 import { catalogProductTitle, compareCatalogProducts, getCatalogTaxonomy, groupCatalogProducts } from "@/lib/catalog-taxonomy";
@@ -85,7 +85,7 @@ export default function CatalogClient({
   const { cart, addSelectionsToCart, replaceCartWithSelections, setIsCartOpen } = useCart();
   const [isLoginOpen, setIsLoginOpen] = useState(false);
   const [isPdfExportOpen, setIsPdfExportOpen] = useState(false);
-  const [workbookScope, setWorkbookScope] = useState("filtered");
+  const [isExcelExportOpen, setIsExcelExportOpen] = useState(false);
   const [workbookAction, setWorkbookAction] = useState("");
   const [workbookError, setWorkbookError] = useState("");
   const [workbookSuccess, setWorkbookSuccess] = useState("");
@@ -267,33 +267,6 @@ export default function CatalogClient({
     return result.sort(compareCatalogProducts);
   };
 
-  const orderWorkbookFilterLabel = () => {
-    const labels = [];
-    if (search.trim()) labels.push(`Search: ${search.trim()}`);
-    if (category !== "All") labels.push(`Category: ${category}`);
-    if (tribe !== "All") labels.push(`Collection: ${tribe}`);
-    return labels.length ? labels.join(" | ") : "Complete catalog";
-  };
-
-  const handleWorkbookExport = async () => {
-    if (!canUseOrderWorkbook || workbookAction) return;
-    setWorkbookAction("export");
-    setWorkbookError("");
-    setWorkbookSuccess("");
-    try {
-      const exportProducts = await loadOrderWorkbookProducts({ applyFilters: workbookScope === "filtered" });
-      await exportCatalogExcel({
-        products: exportProducts,
-        user,
-        filterLabel: workbookScope === "filtered" ? orderWorkbookFilterLabel() : "Complete catalog",
-      });
-    } catch (error) {
-      setWorkbookError(error.message || "The order spreadsheet could not be generated.");
-    } finally {
-      setWorkbookAction("");
-    }
-  };
-
   const openWorkbookImport = () => {
     setWorkbookError("");
     setWorkbookSuccess("");
@@ -400,6 +373,10 @@ export default function CatalogClient({
         <CatalogPdfExportDialog key={`${user.id}:${user.role}:${user.discountRate}`} user={user} initialCategory={category} onClose={() => setIsPdfExportOpen(false)} />
       )}
 
+      {canUseOrderWorkbook && isExcelExportOpen && (
+        <CatalogExcelExportDialog user={user} initialFilters={{ search, category, tribe }} loadProducts={() => loadOrderWorkbookProducts({ applyFilters: false })} onClose={() => setIsExcelExportOpen(false)} />
+      )}
+
       {/* Main Container */}
       <main className="flex-grow w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10 sm:py-12 flex flex-col gap-10 sm:gap-12">
         <header className="border-b border-white/10 pb-6 sm:pb-8">
@@ -420,16 +397,8 @@ export default function CatalogClient({
               <FileDown className="h-4 w-4" aria-hidden="true" /> PDF Catalog
             </button>
             {canUseOrderWorkbook ? <>
-              <label className="flex flex-col gap-1.5 text-xs text-white/60">
-                Excel export includes
-                <select value={workbookScope} onChange={(event) => setWorkbookScope(event.target.value)} className="min-h-12 rounded-sm border border-white/15 bg-[#131313] px-3 py-2 text-sm text-white">
-                  <option value="filtered">Current filters ({filteredProducts.length} products)</option>
-                  <option value="complete">Complete catalog</option>
-                </select>
-              </label>
-              <button type="button" onClick={handleWorkbookExport} disabled={Boolean(workbookAction)} aria-describedby="excel-workflow" className="inline-flex min-h-12 items-center gap-2 rounded-sm border border-white/15 bg-white/5 px-5 py-3 text-xs font-bold uppercase text-white hover:bg-white/10 disabled:opacity-50">
-                {workbookAction === "export" ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <FileSpreadsheet className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />}
-                {workbookAction === "export" ? "Preparing Excel" : "Export Order Excel"}
+              <button type="button" onClick={() => setIsExcelExportOpen(true)} disabled={Boolean(workbookAction)} aria-describedby="excel-workflow" className="inline-flex min-h-12 items-center gap-2 rounded-sm border border-white/15 bg-white/5 px-5 py-3 text-xs font-bold uppercase text-white hover:bg-white/10 disabled:opacity-50">
+                <FileSpreadsheet className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" /> Export Order Excel
               </button>
               <button type="button" onClick={openWorkbookImport} disabled={Boolean(workbookAction)} aria-describedby="excel-workflow" className="inline-flex min-h-12 items-center gap-2 rounded-sm border border-[#82d6c5]/40 bg-[#268072]/20 px-5 py-3 text-xs font-bold uppercase text-[#82d6c5] hover:bg-[#268072]/30 disabled:opacity-50">
                 {workbookAction === "import" ? <LoaderCircle className="h-4 w-4 animate-spin" aria-hidden="true" /> : <Upload className="h-4 w-4" aria-hidden="true" />}
