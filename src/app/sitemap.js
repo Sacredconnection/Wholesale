@@ -8,7 +8,6 @@ const staticRoutes = [
   ["/about", "monthly", 0.8],
   ["/catalog", "weekly", 0.9],
   ["/digital-catalog", "weekly", 0.9],
-  ["/suggested-blends", "weekly", 0.8],
   ["/contact", "monthly", 0.7],
   ["/register", "monthly", 0.7],
   ["/shipping-and-returns-policy", "monthly", 0.5],

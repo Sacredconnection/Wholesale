@@ -72,15 +72,7 @@ export default function Header({ onOpenLogin }) {
           >
             Wholesale Catalog
           </Link>
-          {isLoggedIn && (
-            <Link
-              className={`${pathname === '/suggested-blends' ? 'text-white after:scale-x-100' : 'text-[#82d6c5] after:scale-x-0 hover:text-white hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:transition-transform after:duration-300 after:content-[''] hover:-translate-y-0.5 motion-reduce:transform-none`}
-              href="/suggested-blends"
-              aria-current={pathname === '/suggested-blends' ? 'page' : undefined}
-            >
-              Suggested Blends
-            </Link>
-          )}
+
           {isLoggedIn && <Link href="/my-shelf" aria-current={pathname === '/my-shelf' ? 'page' : undefined} className="py-2 text-[#82d6c5] transition-colors hover:text-white">My Shelf</Link>}
           <Link
             className={`${pathname === '/contact' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:after:scale-x-100 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
@@ -210,16 +202,7 @@ export default function Header({ onOpenLogin }) {
           >
             Wholesale Catalog
           </Link>
-          {isLoggedIn && (
-            <Link
-              className={`${pathname === '/suggested-blends' ? 'text-white' : 'text-[#82d6c5]'} text-base font-medium transition-all duration-300 hover:translate-x-1.5 hover:text-white motion-reduce:transform-none`}
-              href="/suggested-blends"
-              aria-current={pathname === '/suggested-blends' ? 'page' : undefined}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Suggested Blends
-            </Link>
-          )}
+
           {isLoggedIn && <Link href="/my-shelf" aria-current={pathname === '/my-shelf' ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)} className="text-base font-medium text-[#82d6c5] hover:text-white">My Shelf</Link>}
           <Link
             className={`${pathname === '/contact' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
