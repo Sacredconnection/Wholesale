@@ -1,136 +1,43 @@
 "use client";
 
+import { useState } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 
-export default function FilterSidebar({
-  filters,
-  categories,
-  tribes,
-  onChange,
-  onClear,
-  disabled = false,
-  allValue = "",
-}) {
-  const updateSearch = (value) =>
-    onChange({ ...filters, search: value });
-  const updateCategory = (value) =>
-    onChange({
-      ...filters,
-      category: value,
-      tribe: allValue,
-    });
-  const updateTribe = (value) =>
-    onChange({
-      ...filters,
-      tribe: value,
-    });
-  const showTribe = filters.category !== allValue && tribes.length > 0;
-  const tribeLabel = "Product Type";
-  const allTribesLabel = "All Product Types";
-
+export default function FilterSidebar({ filters, categories = [], categoryGroups = [], tribes = [], onChange, onClear, disabled = false, allValue = "" }) {
+  const [expanded, setExpanded] = useState(true);
+  const groups = categoryGroups.length ? categoryGroups : categories.map((name) => ({
+    name,
+    subcategories: name === filters.category ? tribes.map((name) => ({ name })) : [],
+  }));
+  const select = (category, tribe = allValue) => onChange({ ...filters, category, tribe });
   return (
-    <aside className="flex flex-col gap-5 rounded-xl border border-white/5 bg-[#1a1a1a] p-5 sm:gap-6 sm:p-6 lg:p-8">
-      <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white">
-        <Filter className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />
-        Filter Products
+    <aside className="rounded-xl border border-white/10 bg-[#1a1a1a] p-4 sm:p-6">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h2 className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-white"><Filter className="h-4 w-4 text-[#82d6c5]" aria-hidden="true" />Filter products</h2>
+        <button type="button" onClick={onClear} disabled={disabled} className="text-xs font-semibold text-[#82d6c5] underline disabled:opacity-40">Clear filters</button>
       </div>
-
-      <div
-        className={`grid grid-cols-1 items-end gap-5 sm:grid-cols-2 lg:gap-6 ${
-          showTribe ? "lg:grid-cols-4" : "lg:grid-cols-3"
-        }`}
-      >
-        <div className="flex w-full min-w-0 flex-col gap-2">
-          <label
-            htmlFor="catalog-search"
-            className="text-xs font-semibold uppercase tracking-wide text-white/55"
-          >
-            Search
-          </label>
-          <div className="relative">
-            <Search
-              className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"
-              aria-hidden="true"
-            />
-            <input
-              id="catalog-search"
-              type="text"
-              value={filters.search || ""}
-              onChange={(event) => updateSearch(event.target.value)}
-              placeholder="Name or SKU..."
-              disabled={disabled}
-              className="w-full rounded-sm border border-white/10 bg-[#131313] py-4 pl-11 pr-4 text-sm text-white placeholder-white/30 outline-none transition-colors focus:border-[#268072] disabled:cursor-not-allowed disabled:opacity-40"
-            />
-          </div>
+      <div className="mt-4 flex flex-col gap-3 sm:flex-row">
+        <div className="relative flex-1">
+          <label htmlFor="catalog-search" className="sr-only">Search by name or SKU</label>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40" aria-hidden="true" />
+          <input id="catalog-search" type="search" value={filters.search || ""} onChange={(event) => onChange({ ...filters, search: event.target.value })} placeholder="Name or SKU..." disabled={disabled} className="w-full rounded-sm border border-white/15 bg-[#131313] py-3 pl-10 pr-3 text-sm text-white outline-none focus:border-[#82d6c5] disabled:opacity-40" />
         </div>
-
-        <div className="flex w-full min-w-0 flex-col gap-2">
-          <label
-            htmlFor="catalog-category"
-            className="text-xs font-semibold uppercase tracking-wide text-white/55"
-          >
-            Category
-          </label>
-          <div className="relative">
-            <select
-              id="catalog-category"
-              value={filters.category}
-              onChange={(event) => updateCategory(event.target.value)}
-              className="w-full cursor-pointer appearance-none rounded-sm border border-white/10 bg-[#131313] px-4 py-4 text-sm text-white outline-none transition-colors focus:border-[#268072]"
-            >
-              <option value={allValue}>All Categories</option>
-              {categories.map((category) => (
-                <option key={category} value={category}>
-                  {category}
-                </option>
-              ))}
-            </select>
-            <ChevronDown
-              className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"
-              aria-hidden="true"
-            />
-          </div>
-        </div>
-
-        {showTribe && (
-          <div className="flex w-full min-w-0 flex-col gap-2">
-            <label
-              htmlFor="catalog-tribe"
-              className="text-xs font-semibold uppercase tracking-wide text-white/55"
-            >
-              {tribeLabel}
-            </label>
-            <div className="relative">
-              <select
-                id="catalog-tribe"
-                value={filters.tribe}
-                onChange={(event) => updateTribe(event.target.value)}
-                className="w-full cursor-pointer appearance-none rounded-sm border border-white/10 bg-[#131313] px-4 py-4 text-sm text-white outline-none transition-colors focus:border-[#268072]"
-              >
-                <option value={allValue}>{allTribesLabel}</option>
-                {tribes.map((tribe) => (
-                  <option key={tribe} value={tribe}>
-                    {tribe}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown
-                className="pointer-events-none absolute right-4 top-1/2 h-4 w-4 -translate-y-1/2 text-white/40"
-                aria-hidden="true"
-              />
-            </div>
-          </div>
-        )}
-
-        <button
-          type="button"
-          onClick={onClear}
-          disabled={disabled}
-          className="w-full cursor-pointer rounded-sm border border-white/10 bg-white/5 px-6 py-4 text-sm font-bold uppercase tracking-wider text-white transition-all duration-300 hover:border-white/20 hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-40"
-        >
-          Clear Filters
+        <button type="button" onClick={() => setExpanded((value) => !value)} aria-expanded={expanded} aria-controls="catalog-category-choices" className="inline-flex items-center justify-between gap-6 rounded-sm border border-white/15 bg-[#131313] px-4 py-3 text-sm text-white">
+          All categories <ChevronDown className={expanded ? "h-4 w-4 rotate-180" : "h-4 w-4"} aria-hidden="true" />
         </button>
       </div>
+      {filters.category !== allValue && <p className="mt-3 text-xs text-white/60">Showing: {filters.category}{filters.tribe !== allValue ? " / " + filters.tribe : ""}</p>}
+      {expanded && <div id="catalog-category-choices" className="mt-4 border-t border-white/10 pt-4">
+        <button type="button" onClick={() => select(allValue)} disabled={disabled} aria-pressed={filters.category === allValue} className={"mb-4 rounded-sm border px-3 py-2 text-xs font-bold " + (filters.category === allValue ? "border-[#82d6c5]/60 bg-[#268072]/25 text-[#82d6c5]" : "border-white/15 text-white/65")}>Show all products</button>
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          {groups.map((group) => <div key={group.name}>
+            <button type="button" onClick={() => select(group.name)} disabled={disabled} aria-pressed={filters.category === group.name && filters.tribe === allValue} className={"mb-2 text-left text-sm font-bold " + (filters.category === group.name ? "text-[#82d6c5]" : "text-white")}>{group.name}</button>
+            <div className="flex flex-wrap gap-1.5">
+              {group.subcategories.filter((child) => child.name !== group.name).map((child) => <button key={child.name} type="button" onClick={() => select(group.name, child.name)} disabled={disabled} aria-pressed={filters.category === group.name && filters.tribe === child.name} className={"rounded-sm border px-2.5 py-1.5 text-xs " + (filters.category === group.name && filters.tribe === child.name ? "border-[#82d6c5]/60 bg-[#268072]/25 text-[#82d6c5]" : "border-white/10 text-white/60 hover:border-white/30 hover:text-white")}>{child.name}</button>)}
+            </div>
+          </div>)}
+        </div>
+      </div>}
     </aside>
   );
 }

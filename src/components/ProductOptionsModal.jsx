@@ -5,7 +5,7 @@ import { Loader2, Minus, Plus, ShoppingBag, X } from "lucide-react";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 import {
-  maximumOrderQuantityForWeight,
+  maximumOrderQuantity,
   isValidQuantityForWeight,
   needsBackorder,
   normalizeQuantityForWeight,
@@ -42,9 +42,10 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
         if (!response.ok) throw new Error(data.error || "Could not load product options.");
         if (!cancelled) {
           setResolvedProduct(data.product);
-          setSelectedOptionIndex(0);
+          const firstAvailable = Math.max(0, data.product.options.findIndex((option) => option.inStock !== false));
+          setSelectedOptionIndex(firstAvailable);
           setQuantity(String(
-            quantityStepForWeight(data.product.options?.[0]?.weightGrams)
+            quantityStepForWeight(data.product.options?.[firstAvailable]?.weightGrams)
           ));
         }
       } catch (loadError) {
@@ -65,7 +66,7 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
   const selectedOption = resolvedProduct?.options[selectedOptionIndex];
   const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
   const availableQuantity = orderableStockQuantity(selectedOption);
-  const maximumQuantity = maximumOrderQuantityForWeight(selectedOption?.weightGrams);
+  const maximumQuantity = maximumOrderQuantity(selectedOption);
   const numericQuantity = Number(quantity);
   const isQuantityValid =
     isValidQuantityForWeight(numericQuantity, selectedOption?.weightGrams) &&
@@ -176,12 +177,13 @@ export default function ProductOptionsModal({ product, user, onClose, onAddToCar
               </select>
             </div>
 
-            {requiresBackorder && <StockBackorderNotice />}
+            {requiresBackorder && <StockBackorderNotice madeToOrder={selectedOption?.availabilityLabel === "Made to order"} />}
+            {selectedOption?.stockLimited && <p className="text-xs text-amber-200">{selectedOption.availabilityLabel}. {availableQuantity != null ? `${availableQuantity} units remaining; no restock orders.` : "Contact our team to confirm remaining stock."}</p>}
             {quantityStep > 1 && selectedOption && (
               <p className="text-[10px] font-semibold text-[#82d6c5]">
                 This {Math.round(selectedOption.weightGrams)}g tin is sold in
                 multiples of {quantityStep} units.
-                {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now; additional packs can be requested for restock.`}
+                {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now.${selectedOption.stockLimited ? "" : " Additional packs can be requested for restock."}`}
               </p>
             )}
 

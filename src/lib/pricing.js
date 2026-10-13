@@ -39,14 +39,13 @@ export function quantityStepForWeight(weightGrams) {
   return 1;
 }
 
-// Current stock that can fill complete wholesale packs. This is availability
-// information only: the portal also accepts order requests for the next
-// restock, so callers must not use this value as a purchasing limit.
+// Current stock that can fill complete wholesale packs. Unknown stock remains
+// unknown; it must not be mistaken for an empty warehouse.
 export function orderableStockQuantity(option) {
   if (!option) return null;
   if (option.stockQuantity == null || option.stockQuantity === "") return null;
   const stockQuantity = Number(option.stockQuantity);
-  if (!Number.isFinite(stockQuantity) || stockQuantity < 0) return null;
+  if (!Number.isFinite(stockQuantity)) return null;
   const quantityStep = quantityStepForWeight(option.weightGrams);
   return Math.floor(Math.max(0, stockQuantity) / quantityStep) * quantityStep;
 }
@@ -64,8 +63,60 @@ export function maximumOrderQuantityForWeight(weightGrams) {
   );
 }
 
+export function isOptionVisible(option) {
+  if (!option || option.lifecycle === "removed") return false;
+  if (!option.stockLimited) return true;
+  const stock = orderableStockQuantity(option);
+  return option.inStock !== false && (stock == null || stock > 0);
+}
+
+export function getOrderableProductOptions(product) {
+  if (!product || product.lifecycle === "removed") return [];
+  return (product.options || []).filter(isOptionVisible);
+}
+
+export function maximumOrderQuantity(option) {
+  if (!option || option.lifecycle === "removed") return 0;
+  const maximum = maximumOrderQuantityForWeight(option.weightGrams);
+  if (!option.stockLimited) return maximum;
+  if (option.inStock === false) return 0;
+  return Math.min(maximum, orderableStockQuantity(option) ?? 0);
+}
+
+export function orderQuantityError(option, quantity) {
+  if (!option || option.lifecycle === "removed") return "This product is no longer available.";
+  if (!isValidQuantityForWeight(quantity, option.weightGrams)) {
+    return `Order in multiples of ${quantityStepForWeight(option.weightGrams)} units.`;
+  }
+  if (option.stockLimited && orderableStockQuantity(option) == null) {
+    return "Stock must be confirmed for this discontinued format before ordering.";
+  }
+  const maximum = maximumOrderQuantity(option);
+  if (quantity > maximum) {
+    return option.stockLimited
+      ? `Only ${maximum} units remain. This item cannot be ordered for restock.`
+      : `The maximum quantity is ${maximum} units.`;
+  }
+  return "";
+}
+
+// Used at checkout and by the server. Different variations can consume the
+// same parent-managed stock; SKU-only checks would allow their combined excess.
+export function stockLimitErrors(items = []) {
+  const stockKey = (item) => `${item.storeId || item.store?.id || "sacred-connection"}:${item.stockItemId || item.wcVariationId || item.variationId || item.wcProductId || item.productId || item.sku}`;
+  const totals = new Map();
+  items.forEach((item) => totals.set(stockKey(item), (totals.get(stockKey(item)) || 0) + item.quantity));
+  return items.flatMap((item) => {
+    const error = orderQuantityError(item, item.quantity);
+    const knownStock = item.stockQuantity != null && item.stockQuantity !== "" && Number.isFinite(Number(item.stockQuantity));
+    const sharedExcess = item.stockLimited && knownStock && totals.get(stockKey(item)) > Math.max(0, Number(item.stockQuantity));
+    return error || sharedExcess ? [{ item, error: error || `Only ${Math.max(0, Number(item.stockQuantity))} units remain across the selected formats.` }] : [];
+  });
+}
+
 export function needsBackorder(option, quantity = option?.quantity) {
   if (!option) return false;
+  if (option.stockLimited || option.lifecycle === "removed") return false;
   if (option.inStock === false) return true;
   const requestedQuantity = Number(quantity);
   const availableQuantity = orderableStockQuantity(option);

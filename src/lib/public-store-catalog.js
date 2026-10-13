@@ -31,7 +31,7 @@ export async function loadPublicStoreProducts(store, { revalidate } = {}) {
       ...mapped,
       productUrl: `/product/${encodeURIComponent(mapped.slug)}`,
     };
-  });
+  }).filter((product) => product.catalogVisible !== false);
 }
 
 export async function loadPublicStoreProductBySlug(

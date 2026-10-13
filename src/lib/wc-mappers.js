@@ -2,6 +2,8 @@
 
 import "server-only";
 import { isOptionOrderable } from "@/lib/pricing";
+import { applyProductLifecycle } from "@/lib/catalog-lifecycle";
+import { getCatalogImage } from "@/lib/catalog-media";
 
 const DEFAULT_APPROVED_WHOLESALE_ROLES = [
   "new customer",
@@ -130,7 +132,19 @@ export function roleBasedPrices(metaData = []) {
   return prices;
 }
 
-export function mapVariationToOption(variation) {
+export function stockFromWooCommerce(payload, parent = payload) {
+  const inherited = parent?.manage_stock === true && payload.id !== parent.id && payload.manage_stock !== true;
+  const owner = inherited ? parent : payload;
+  return {
+    stockQuantity: owner.stock_quantity == null ? null : Number(owner.stock_quantity),
+    stockItemId: owner.id,
+    stockStatus: payload.stock_status || owner.stock_status || "instock",
+    inStock: (payload.stock_status || owner.stock_status || "instock") === "instock",
+    backordersAllowed: owner.backorders === "yes" || owner.backorders === "notify",
+  };
+}
+
+export function mapVariationToOption(variation, parent = variation) {
   const name =
     (variation.attributes || [])
       .map((a) => a.option)
@@ -144,12 +158,7 @@ export function mapVariationToOption(variation) {
     sku: variation.sku || String(variation.id),
     weightGrams: extractWeightGrams(name, variation.weight),
     wcVariationId: variation.id,
-    inStock: variation.stock_status === "instock",
-    stockStatus: variation.stock_status || "instock",
-    backordersAllowed:
-      variation.backorders === "yes" || variation.backorders === "notify",
-    stockQuantity:
-      variation.stock_quantity == null ? null : Number(variation.stock_quantity),
+    ...stockFromWooCommerce(variation, parent),
   };
 }
 
@@ -428,7 +437,7 @@ export function mapProduct(
               variation.purchasable !== false ||
               variation.stock_status === "outofstock"
           )
-          .map(mapVariationToOption)
+          .map((variation) => mapVariationToOption(variation, product))
           .sort((a, b) => (a.weightGrams ?? Infinity) - (b.weightGrams ?? Infinity))
       : [
           {
@@ -466,7 +475,7 @@ export function mapProduct(
     attributeOption(product.attributes, "tribe")
   );
 
-  return {
+  return applyProductLifecycle({
     // Prefix with the store id so equal slugs from different backends never collide.
     id: `${store.id}~${product.slug}`,
     storeId: store.id,
@@ -480,7 +489,7 @@ export function mapProduct(
     sku: product.sku || String(product.id),
     category: taxonomy.category,
     tribe: taxonomy.tribe,
-    image: product.images?.[0]?.src || null,
+    image: getCatalogImage({ ...product, storeId: store.id }),
     images: (product.images || []).map((img) => img.src),
     description: stripHtml(product.short_description) || stripHtml(product.description),
     isNew: product.featured === true || (product.tags || []).some((t) => t.slug === "new"),
@@ -490,7 +499,7 @@ export function mapProduct(
     stockQuantity,
     attributes: mapProductAttributes(product.attributes),
     options,
-  };
+  }, { ...product, tribe: taxonomy.tribe, category: taxonomy.category });
 }
 
 export function mapStoreProduct(
@@ -538,7 +547,7 @@ export function mapStoreProduct(
     attributeOption(product.attributes, "tribe")
   );
 
-  return {
+  return applyProductLifecycle({
     id: `${store.id}~${product.slug}`,
     storeId: store.id,
     storeName: store.name,
@@ -551,7 +560,7 @@ export function mapStoreProduct(
     sku: product.sku || String(product.id),
     category: taxonomy.category,
     tribe: taxonomy.tribe,
-    image: product.images?.[0]?.src || null,
+    image: getCatalogImage({ ...product, storeId: store.id }),
     images: (product.images || []).map((image) => image.src),
     description: stripHtml(product.short_description) || stripHtml(product.description),
     isNew: (product.tags || []).some((tag) => tag.slug === "new"),
@@ -562,7 +571,7 @@ export function mapStoreProduct(
     stockKnown: true,
     attributes: mapProductAttributes(product.attributes),
     options,
-  };
+  }, { ...product, tribe: taxonomy.tribe, category: taxonomy.category });
 }
 
 export function mapProductForRole(product, variations, categoryContext, role, store) {

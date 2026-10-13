@@ -5,11 +5,13 @@ import { useAuth } from './AuthContext';
 import { useProducts } from './ProductsContext';
 import {
   cartUnitPrice,
-  maximumOrderQuantityForWeight,
+  maximumOrderQuantity,
   needsBackorder,
   normalizeQuantityForWeight,
   optionPriceForUser,
   quantityStepForWeight,
+  orderQuantityError,
+  stockLimitErrors,
 } from '@/lib/pricing';
 
 const CartContext = createContext();
@@ -17,11 +19,21 @@ const SACRED_STORE_ID = "sacred-connection";
 
 export function CartProvider({ children }) {
   const { isLoggedIn, user, loading: authLoading } = useAuth();
-  const { products, loading: productsLoading } = useProducts();
+  const { products, loading: productsLoading, resolveProduct } = useProducts();
   const [cart, setCart] = useState([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
   const cartHydrated = useRef(false);
   const [isCartHydrated, setIsCartHydrated] = useState(false);
+  const cartProductIds = cart.map((item) => item.id).join("|");
+
+  // A catalog summary does not contain variation stock. Resolve persisted cart
+  // products before reconciling their quantities and availability.
+  useEffect(() => {
+    if (!isCartHydrated || productsLoading) return;
+    const ids = new Set(cartProductIds.split("|"));
+    products.filter((product) => ids.has(product.id) && !product.optionsLoaded)
+      .forEach((product) => { resolveProduct(product).catch(() => {}); });
+  }, [cartProductIds, isCartHydrated, products, productsLoading, resolveProduct]);
 
   // Load cart from localStorage on mount
   useEffect(() => {
@@ -107,7 +119,13 @@ export function CartProvider({ children }) {
           const live = liveOptions.get(
             `${item.storeId || SACRED_STORE_ID}:${String(item.sku || "").toLowerCase()}`
           );
-          if (!live) return item;
+          if (!live) {
+            const product = products.find((entry) => entry.id === item.id);
+            if (product && !product.optionsLoaded) return item;
+            if (item.lifecycle === "removed") return item;
+            changed = true;
+            return { ...item, lifecycle: "removed", inStock: false };
+          }
 
           const nextAvailability = {
             price: live.product.pricingVisible === true
@@ -115,7 +133,11 @@ export function CartProvider({ children }) {
               : item.price,
             inStock: live.option.inStock !== false,
             stockQuantity: live.option.stockQuantity ?? null,
+            stockItemId: live.option.stockItemId,
             backordersAllowed: live.option.backordersAllowed === true,
+            stockLimited: live.option.stockLimited === true,
+            lifecycle: live.option.lifecycle,
+            availabilityLabel: live.option.availabilityLabel,
             wcProductId: live.product.wcId || item.wcProductId || null,
             wcVariationId: live.option.wcVariationId || null,
           };
@@ -123,7 +145,11 @@ export function CartProvider({ children }) {
             item.price === nextAvailability.price &&
             item.inStock === nextAvailability.inStock &&
             item.stockQuantity === nextAvailability.stockQuantity &&
+            item.stockItemId === nextAvailability.stockItemId &&
             item.backordersAllowed === nextAvailability.backordersAllowed &&
+            item.stockLimited === nextAvailability.stockLimited &&
+            item.lifecycle === nextAvailability.lifecycle &&
+            item.availabilityLabel === nextAvailability.availabilityLabel &&
             item.wcProductId === nextAvailability.wcProductId &&
             item.wcVariationId === nextAvailability.wcVariationId
           ) {
@@ -150,9 +176,9 @@ export function CartProvider({ children }) {
       return null;
     }
     const selectedOption = product.options?.[optionIndex];
-    if (!selectedOption) return null;
+    if (!selectedOption || orderQuantityError(selectedOption, quantity)) return null;
     const quantityStep = quantityStepForWeight(selectedOption.weightGrams);
-    const maximumQuantity = maximumOrderQuantityForWeight(selectedOption.weightGrams);
+    const maximumQuantity = maximumOrderQuantity(selectedOption);
     const storeId = product.storeId || SACRED_STORE_ID;
     if (storeId !== SACRED_STORE_ID) return null;
 
@@ -177,7 +203,11 @@ export function CartProvider({ children }) {
       wcVariationId: selectedOption.wcVariationId || null,
       inStock: selectedOption.inStock !== false,
       stockQuantity: selectedOption.stockQuantity ?? null,
+      stockItemId: selectedOption.stockItemId,
       backordersAllowed: selectedOption.backordersAllowed === true,
+      stockLimited: selectedOption.stockLimited === true,
+      lifecycle: selectedOption.lifecycle,
+      availabilityLabel: selectedOption.availabilityLabel,
     };
   };
 
@@ -187,7 +217,14 @@ export function CartProvider({ children }) {
         cartItemFromSelection(product, optionIndex, Number(quantity))
       )
       .filter(Boolean);
-    if (incomingItems.length === 0) return 0;
+    if (incomingItems.length === 0 || incomingItems.length !== selections.length) return 0;
+    if (stockLimitErrors([...cart, ...incomingItems]).length) return 0;
+    const requestedBySku = new Map(cart.map((item) => [item.cartKey, item.quantity]));
+    for (const incoming of incomingItems) {
+      const quantity = (requestedBySku.get(incoming.cartKey) || 0) + incoming.quantity;
+      if (orderQuantityError(incoming, quantity)) return 0;
+      requestedBySku.set(incoming.cartKey, quantity);
+    }
 
     setCart((prevCart) => {
       const nextCart = prevCart.map((item) => ({ ...item }));
@@ -197,11 +234,14 @@ export function CartProvider({ children }) {
           existingItem.quantity += incoming.quantity;
           existingItem.quantity = Math.min(
             existingItem.quantity,
-            maximumOrderQuantityForWeight(incoming.weightGrams)
+            maximumOrderQuantity(incoming)
           );
           existingItem.inStock = incoming.inStock;
           existingItem.stockQuantity = incoming.stockQuantity;
+          existingItem.stockItemId = incoming.stockItemId;
           existingItem.backordersAllowed = incoming.backordersAllowed;
+          existingItem.stockLimited = incoming.stockLimited;
+          existingItem.lifecycle = incoming.lifecycle;
         } else {
           nextCart.push(incoming);
         }
@@ -222,9 +262,17 @@ export function CartProvider({ children }) {
         cartItemFromSelection(product, optionIndex, Number(quantity))
       )
       .filter(Boolean);
-    if (incomingItems.length === 0) return 0;
+    if (incomingItems.length === 0 || incomingItems.length !== selections.length) return 0;
+    if (stockLimitErrors(incomingItems).length) return 0;
+    const combined = new Map();
+    for (const incoming of incomingItems) {
+      const existing = combined.get(incoming.cartKey);
+      const merged = { ...incoming, quantity: incoming.quantity + (existing?.quantity || 0) };
+      if (orderQuantityError(merged, merged.quantity)) return 0;
+      combined.set(incoming.cartKey, merged);
+    }
 
-    setCart(incomingItems);
+    setCart([...combined.values()]);
     return incomingItems.length;
   };
 
@@ -238,7 +286,8 @@ export function CartProvider({ children }) {
               item.quantityStep || quantityStepForWeight(item.weightGrams);
             const direction = change < 0 ? -1 : 1;
             const nextQty = item.quantity + direction * quantityStep;
-            const maximumQuantity = maximumOrderQuantityForWeight(item.weightGrams);
+            const maximumQuantity = maximumOrderQuantity(item);
+            if (maximumQuantity < quantityStep) return item;
             return {
               ...item,
               quantityStep,
@@ -278,10 +327,12 @@ export function CartProvider({ children }) {
 
   // Keep the WooCommerce unit price regardless of total order weight.
   const pricedCart = useMemo(() => {
+    const errors = new Map(stockLimitErrors(cart).map(({ item, error }) => [item.cartKey, error]));
     return cart.map((item) => ({
       ...item,
       price: cartUnitPrice(item),
       needsBackorder: needsBackorder(item),
+      availabilityError: errors.get(item.cartKey) || "",
     }));
   }, [cart]);
 

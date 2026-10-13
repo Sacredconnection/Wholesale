@@ -277,7 +277,7 @@ export async function getAllProducts(
   const productParams = {
     per_page: 100,
     ...(catalogLanguage ? { lang: catalogLanguage } : {}),
-    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data,status,catalog_visibility,stock_status,stock_quantity,date_modified_gmt",
+    _fields: "id,slug,name,sku,type,price,weight,images,short_description,description,featured,tags,categories,attributes,meta_data,status,catalog_visibility,stock_status,stock_quantity,manage_stock,backorders,date_modified_gmt",
   };
 
   async function getProductsWithStatus(status) {
@@ -339,7 +339,7 @@ export async function getProductVariations(
   const tags = [getWooCommerceCatalogCacheTag(storeId)];
   const variationParams = {
     per_page: 100,
-    _fields: "id,name,sku,price,weight,purchasable,attributes,meta_data,stock_status,stock_quantity",
+    _fields: "id,name,sku,price,weight,purchasable,attributes,meta_data,stock_status,stock_quantity,manage_stock,backorders",
   };
   const { data: firstPage, headers } = await wcFetch(
     storeId,
@@ -375,7 +375,7 @@ export async function getProductVariations(
 // SKU lookup matches both products and variations (variations come back with
 // type "variation" and a parent_id). Uncached — used while creating orders.
 const ORDER_PRODUCT_FIELDS =
-  "id,parent_id,name,sku,price,weight,attributes,meta_data,categories,stock_status,stock_quantity";
+  "id,parent_id,name,sku,type,status,catalog_visibility,price,weight,attributes,meta_data,categories,stock_status,stock_quantity,manage_stock,backorders";
 
 export async function findProductBySku(sku, storeId = PRIMARY_STORE_ID) {
   const { data } = await wcFetch(storeId, "products", {

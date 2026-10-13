@@ -15,6 +15,7 @@ import {
 import { useCart } from "@/components/CartContext";
 import { useProducts } from "@/components/ProductsContext";
 import { useAuth } from "@/components/AuthContext";
+import { getCatalogTaxonomy } from "@/lib/catalog-taxonomy";
 import {
   ensureWholesaleMinimum,
   findCatalogProduct,
@@ -155,7 +156,7 @@ function SuggestedOrderCard({
             {isAdded
               ? "Added"
               : canOrder
-                ? "Add order sheet"
+                ? "Add to cart"
                 : "Sign in to order"}
           </button>
         </div>
@@ -177,7 +178,7 @@ export default function SuggestedBlends({
   } = useProducts();
   const { isLoggedIn, user } = useAuth();
   const { addSelectionsToCart } = useCart();
-  const [fetchedOrders, setFetchedOrders] = useState([]);
+  const [fetchedHistory, setFetchedHistory] = useState(null);
   const [blends, setBlends] = useState([]);
   const [personalizedBlend, setPersonalizedBlend] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -186,7 +187,7 @@ export default function SuggestedBlends({
   const [retryKey, setRetryKey] = useState(0);
   const preparedKeyRef = useRef("");
   const mountedRef = useRef(true);
-  const orders = providedOrders ?? fetchedOrders;
+  const orders = useMemo(() => providedOrders ?? (fetchedHistory?.account === user?.email ? fetchedHistory?.orders || [] : []), [providedOrders, fetchedHistory, user?.email]);
 
   useEffect(() => {
     if (providedOrders !== undefined || !isLoggedIn) return;
@@ -200,10 +201,10 @@ export default function SuggestedBlends({
         });
         const data = await response.json().catch(() => ({}));
         if (active && response.ok) {
-          setFetchedOrders(Array.isArray(data.orders) ? data.orders : []);
+          setFetchedHistory({ account: user?.email, orders: Array.isArray(data.orders) ? data.orders : [] });
         }
       } catch {
-        // Curated in-stock blends remain useful when history is unavailable.
+        // Personal suggestions stay hidden when order history is unavailable.
       }
     }
 
@@ -211,15 +212,15 @@ export default function SuggestedBlends({
     return () => {
       active = false;
     };
-  }, [isLoggedIn, providedOrders]);
+  }, [isLoggedIn, providedOrders, user?.email]);
 
   const historyItems = useMemo(() => rankHistoricalItems(orders), [orders]);
   const catalogKey = useMemo(
-    () => products.map((product) => product.id).sort().join("|"),
+    () => JSON.stringify(products.map((product) => [product.id, product.inStock, product.options, product.catalogVisible])),
     [products]
   );
   const historyKey = useMemo(
-    () => orders.map((order) => order.id).join("|"),
+    () => JSON.stringify(orders.map((order) => [order.id, order.status, order.items])),
     [orders]
   );
 
@@ -231,12 +232,12 @@ export default function SuggestedBlends({
   }, []);
 
   useEffect(() => {
-    if (productsLoading) return;
+    if (productsLoading || !isLoggedIn || !historyItems.length) return;
     const catalogProducts = products;
     if (!catalogProducts.length) return;
 
     const preparationKey =
-      `${isLoggedIn ? "partner" : "public"}:${user?.role || "none"}:` +
+      `${isLoggedIn ? "partner" : "public"}:${user?.email || ""}:${user?.role || "none"}:` +
       `${user?.discountRate || 0}:${catalogKey}:${historyKey}:${retryKey}`;
     if (preparedKeyRef.current === preparationKey) return;
     preparedKeyRef.current = preparationKey;
@@ -246,8 +247,17 @@ export default function SuggestedBlends({
       setError("");
 
       try {
+        const historicalProducts = historyItems
+          .slice(0, 10)
+          .map((item) => findCatalogProduct(catalogProducts, item, item.storeId))
+          .filter(Boolean);
+        const groupKey = (product) => {
+          const taxonomy = getCatalogTaxonomy(product);
+          return `${taxonomy.mainCategory}:${taxonomy.subcategory}`;
+        };
+        const historicalGroups = new Set(historicalProducts.map(groupKey));
         const availableProductSummaries = catalogProducts
-          .filter((product) => product.inStock !== false)
+          .filter((product) => product.inStock !== false && product.catalogVisible !== false && historicalGroups.has(groupKey(product)))
           .sort((a, b) => a.name.localeCompare(b.name));
         const candidatesByRecipe = new Map(
           SUGGESTED_BLEND_RECIPES.map((recipe) => [
@@ -255,10 +265,6 @@ export default function SuggestedBlends({
             variedCandidates(availableProductSummaries, recipe),
           ])
         );
-        const historicalProducts = historyItems
-          .slice(0, 10)
-          .map((item) => findCatalogProduct(catalogProducts, item, item.storeId))
-          .filter(Boolean);
         const candidates = uniqueById([
           ...[...candidatesByRecipe.values()].flat(),
           ...historicalProducts,
@@ -293,6 +299,7 @@ export default function SuggestedBlends({
             })
             .slice(0, RECIPE_LINE_COUNT);
           if (selections.length < 2) return [];
+          if (recipe.id === "mixed-indigenous-nations" && new Set(selections.map(({ product }) => getCatalogTaxonomy(product).subcategory)).size < 2) return [];
           const weighted = ensureWholesaleMinimum(selections, user);
           return weighted.meetsMinimum
             ? [{ ...recipe, ...weighted }]
@@ -304,7 +311,9 @@ export default function SuggestedBlends({
             const summary = findCatalogProduct(catalogProducts, item, item.storeId);
             const resolved = summary ? resolvedById.get(summary.id) : null;
             if (!resolved) return [];
-            const optionIndex = findOptionIndex(resolved, item);
+            const previousOptionIndex = findOptionIndex(resolved, item);
+            const optionIndex = isStockedOption(resolved.options?.[previousOptionIndex])
+              ? previousOptionIndex : preferredStockedOptionIndex(resolved, 50);
             const option = resolved.options?.[optionIndex];
             if (optionIndex < 0 || !isStockedOption(option)) return [];
             const requestedQuantity = Math.max(1, item.suggestedQuantity);
@@ -316,6 +325,7 @@ export default function SuggestedBlends({
               ? [{ product: resolved, optionIndex, quantity }]
               : [];
           })
+          .filter((selection, index, all) => all.findIndex((other) => other.product.id === selection.product.id && other.optionIndex === selection.optionIndex) === index)
           .slice(0, 5);
         const weightedPersonalized =
           personalizedSelections.length > 0
@@ -333,10 +343,10 @@ export default function SuggestedBlends({
           weightedPersonalized?.meetsMinimum
             ? {
                 id: "history-based",
-                title: "Your Smart Restock",
+                title: "Restock your previous products",
                 eyebrow: "Based on your order history",
                 description:
-                  "Your most frequently reordered items, adjusted to current availability and the wholesale minimum.",
+                  "Products ranked by quantity and recency across your last 12 processing or completed orders. Quantities are adjusted to current stock and your order minimum; an available size may replace a retired one.",
                 ...weightedPersonalized,
               }
             : null
@@ -383,9 +393,15 @@ export default function SuggestedBlends({
       setError("Availability changed. Refresh the suggestions before adding this order.");
       return;
     }
-    addSelectionsToCart(stockedSelections);
+    const added = addSelectionsToCart(stockedSelections);
+    if (added !== stockedSelections.length) {
+      setError("Some quantities are no longer available. Refresh the suggestions and review your cart.");
+      return;
+    }
     setAddedBlendId(blend.id);
   };
+
+  if (!isLoggedIn || historyItems.length === 0) return null;
 
   if (error || productsError) {
     return (
@@ -445,11 +461,12 @@ export default function SuggestedBlends({
               Suggested Blends
             </span>
             <h2 className="mt-2 font-headline-md text-2xl font-bold text-white md:text-3xl">
-              Ready-to-build wholesale order sheets
+              Suggestions from your past orders
             </h2>
             <p className="mt-3 text-sm leading-relaxed text-white/60">
-              Each template is rebuilt from live catalog availability. Only in-stock
-              options are included, and nothing enters your cart until you choose it.
+              These suggestions use your processing and completed orders. Your
+              previous products and product groups are checked against current stock
+              before you choose what to add to your cart.
             </p>
           </div>
           <span className="inline-flex w-fit items-center gap-2 rounded-full border border-emerald-300/20 bg-emerald-300/10 px-3 py-2 text-[9px] font-bold uppercase tracking-wider text-emerald-200">
@@ -477,7 +494,7 @@ export default function SuggestedBlends({
 
       <section>
         <h2 className="mb-4 font-headline-md text-lg font-bold text-white">
-          Curated assortments
+          Explore groups you have ordered before
         </h2>
         {blends.length > 0 ? (
           <div className="grid gap-5 xl:grid-cols-2">
@@ -493,7 +510,7 @@ export default function SuggestedBlends({
           </div>
         ) : (
           <div className="rounded-xl border border-white/10 bg-[#1a1a1a] p-8 text-center">
-            <p className="text-sm font-bold text-white">No complete blend is available right now.</p>
+            <p className="text-sm font-bold text-white">No additional assortment is available from your previous product groups.</p>
             <p className="mt-2 text-xs text-white/45">
               Suggested orders return automatically as qualifying products are restocked.
             </p>

@@ -383,6 +383,7 @@ export default function CheckoutPage() {
   const [liveStockWarnings, setLiveStockWarnings] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submissionStage, setSubmissionStage] = useState(0);
+  const unavailableCartItems = cart.filter((item) => item.availabilityError);
 
   useEffect(() => {
     if (!user || initializedForUser.current === user.email) return;
@@ -475,6 +476,10 @@ export default function CheckoutPage() {
 
   const submitOrder = async () => {
     if (isSubmitting) return;
+    if (unavailableCartItems.length) {
+      setError("Update the unavailable items in your cart before placing the order.");
+      return;
+    }
     if (!confirmed) {
       setError("Confirm that the order details are correct before placing the order.");
       return;
@@ -530,6 +535,9 @@ export default function CheckoutPage() {
         }
         if (!data.uncertain) {
           orderIdempotencyKey.current = "";
+        }
+        if (Array.isArray(data.unavailableItems)) {
+          throw new Error(data.unavailableItems.map((item) => `${item.productName} (${item.sku}): ${item.error}`).join(" "));
         }
         throw new Error(data.error || "Order submission failed. Please try again.");
       }
@@ -802,7 +810,7 @@ export default function CheckoutPage() {
                       <button
                         type="button"
                         onClick={submitOrder}
-                        disabled={isSubmitting || !confirmed || !minimumStatus.meetsMinimum}
+                        disabled={isSubmitting || !confirmed || !minimumStatus.meetsMinimum || unavailableCartItems.length > 0}
                         aria-busy={isSubmitting}
                         className="inline-flex min-h-12 items-center justify-center gap-2 rounded-sm bg-[#EC2300] px-7 text-xs font-black uppercase tracking-wider text-white shadow-lg shadow-[#EC2300]/15 transition-colors hover:bg-[#c51d00] disabled:cursor-not-allowed disabled:opacity-45"
                       >
@@ -844,6 +852,7 @@ export default function CheckoutPage() {
                     <div className="min-w-0 flex-1">
                       <p className="truncate text-xs font-bold text-white">{item.name}</p>
                       <p className="mt-1 text-[10px] text-white/40">{item.optionName} · Qty {item.quantity}</p>
+                      {item.availabilityError && <p role="alert" className="mt-1 text-xs text-red-200">{item.availabilityError}</p>}
                       {stockWarnings.some((warning) => warningMatchesCartItem(warning, item)) && (
                         <p className="mt-1 text-[10px] font-bold text-amber-200">
                           Includes units awaiting monthly restock

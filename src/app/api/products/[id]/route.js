@@ -91,6 +91,9 @@ export async function GET(request, { params }) {
           identity.store
         );
     const product = revealPricing ? mapped : stripProductPricing(mapped);
+    if (product.catalogVisible === false) {
+      return Response.json({ error: "Product is no longer available." }, { status: 404 });
+    }
     return Response.json(
       {
         product: {

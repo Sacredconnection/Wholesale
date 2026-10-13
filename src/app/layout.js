@@ -2,6 +2,7 @@ import { Roboto } from "next/font/google";
 import { AuthProvider } from "@/components/AuthContext";
 import { CartProvider } from "@/components/CartContext";
 import { ProductsProvider } from "@/components/ProductsContext";
+import { ShelfProvider } from "@/components/ShelfContext";
 import CartDrawer from "@/components/CartDrawer";
 import BackToTop from "@/components/BackToTop";
 import { SITE_URL } from "@/lib/site-config";
@@ -34,6 +35,7 @@ export default function RootLayout({ children }) {
         className="min-h-full flex flex-col bg-[#23403B] text-[#e5e2e1]"
       >
         <AuthProvider>
+          <ShelfProvider>
           <ProductsProvider>
             <CartProvider>
               {children}
@@ -41,6 +43,7 @@ export default function RootLayout({ children }) {
               <BackToTop />
             </CartProvider>
           </ProductsProvider>
+          </ShelfProvider>
         </AuthProvider>
       </body>
     </html>

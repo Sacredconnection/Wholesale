@@ -3,7 +3,7 @@ import { getPublicCatalogProducts } from "@/lib/public-catalog";
 
 export const revalidate = 300;
 
-const PRODUCTS_PER_PAGE = 8;
+const PRODUCTS_PER_PAGE = 12;
 
 const firstQueryValue = (value) =>
   Array.isArray(value) ? value[0] : value;

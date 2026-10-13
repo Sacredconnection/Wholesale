@@ -4,24 +4,18 @@ import {
   orderMinimumStatus,
   optionPriceForUser,
   quantityStepForWeight,
+  isOptionVisible,
+  maximumOrderQuantity,
 } from "@/lib/pricing";
+import { getCatalogTaxonomy } from "@/lib/catalog-taxonomy";
 
 export const SUGGESTED_BLEND_RECIPES = [
   {
-    id: "balanced-counter",
-    title: "Balanced Counter Mix",
-    eyebrow: "Broad assortment",
-    description:
-      "A varied shelf-ready order designed to give returning customers several familiar directions to explore.",
-    terms: [],
-    preferredWeight: 100,
-  },
-  {
     id: "yawanawa-lineage",
     title: "Yawanawá Lineage",
-    eyebrow: "Single-nation focus",
+    eyebrow: "From a tribe in your order history",
     description:
-      "A focused assortment built only from products explicitly associated with the Yawanawá nation.",
+      "Available Yawanawá products, shown when your previous orders include this tribe.",
     terms: ["yawanawa"],
     preferredWeight: 50,
     strict: true,
@@ -29,9 +23,9 @@ export const SUGGESTED_BLEND_RECIPES = [
   {
     id: "mixed-indigenous-nations",
     title: "Mixed Indigenous Nations",
-    eyebrow: "Cross-lineage assortment",
+    eyebrow: "Tribes from your previous orders",
     description:
-      "A varied selection across distinct indigenous nations, with lineage diversity prioritized.",
+      "Available products from indigenous tribes found in your previous orders, with different tribes prioritized.",
     terms: ["indigenous"],
     preferredWeight: 50,
     strict: true,
@@ -39,21 +33,12 @@ export const SUGGESTED_BLEND_RECIPES = [
   {
     id: "tobacco-free",
     title: "Tobacco-Free Discovery",
-    eyebrow: "Alternative assortment",
+    eyebrow: "From your previous product groups",
     description:
-      "A focused mix containing only products explicitly classified as tobacco-free in the live catalog.",
+      "Products explicitly classified as tobacco-free, from product groups in your previous orders.",
     terms: ["tobacco free", "tobacco-free", "tobaccofree"],
-    preferredWeight: 100,
+    preferredWeight: 50,
     strict: true,
-  },
-  {
-    id: "traditional-heritage",
-    title: "Traditional Heritage",
-    eyebrow: "Classic assortment",
-    description:
-      "A traditional-facing selection spanning classic, ash, and Sacred Connection catalog groups.",
-    terms: ["traditional", "ash", "tobacco", "sacred connection"],
-    preferredWeight: 100,
   },
 ];
 
@@ -71,6 +56,7 @@ const productSearchText = (product) =>
       product?.name,
       product?.category,
       product?.tribe,
+      getCatalogTaxonomy(product).mainCategory,
       ...(product?.attributes || []).flatMap((attribute) => [
         attribute.name,
         ...(attribute.values || []),
@@ -94,6 +80,8 @@ export const recipeScore = (product, recipe) => {
 export const isStockedOption = (option) =>
   Boolean(
     option &&
+      isOptionVisible(option) &&
+      maximumOrderQuantity(option) > 0 &&
       option.inStock !== false &&
       (!option.stockStatus || option.stockStatus === "instock") &&
       (option.stockQuantity == null || Number(option.stockQuantity) > 0)
@@ -142,7 +130,7 @@ export const findOptionIndex = (product, item) => {
   return -1;
 };
 
-export const preferredStockedOptionIndex = (product, preferredWeight = 100) => {
+export const preferredStockedOptionIndex = (product, preferredWeight = 50) => {
   const candidates = (product.options || [])
     .map((option, optionIndex) => ({ option, optionIndex }))
     .filter(({ option }) => {
@@ -165,17 +153,16 @@ export const preferredStockedOptionIndex = (product, preferredWeight = 100) => {
 export const ensureWholesaleMinimum = (selections, user = null) => {
   const adjusted = selections.flatMap((selection) => {
     const option = selection.product.options[selection.optionIndex];
-    if (!option) return [];
+    if (!isStockedOption(option)) return [];
     const quantityStep = quantityStepForWeight(option.weightGrams);
     const normalized = normalizeQuantityForWeight(
       selection.quantity,
       option.weightGrams
     );
-    const maxQuantity =
+    const maxQuantity = Math.min(maximumOrderQuantity(option),
       option.stockQuantity == null
-        ? null
-        : Math.floor(Number(option.stockQuantity) / quantityStep) *
-          quantityStep;
+        ? maximumOrderQuantity(option)
+        : Math.floor(Number(option.stockQuantity) / quantityStep) * quantityStep);
     if (maxQuantity != null && maxQuantity < quantityStep) return [];
     return [{
       ...selection,
@@ -253,6 +240,7 @@ export const ensureWholesaleMinimum = (selections, user = null) => {
         const quantityStep = quantityStepForWeight(option.weightGrams);
         return (
           selectionWeight(selection) > 0 &&
+          selection.quantity + quantityStep <= maximumOrderQuantity(option) &&
           (option.stockQuantity == null ||
             selection.quantity + quantityStep <= Number(option.stockQuantity))
         );
@@ -288,7 +276,10 @@ export const ensureWholesaleMinimum = (selections, user = null) => {
 
 export const rankHistoricalItems = (orders) => {
   const stats = new Map();
-  (orders || []).slice(0, 12).forEach((order, orderIndex) => {
+  (orders || [])
+    .filter((order) => ["completed", "processing"].includes(order.status))
+    .sort((a, b) => (Date.parse(b.dateCreated) || 0) - (Date.parse(a.dateCreated) || 0))
+    .slice(0, 12).forEach((order, orderIndex) => {
     const recencyWeight = Math.max(1, 12 - orderIndex);
     (order.items || []).forEach((item) => {
       const key =
