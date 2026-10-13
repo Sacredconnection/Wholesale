@@ -56,9 +56,12 @@ const getPaginationItems = (currentPage, totalPages) => {
   return items;
 };
 
-const catalogPageHref = (page, tribe, category, search) => {
+const PAGE_SIZES = [12, 24, 48, 96];
+
+const catalogPageHref = (page, tribe, category, search, itemsPerPage) => {
   const params = new URLSearchParams();
   if (page > 1) params.set("page", String(page));
+  if (itemsPerPage !== 12) params.set("pageSize", String(itemsPerPage));
   if (tribe !== "All") params.set("tribe", tribe.toLowerCase());
   if (category !== "All") params.set("category", category);
   if (search.trim()) params.set("q", search.trim());
@@ -97,12 +100,12 @@ export default function CatalogClient({
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [tribe, setTribe] = useState("All");
-  const [viewMode, setViewMode] = useState("grid");
+  const [viewMode, setViewMode] = useState("list");
   const [showAll, setShowAll] = useState(false);
 
   // Pagination State
   const [currentPage, setCurrentPage] = useState(initialPage);
-  const itemsPerPage = 12;
+  const [itemsPerPage, setItemsPerPage] = useState(12);
 
   // Read URL query parameters to set initial tribe filter and page
   // Resolve accent-insensitively against actual data so URL params always match
@@ -111,6 +114,8 @@ export default function CatalogClient({
       const params = new URLSearchParams(window.location.search);
       setSearch(params.get("q") || "");
       setShowAll(params.get("showAll") === "true");
+      const requestedSize = Number(params.get("pageSize"));
+      setItemsPerPage(PAGE_SIZES.includes(requestedSize) ? requestedSize : 12);
       const categoryParam = params.get("category");
       if (categoryParam) {
         const match = products.find((product) => normalizeStr(getCatalogTaxonomy(product).mainCategory) === normalizeStr(categoryParam) || normalizeStr(product.category) === normalizeStr(categoryParam));
@@ -165,6 +170,8 @@ export default function CatalogClient({
       else params.delete("category");
       if (search.trim()) params.set("q", search.trim());
       else params.delete("q");
+      if (itemsPerPage !== 12) params.set("pageSize", String(itemsPerPage));
+      else params.delete("pageSize");
       if (showAll) params.set("showAll", "true");
       else params.delete("showAll");
       const newUrl = params.toString() ? `?${params.toString()}` : window.location.pathname;
@@ -172,7 +179,7 @@ export default function CatalogClient({
     } else {
       isMounted.current = true;
     }
-  }, [currentPage, tribe, category, search, showAll]);
+  }, [currentPage, tribe, category, search, showAll, itemsPerPage]);
 
   const categoryGroups = useMemo(() => groupCatalogProducts(products), [products]);
   const categories = useMemo(() => categoryGroups.map((group) => group.name), [categoryGroups]);
@@ -200,7 +207,7 @@ export default function CatalogClient({
       startIndex,
       startIndex + itemsPerPage
     );
-  }, [filteredProducts, currentPage, showAll]);
+  }, [filteredProducts, currentPage, showAll, itemsPerPage]);
 
   const totalPages =
     showAll ? 1 : Math.ceil(filteredProducts.length / itemsPerPage) || 1;
@@ -234,7 +241,6 @@ export default function CatalogClient({
     setSearch("");
     setCategory("All");
     setTribe("All");
-    setShowAll(false);
     setCurrentPage(1);
   };
 
@@ -438,7 +444,6 @@ export default function CatalogClient({
             if ("category" in nextFilters) setCategory(nextFilters.category);
             if ("tribe" in nextFilters) setTribe(nextFilters.tribe);
             setCurrentPage(1);
-            setShowAll(false);
           }}
           onClear={handleClearFilters}
           disabled={productsLoading}
@@ -455,7 +460,18 @@ export default function CatalogClient({
           <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 p-4">
             <p className="text-sm text-white/65">{filteredProducts.length} products{tribe !== "All" ? ` in ${tribe}` : ""}</p>
             <div className="flex flex-wrap items-center gap-2">
-              {filteredProducts.length > itemsPerPage && <button type="button" onClick={() => { setShowAll((value) => !value); setCurrentPage(1); }} className="rounded-sm border border-white/15 px-3 py-2 text-xs font-bold text-[#82d6c5]">{showAll ? "Show 12 per page" : `Show all ${filteredProducts.length}`}</button>}
+              <label className="flex items-center gap-2 text-xs text-white/65">
+                Products per page
+                <select value={showAll ? "all" : String(itemsPerPage)} onChange={(event) => {
+                  const value = event.target.value;
+                  setShowAll(value === "all");
+                  if (value !== "all") setItemsPerPage(Number(value));
+                  setCurrentPage(1);
+                }} className="rounded-sm border border-white/15 bg-[#131313] px-3 py-2 text-sm text-white">
+                  {PAGE_SIZES.map((size) => <option key={size} value={size}>{size}</option>)}
+                  <option value="all">All</option>
+                </select>
+              </label>
               <button type="button" aria-label="Two-column view" aria-pressed={viewMode === "grid"} onClick={() => setViewMode("grid")} className={`rounded-sm border p-2 ${viewMode === "grid" ? "border-[#82d6c5] bg-[#268072]/25 text-[#82d6c5]" : "border-white/15 text-white/60"}`}><LayoutGrid className="h-4 w-4" aria-hidden="true" /></button>
               <button type="button" aria-label="Full-width list view" aria-pressed={viewMode === "list"} onClick={() => setViewMode("list")} className={`rounded-sm border p-2 ${viewMode === "list" ? "border-[#82d6c5] bg-[#268072]/25 text-[#82d6c5]" : "border-white/15 text-white/60"}`}><List className="h-4 w-4" aria-hidden="true" /></button>
             </div>
@@ -602,7 +618,7 @@ export default function CatalogClient({
                 </span>
               ) : (
                 <Link
-                  href={catalogPageHref(currentPage - 1, tribe, category, search)}
+                  href={catalogPageHref(currentPage - 1, tribe, category, search, itemsPerPage)}
                   prefetch={false}
                   scroll={false}
                   onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
@@ -616,7 +632,7 @@ export default function CatalogClient({
                 {mobilePageNumbers.map((page) => (
                   <Link
                     key={page}
-                    href={catalogPageHref(page, tribe, category, search)}
+                    href={catalogPageHref(page, tribe, category, search, itemsPerPage)}
                     prefetch={false}
                     scroll={false}
                     onClick={() => setCurrentPage(page)}
@@ -642,7 +658,7 @@ export default function CatalogClient({
                   ) : (
                     <Link
                       key={item}
-                      href={catalogPageHref(item, tribe, category, search)}
+                      href={catalogPageHref(item, tribe, category, search, itemsPerPage)}
                       prefetch={false}
                       scroll={false}
                       onClick={() => setCurrentPage(item)}
@@ -670,7 +686,7 @@ export default function CatalogClient({
                 </span>
               ) : (
                 <Link
-                  href={catalogPageHref(currentPage + 1, tribe, category, search)}
+                  href={catalogPageHref(currentPage + 1, tribe, category, search, itemsPerPage)}
                   prefetch={false}
                   scroll={false}
                   onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
