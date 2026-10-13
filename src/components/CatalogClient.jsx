@@ -462,7 +462,6 @@ export default function CatalogClient({
         <FilterSidebar
           filters={{ search, category, tribe }}
           categories={categories}
-          categoryGroups={categoryGroups}
           tribes={tribes}
           allValue="All"
           onChange={(nextFilters) => {
