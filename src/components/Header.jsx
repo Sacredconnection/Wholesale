@@ -117,7 +117,7 @@ export default function Header({ onOpenLogin }) {
                 onClick={handleHeaderLogout}
                 className="bg-[#93000a]/15 hover:bg-[#93000a]/30 text-[#ffb4ab] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-[#93000a]/30 hover:border-[#ffb4ab]/40 transition-all duration-300 flex items-center gap-2 cursor-pointer"
               >
-                Exit Portal
+                Log Out
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </>
@@ -232,7 +232,7 @@ export default function Header({ onOpenLogin }) {
                 className="flex items-center gap-2 text-left text-[#ffb4ab] text-base font-medium py-2 bg-transparent border-0 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                Exit Portal
+                Log Out
               </button>
             </>
           ) : (
