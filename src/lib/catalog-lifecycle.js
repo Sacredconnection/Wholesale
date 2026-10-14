@@ -58,7 +58,7 @@ export function applyOptionLifecycle(option, policy) {
   return {
     ...decorated,
     availabilityLabel: policy.lifecycle === "removed" ? "No longer available"
-      : stockLimited ? stock == null ? "Stock confirmation required" : "While stocks last"
+      : stockLimited ? stock == null ? "Stock confirmation required" : unavailable ? "Temporarily out of stock" : "In stock"
         : unavailable && policy.lifecycle === "made-to-order" ? "Made to order"
           : unavailable ? "Temporarily out of stock — available to order" : "In stock",
   };

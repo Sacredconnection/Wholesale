@@ -508,7 +508,6 @@ export default function ProductDetailClient({ initialProduct }) {
               )}
 
               {requiresBackorder && <StockBackorderNotice madeToOrder={selectedOption?.availabilityLabel === "Made to order"} />}
-              {selectedOption?.stockLimited && <p className="text-xs text-amber-200">{selectedOption.availabilityLabel}. {availableQuantity != null ? `${availableQuantity} units remaining; no restock orders.` : "Contact our team to confirm remaining stock."}</p>}
               {quantityStep > 1 && selectedOption && (
                 <p className="text-[10px] font-semibold text-[#82d6c5]">
                   This {Math.round(selectedOption.weightGrams)}g tin is sold in
