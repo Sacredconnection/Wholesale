@@ -1,13 +1,13 @@
 // Client-safe pricing helpers (no secrets here). Also imported server-side by
 // /api/orders so the order totals use exactly the same rules as the UI.
 
-// Minimum wholesale order value in USD. The storefront uses USD throughout,
+// Orders have no minimum value in USD. The storefront uses USD throughout,
 // and the same threshold is enforced again when an order is registered.
-export const MIN_ORDER_AMOUNT = 500;
+export const MIN_ORDER_AMOUNT = 0;
 export const MAX_ORDER_ITEM_QUANTITY = 1000;
 
 // Some approved accounts use a weight-based order minimum instead of the
-// standard dollar minimum. The server adds `minimumOrderWeightGrams` to those
+// default zero dollar minimum. The server adds `minimumOrderWeightGrams` to those
 // users; keeping the evaluator here makes the cart, checkout, suggestions, and
 // order API follow the same rule.
 export function orderMinimumStatus(user, totalAmount, totalWeightGrams) {
