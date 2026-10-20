@@ -100,7 +100,7 @@ export default function CatalogClient({
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
   const [tribe, setTribe] = useState("All");
-  const [viewMode, setViewMode] = useState("list");
+  const [viewMode, setViewMode] = useState("grid");
   const [showAll, setShowAll] = useState(false);
 
   // Pagination State
