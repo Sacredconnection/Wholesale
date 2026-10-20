@@ -72,16 +72,17 @@ const manyOptions = Array.from({ length: 85 }, (_, index) => ({
 }));
 const pdf = renderCatalogListPdf({
   jsPDF: RecordingPdf,
-  groups: [{ name: "Indigenous Hapé", subcategories: [{ name: "Yawanawá", products: [{ id: "long", name: "Mulateiro full available assortment", sku: "MUL", options: manyOptions }] }] }],
+  groups: [{ name: "Indigenous Hapé", subcategories: [{ name: "Yawanawá", products: [{ id: "long", name: "Mulateiro full available assortment", description: "A brief product description for the PDF catalog.", sku: "MUL", options: manyOptions }] }] }],
   generatedAtLabel: "Oct 13, 2026, 12:00 (America/Sao_Paulo)",
 });
 const flattened = drawnText.flatMap(({ value }) => Array.isArray(value) ? value : [value]);
-assert.ok(pdf.getNumberOfPages() >= 4, "Long format lists continue across pages");
+assert.ok(pdf.getNumberOfPages() >= 2, "Long format lists continue across pages");
 for (let index = 0; index < 85; index += 1) {
-  assert.equal(flattened.filter((text) => text === `PAGINATION-SKU-${index}`).length, 1);
-  assert.ok(flattened.includes(`$${(index + 0.99).toFixed(2)}`));
+  assert.equal(flattened.filter((text) => text.includes(`PAGINATION-SKU-${index}`)).length, 0);
+  assert.ok(flattened.includes(`${index + 1} g: $${(index + 0.99).toFixed(2)}`));
 }
-assert.ok(flattened.some((text) => text.includes("(continued)")));
+assert.ok(flattened.includes("A brief product description for the PDF catalog."));
+assert.ok(flattened.every((text) => !/SKU|Availability|In stock|backorder|Product option/i.test(text)), "PDF excludes inventory and technical details");
 assert.ok(drawnText.every(({ y }) => y >= 0 && y <= 289), "Text stays within page margins");
 
 const originalFetch = globalThis.fetch;

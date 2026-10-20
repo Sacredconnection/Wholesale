@@ -26,41 +26,6 @@ export async function loadPdfCatalog({ signal } = {}) {
   return products;
 }
 
-async function loadProductImage(product) {
-  if (!product.image) return null;
-  let source = product.image;
-  if (!source.startsWith("/products/")) {
-    const response = await fetch(`/api/catalog/image?url=${encodeURIComponent(source)}&v=base64-json-v3`, { cache: "force-cache", signal: AbortSignal.timeout(15000) });
-    if (!response.ok) return null;
-    const payload = await response.json();
-    const mimeType = payload.mimeType || { JPEG: "image/jpeg", PNG: "image/png", WEBP: "image/webp" }[payload.format];
-    if (!["image/jpeg", "image/png", "image/webp"].includes(mimeType) || !payload.base64) return null;
-    source = `data:${mimeType};base64,${payload.base64}`;
-  }
-  const image = new Image();
-  image.decoding = "async";
-  const loaded = new Promise((resolve, reject) => {
-    const timeout = setTimeout(() => reject(new Error("Product image timed out.")), 15000);
-    image.onload = () => { clearTimeout(timeout); resolve(); };
-    image.onerror = () => { clearTimeout(timeout); reject(new Error("Product image could not be loaded.")); };
-  });
-  image.src = source;
-  await loaded;
-  if (!image.naturalWidth || !image.naturalHeight) return null;
-  const canvas = document.createElement("canvas");
-  canvas.width = 160;
-  canvas.height = 160;
-  const context = canvas.getContext("2d");
-  if (!context) return null;
-  context.fillStyle = "#ffffff";
-  context.fillRect(0, 0, 160, 160);
-  const scale = Math.min(160 / image.naturalWidth, 160 / image.naturalHeight);
-  const width = image.naturalWidth * scale;
-  const height = image.naturalHeight * scale;
-  context.drawImage(image, (160 - width) / 2, (160 - height) / 2, width, height);
-  return { dataUrl: canvas.toDataURL("image/png"), format: "PNG" };
-}
-
 export async function generateCatalogPdf({ products, user, filterLabel = "Selected catalog", onProgress } = {}) {
   if (!Array.isArray(products) || !products.length) throw new Error("Select at least one product before generating your PDF.");
   const selected = exportableProducts(products).map((product) => ({
@@ -80,32 +45,18 @@ export async function generateCatalogPdf({ products, user, filterLabel = "Select
   const generatedAtLabel = `${new Intl.DateTimeFormat("en-US", {
     dateStyle: "medium", timeStyle: "short", ...(timeZone ? { timeZone } : {}),
   }).format(generatedAt)}${timeZone ? ` (${timeZone})` : ""}`;
-  const total = selected.length * 2;
-  const images = new Map();
-  const cachedImages = new Map();
-  let loaded = 0;
+  const total = selected.length;
   onProgress?.({ completed: 0, total, label: "Preparing your selected products..." });
-  for (let start = 0; start < selected.length; start += 6) {
-    await Promise.all(selected.slice(start, start + 6).map(async (product) => {
-      if (!cachedImages.has(product.image)) {
-        cachedImages.set(product.image, loadProductImage(product).catch(() => null));
-      }
-      images.set(product.id, await cachedImages.get(product.image));
-      loaded += 1;
-      onProgress?.({ completed: loaded, total, label: `Preparing images: ${loaded} of ${selected.length}` });
-    }));
-  }
   const { jsPDF } = await import("jspdf");
   const pdf = renderCatalogListPdf({
     jsPDF,
     groups: groupCatalogProducts(selected),
-    images,
     generatedAt,
     generatedAtLabel,
     filterLabel,
     includePrices: Boolean(user),
     onProductRendered: (count) => onProgress?.({
-      completed: selected.length + count,
+      completed: count,
       total,
       label: `Formatting products: ${count} of ${selected.length}`,
     }),
