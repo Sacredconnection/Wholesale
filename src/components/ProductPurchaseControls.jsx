@@ -7,7 +7,7 @@ import { useCart } from "@/components/CartContext";
 import { useProducts } from "@/components/ProductsContext";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
 import {
-  maximumOrderQuantityForWeight,
+  maximumOrderQuantity,
   isValidQuantityForWeight,
   needsBackorder,
   normalizeQuantityForWeight,
@@ -85,7 +85,7 @@ export default function ProductPurchaseControls({
   const selectedOption = activeProduct?.options[selectedOptionIndex];
   const quantityStep = quantityStepForWeight(selectedOption?.weightGrams);
   const availableQuantity = orderableStockQuantity(selectedOption);
-  const maximumQuantity = maximumOrderQuantityForWeight(selectedOption?.weightGrams);
+  const maximumQuantity = maximumOrderQuantity(selectedOption);
   const numericQuantity = Number(quantity);
   const isQuantityValid =
     isValidQuantityForWeight(numericQuantity, selectedOption?.weightGrams) &&
@@ -126,7 +126,10 @@ export default function ProductPurchaseControls({
 
   const handleAdd = () => {
     if (!activeProduct || !canAdd) return;
-    addToCart(activeProduct, selectedOptionIndex, numericQuantity);
+    if (!addToCart(activeProduct, selectedOptionIndex, numericQuantity)) {
+      setError("The combined cart quantity exceeds remaining stock. Review your cart.");
+      return;
+    }
     setQuantity(String(quantityStep));
     setAddedAt(Date.now());
     onAdded?.(activeProduct, selectedOptionIndex);
@@ -172,12 +175,12 @@ export default function ProductPurchaseControls({
         </select>
       </label>
 
-      {requiresBackorder && <StockBackorderNotice compact={compact} />}
+      {requiresBackorder && <StockBackorderNotice compact={compact} madeToOrder={selectedOption?.availabilityLabel === "Made to order"} />}
       {quantityStep > 1 && selectedOption && (
         <p className="text-[9px] font-semibold leading-relaxed text-[#82d6c5]">
           This {Math.round(selectedOption.weightGrams)}g tin is sold in multiples
           of {quantityStep} units.
-          {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now; additional packs can be requested for restock.`}
+          {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now.${selectedOption.stockLimited ? "" : " Additional packs can be requested for restock."}`}
         </p>
       )}
 

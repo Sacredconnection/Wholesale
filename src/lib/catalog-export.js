@@ -2,6 +2,8 @@
 
 import {
   MAX_ORDER_ITEM_QUANTITY,
+  getOrderableProductOptions,
+  maximumOrderQuantity,
   optionPriceForUser,
   orderableStockQuantity,
   quantityStepForWeight,
@@ -14,11 +16,9 @@ import {
   ORDER_WORKBOOK_META_SHEET,
   ORDER_WORKBOOK_VERSION,
 } from "@/lib/catalog-order-workbook";
+import { catalogProductTitle, groupCatalogProducts } from "@/lib/catalog-taxonomy";
 
-const BRAND_DARK = "FF1A1A1A";
 const BRAND_GREEN = "FF268072";
-const BRAND_MINT = "FF82D6C5";
-const BRAND_RED = "FFEC2300";
 const CATALOG_GRID_COLOR = "FFD5DEDB";
 
 const catalogGridBorder = () => ({
@@ -29,9 +29,6 @@ const catalogGridBorder = () => ({
 });
 
 const DEFAULT_ETHNICITY_COLOR = [38, 128, 114];
-const SACRED_PRIMARY = [20, 65, 57];
-const SACRED_SECONDARY = [130, 214, 197];
-const SACRED_STORE_ID = "sacred-connection";
 const ETHNICITY_COLORS = {
   apurina: [74, 115, 13],
   "apurina\u00a3": [74, 115, 13],
@@ -95,11 +92,6 @@ const safeFilenameDate = (date = new Date()) =>
     date.getDate()
   )}`;
 
-const safeFilenameTimestamp = (date) =>
-  `${safeFilenameDate(date)}-${twoDigits(date.getHours())}-${twoDigits(
-    date.getMinutes()
-  )}-${twoDigits(date.getSeconds())}`;
-
 const clientGenerationContext = (date = new Date()) => {
   const resolvedTimeZone = Intl.DateTimeFormat().resolvedOptions().timeZone;
   const timeZone = resolvedTimeZone || "Client local time";
@@ -139,75 +131,9 @@ function downloadBlob(blob, filename) {
   window.setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
-function usesMobilePdfPreview() {
-  const userAgentDataMobile = navigator.userAgentData?.mobile === true;
-  const mobileUserAgent = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
-  const touchEnabledIpad = navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1;
-  return userAgentDataMobile || mobileUserAgent || touchEnabledIpad;
-}
-
-function preparePdfDelivery() {
-  if (usesMobilePdfPreview()) {
-    return { mode: "preview" };
-  }
-
-  const previewWindow = window.open("", "_blank");
-  if (!previewWindow) {
-    return { mode: "preview" };
-  }
-
-  previewWindow.document.title = "Generating PDF catalog";
-  previewWindow.document.body.innerHTML = `
-    <main style="box-sizing:border-box;min-height:100vh;display:grid;place-items:center;margin:0;padding:32px;background:#102c27;color:#fff;font-family:Arial,sans-serif;text-align:center">
-      <div>
-        <div style="width:44px;height:44px;margin:0 auto 24px;border:4px solid rgba(130,214,197,.25);border-top-color:#82d6c5;border-radius:50%;animation:catalog-spin .8s linear infinite"></div>
-        <h1 style="margin:0;font-size:24px">Generating your PDF catalog...</h1>
-        <p style="margin:14px 0 0;color:rgba(255,255,255,.72);font-size:16px;line-height:1.6">Please keep this tab open. The document will appear here when it is ready.</p>
-      </div>
-      <style>@keyframes catalog-spin{to{transform:rotate(360deg)}}</style>
-    </main>`;
-
-  return { mode: "window", previewWindow };
-}
-
-function showPdfDeliveryError(delivery) {
-  if (delivery?.mode !== "window" || delivery.previewWindow.closed) return;
-
-  delivery.previewWindow.document.title = "PDF generation failed";
-  delivery.previewWindow.document.body.innerHTML = `
-    <main style="box-sizing:border-box;min-height:100vh;display:grid;place-items:center;margin:0;padding:32px;background:#102c27;color:#fff;font-family:Arial,sans-serif;text-align:center">
-      <div>
-        <h1 style="margin:0;font-size:24px">The PDF could not be generated</h1>
-        <p style="margin:14px 0 0;color:rgba(255,255,255,.72);font-size:16px;line-height:1.6">Please close this tab and try again from the digital catalog.</p>
-      </div>
-    </main>`;
-}
-
-async function deliverPdf(pdf, filename, delivery) {
-  const blob = pdf.output("blob");
-
-  if (delivery?.mode === "window" && !delivery.previewWindow.closed) {
-    const url = URL.createObjectURL(blob);
-    delivery.previewWindow.location.replace(url);
-    window.setTimeout(() => URL.revokeObjectURL(url), 300000);
-    return;
-  }
-
-  if (delivery?.mode === "preview" || usesMobilePdfPreview()) {
-    const url = URL.createObjectURL(blob);
-    // Keep generation in the foreground on tablets. Opening a placeholder tab
-    // before the async work finishes can suspend the source page on iPadOS.
-    // The native PDF viewer then provides Share / Save to Files.
-    window.location.assign(url);
-    return;
-  }
-
-  downloadBlob(blob, filename);
-}
-
 function catalogRows(products, user) {
   return products.flatMap((product) => {
-    const options = product.options?.length ? product.options : [{}];
+    const options = getOrderableProductOptions(product);
 
     return options.map((option) => {
       const hasKnownStock =
@@ -217,13 +143,13 @@ function catalogRows(products, user) {
 
       return {
         productId: product.id || "",
-        product: product.name || "",
+        product: catalogProductTitle(product),
         sku: option.sku || "",
         option: option.name || "Single format",
         weight: Number.isFinite(Number(option.weightGrams))
           ? Number(option.weightGrams)
           : null,
-        availability:
+        availability: option.availabilityLabel || (
           option.inStock === false
             ? "Out of stock — available to order"
             : option.backordersAllowed && hasKnownStock && Number(option.stockQuantity) === 0
@@ -236,10 +162,11 @@ function catalogRows(products, user) {
                     const packs = orderableQuantity / quantityStep;
                     return `${packs} ${packs === 1 ? "pack" : "packs"} available (${quantityStep} units per pack)`;
                   })()
-                : "In stock",
+                : "In stock"),
         inStock: option.inStock !== false,
         backordersAllowed: option.backordersAllowed === true,
         stockQuantity: hasKnownStock ? Number(option.stockQuantity) : null,
+        maximumQuantity: maximumOrderQuantity(option),
         price: user ? optionPriceForUser(option, user, product.category) : null,
         orderQuantity: "",
         importItem: catalogOrderItemToken(product, option),
@@ -249,22 +176,6 @@ function catalogRows(products, user) {
     });
   });
 }
-
-const productEthnicity = (product) =>
-  String(product.tribe || product.category || "Other Products").trim() ||
-  "Other Products";
-
-const productsByEthnicity = (products) => {
-  const groups = new Map();
-  products.forEach((product) => {
-    const ethnicity = productEthnicity(product);
-    if (!groups.has(ethnicity)) groups.set(ethnicity, []);
-    groups.get(ethnicity).push(product);
-  });
-  return [...groups.entries()].sort(([left], [right]) =>
-    normalizeEthnicity(left).localeCompare(normalizeEthnicity(right))
-  );
-};
 
 const columnName = (index) => {
   let value = index;
@@ -300,7 +211,7 @@ const wrappedLineCount = (value, columnWidth) => {
 };
 
 const catalogRowHeight = (item, columns) => {
-  return 24;
+  return Math.max(24, ...columns.filter((column) => !column.hidden).map((column) => wrappedLineCount(item[column.key], column.width) * 13 + 8));
 };
 
 const formatCatalogSheet = (
@@ -453,7 +364,7 @@ const formatCatalogSheet = (
       cell.alignment = {
         horizontal: "center",
         vertical: "middle",
-        wrapText: false,
+        wrapText: true,
       };
     });
 
@@ -477,7 +388,7 @@ const formatCatalogSheet = (
     if (keyIndex.has("orderQuantity")) {
       const quantityCell = row.getCell(keyIndex.get("orderQuantity"));
       const step = Math.max(1, Number(item.quantityStep) || 1);
-      const stockLimit = MAX_ORDER_ITEM_QUANTITY;
+      const stockLimit = Math.min(MAX_ORDER_ITEM_QUANTITY, item.maximumQuantity ?? MAX_ORDER_ITEM_QUANTITY);
       const address = quantityCell.address;
       quantityCell.numFmt = "0";
       quantityCell.fill = {
@@ -490,7 +401,7 @@ const formatCatalogSheet = (
         type: "custom",
         allowBlank: true,
         formulae: [
-          `OR(${address}="",AND(ISNUMBER(${address}),${address}=INT(${address}),${address}>=${step},${address}<=${stockLimit},MOD(${address},${step})=0))`,
+          `OR(${address}="",${address}=0,AND(ISNUMBER(${address}),${address}=INT(${address}),${address}>=${step},${address}<=${stockLimit},MOD(${address},${step})=0))`,
         ],
         showErrorMessage: true,
         errorStyle: "stop",
@@ -536,7 +447,7 @@ const formatCatalogSheet = (
       cell.alignment = {
         horizontal: "center",
         vertical: "middle",
-        wrapText: rowNumber === headerRowNumber,
+        wrapText: rowNumber >= headerRowNumber,
       };
     }
   }
@@ -558,7 +469,7 @@ const formatCatalogSheet = (
   });
 };
 
-export async function exportCatalogExcel({
+export async function buildCatalogOrderWorkbook({
   products,
   user,
   filterLabel = "Complete catalog",
@@ -606,42 +517,39 @@ export async function exportCatalogExcel({
   const protectionPassword =
     globalThis.crypto?.randomUUID?.() ||
     `${Date.now()}-${Math.random().toString(36).slice(2)}-${Math.random().toString(36).slice(2)}`;
-  const ethnicitySections = productsByEthnicity(products).map(([ethnicity, ethnicityProducts]) => ({
-    ethnicity,
-    accentColor: ethnicityColor({ tribe: ethnicity }),
-    rows: catalogRows(ethnicityProducts, user).sort((left, right) =>
-      String(left.sku).localeCompare(String(right.sku), undefined, { numeric: true, sensitivity: "base" })
-    ),
-  }));
-  const sheet = workbook.addWorksheet("Wholesale Order", {
-    properties: { tabColor: { argb: excelArgb(DEFAULT_ETHNICITY_COLOR) } },
-    views: [{ state: "frozen", ySplit: 6, showGridLines: false }],
-    pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1 },
-  });
-  formatCatalogSheet(
-    sheet,
-    columns,
-    ethnicitySections.flatMap((section) => section.rows),
-    filterLabel,
-    DEFAULT_ETHNICITY_COLOR,
-    generation.label,
-    orderEnabled,
-    ethnicitySections
-  );
-  await sheet.protect(protectionPassword, {
-    spinCount: 10_000,
-    selectLockedCells: true,
-    selectUnlockedCells: orderEnabled,
-    formatCells: false,
-    formatColumns: false,
-    formatRows: false,
-    insertColumns: false,
-    insertRows: false,
-    deleteColumns: false,
-    deleteRows: false,
-    sort: false,
-    autoFilter: true,
-  });
+  const groups = groupCatalogProducts(products || []);
+  const sheetNames = new Set();
+  for (const group of groups) {
+    const sections = group.subcategories.map((subcategory) => ({
+      ethnicity: subcategory.name || group.name,
+      accentColor: ethnicityColor({ tribe: subcategory.name }),
+      rows: catalogRows(subcategory.products, user),
+    })).filter((section) => section.rows.length);
+    if (!sections.length) continue;
+    const baseName = group.name.replace(/[\\/*?:\[\]]/g, " ").replace(/^'+|'+$/g, "").trim().slice(0, 31) || "Wholesale Order";
+    let sheetName = baseName;
+    for (let suffix = 2; sheetNames.has(sheetName.toLowerCase()); suffix += 1) {
+      sheetName = `${baseName.slice(0, 27)} ${suffix}`;
+    }
+    sheetNames.add(sheetName.toLowerCase());
+    const sheet = workbook.addWorksheet(sheetName, {
+      properties: { tabColor: { argb: excelArgb(DEFAULT_ETHNICITY_COLOR) } },
+      views: [{ state: "frozen", ySplit: 6, showGridLines: false }],
+      pageSetup: { orientation: "landscape", fitToPage: true, fitToWidth: 1, printTitlesRow: "1:6" },
+    });
+    formatCatalogSheet(
+      sheet, columns, sections.flatMap((section) => section.rows),
+      `${group.name} | ${filterLabel}`, DEFAULT_ETHNICITY_COLOR,
+      generation.label, orderEnabled, sections
+    );
+    await sheet.protect(protectionPassword, {
+      spinCount: 10_000, selectLockedCells: true, selectUnlockedCells: orderEnabled,
+      formatCells: false, formatColumns: false, formatRows: false,
+      insertColumns: false, insertRows: false, deleteColumns: false, deleteRows: false,
+      sort: false, autoFilter: true,
+    });
+  }
+  if (!sheetNames.size) throw new Error("No available product formats match this export.");
 
   if (orderEnabled) {
     const metadata = workbook.addWorksheet(ORDER_WORKBOOK_META_SHEET, {
@@ -660,1275 +568,24 @@ export async function exportCatalogExcel({
     });
   }
 
+  return workbook;
+}
+
+export async function exportCatalogExcel(options) {
+  const workbook = await buildCatalogOrderWorkbook(options);
   const buffer = await workbook.xlsx.writeBuffer();
   downloadBlob(
     new Blob([buffer], {
       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     }),
-    `sacred-connection-${orderEnabled ? "order" : "catalog"}-${safeFilenameDate(generation.date)}.xlsx`
+    `sacred-connection-order-${safeFilenameDate(workbook.created)}.xlsx`
   );
 }
 
-const pdfSafeText = (value) => {
-  const normalized = String(value ?? "")
-    .replace(/[\u2018\u2019\u201A\u201B]/g, "'")
-    .replace(/[\u201C\u201D\u201E\u201F]/g, '"')
-    .replace(/[\u2010-\u2015\u2212]/g, "-")
-    .replace(/\u2026/g, "...")
-    .replace(/[\u00A0\u2007\u202F]/g, " ")
-    .replace(/[\u2022\u00B7]/g, "-");
-  return Array.from(normalized, (character) => {
-    if (character.codePointAt(0) <= 255) return character;
-    const latinFallback = character
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[^\u0020-\u00ff]/g, "");
-    return latinFallback || "?";
-  }).join("");
-};
-
-function plainPdfText(value) {
-  if (!value) return "";
-  const textarea = document.createElement("textarea");
-  textarea.innerHTML = String(value).replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n");
-  return pdfSafeText(textarea.value.replace(/<[^>]*>/g, " ").replace(/[ \t]+/g, " ").replace(/\n\s+/g, "\n").trim());
-}
-
-async function fetchPdfAsset(url, { cache = "force-cache" } = {}) {
-  const response = await fetch(url, { cache });
-  if (!response.ok) throw new Error(`PDF asset failed with status ${response.status}.`);
-  return new Uint8Array(await response.arrayBuffer());
-}
-
-async function loadPdfLogo() {
-  const image = new Image();
-  image.decoding = "async";
-  const loaded = new Promise((resolve, reject) => {
-    image.onload = resolve;
-    image.onerror = () => reject(new Error("The catalog logo could not be loaded."));
-  });
-  image.src = new URL("/logo-pdf.png", window.location.origin).href;
-  await loaded;
-
-  const canvas = document.createElement("canvas");
-  canvas.width = image.naturalWidth;
-  canvas.height = image.naturalHeight;
-  const context = canvas.getContext("2d");
-  if (!context) throw new Error("The catalog logo could not be rendered.");
-  context.drawImage(image, 0, 0);
-  return canvas.toDataURL("image/png");
-}
-
-async function fetchPdfProductImage(url) {
-  const response = await fetch(url, { cache: "no-store" });
-  if (!response.ok) throw new Error(`PDF product image failed with status ${response.status}.`);
-  const payload = await response.json();
-  const sourceMimeType =
-    payload?.mimeType ||
-    ({
-      JPEG: "image/jpeg",
-      PNG: "image/png",
-      WEBP: "image/webp",
-    }[payload?.format] || "");
-  if (
-    !["JPEG", "PNG", "WEBP"].includes(payload?.format) ||
-    !sourceMimeType ||
-    typeof payload.base64 !== "string" ||
-    !payload.base64
-  ) {
-    throw new Error("PDF product image payload is invalid.");
-  }
-
-  const sourceDataUrl = `data:${sourceMimeType};base64,${payload.base64}`;
-  const image = new Image();
-  image.decoding = "async";
-  const loaded = new Promise((resolve, reject) => {
-    image.onload = resolve;
-    image.onerror = () => reject(new Error("PDF product image could not be decoded."));
-  });
-  image.src = sourceDataUrl;
-  await loaded;
-
-  const canvas = document.createElement("canvas");
-  const size = 240;
-  canvas.width = size;
-  canvas.height = size;
-  const context = canvas.getContext("2d");
-  if (!context || !image.naturalWidth || !image.naturalHeight) {
-    throw new Error("PDF product image could not be rendered.");
-  }
-
-  const scale = Math.max(size / image.naturalWidth, size / image.naturalHeight);
-  const width = image.naturalWidth * scale;
-  const height = image.naturalHeight * scale;
-  context.drawImage(image, (size - width) / 2, (size - height) / 2, width, height);
-
-  return {
-    dataUrl: canvas.toDataURL("image/png"),
-    format: "PNG",
-  };
-}
-
-function truncatePdfLines(pdf, text, width, maxLines = 2) {
-  const lines = pdf.splitTextToSize(pdfSafeText(text), width);
-  if (lines.length <= maxLines) return lines;
-  const visible = lines.slice(0, maxLines);
-  const finalLine = visible[maxLines - 1];
-  visible[maxLines - 1] = `${finalLine.slice(0, Math.max(1, finalLine.length - 3))}...`;
-  return visible;
-}
-
-function drawCatalogLogo(pdf, logo, x, y, width = 45) {
-  if (logo) {
-    pdf.addImage(logo, "PNG", x, y, width, width * 0.36, "catalog-logo", "FAST");
-  } else {
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(width / 4);
-    pdf.setTextColor(255, 255, 255);
-    pdf.text("Sacred Connection", x, y + width * 0.22);
-  }
-}
-
-function storePdfTheme() {
-  return {
-    primary: SACRED_PRIMARY,
-    secondary: SACRED_SECONDARY,
-    secondarySoft: [218, 235, 230],
-    muted: [180, 211, 202],
-    headerMuted: [190, 201, 198],
-  };
-}
-
-function drawStoreBrand(pdf, logo, x, y, width = 45) {
-  drawCatalogLogo(pdf, logo, x, y, width);
-}
-
-function drawSharedCatalogBrand(pdf, logo, x, y) {
-  const logoWidth = 42;
-  drawStoreBrand(pdf, logo, x, y, logoWidth);
-}
-
-function drawGreenCoverBackground(pdf, background) {
-  if (!background) return;
-  pdf.addImage(background, "PNG", 0, 0, 210, 297, "catalog-cover-background", "FAST");
-}
-
-function drawCoverDecoration(pdf, decoration) {
-  if (!decoration) return;
-  pdf.addImage(decoration, "PNG", 105, 0, 105, 42, "catalog-cover-decoration", "FAST");
-}
-
-const contactIconSvg = (content) =>
-  `<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${content}</svg>`;
-
-const CONTACT_ICON_SVGS = {
-  email: contactIconSvg(
-    '<path d="m22 7-8.991 5.727a2 2 0 0 1-2.009 0L2 7"/><rect x="2" y="4" width="20" height="16" rx="2"/>'
-  ),
-  phone: contactIconSvg(
-    '<path d="M13.832 16.568a1 1 0 0 0 1.213-.303l.355-.465A2 2 0 0 1 17 15h3a2 2 0 0 1 2 2v3a2 2 0 0 1-2 2A18 18 0 0 1 2 4a2 2 0 0 1 2-2h3a2 2 0 0 1 2 2v3a2 2 0 0 1-.8 1.6l-.468.351a1 1 0 0 0-.292 1.233 14 14 0 0 0 6.392 6.384"/>'
-  ),
-  location: contactIconSvg(
-    '<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/><circle cx="12" cy="10" r="3"/>'
-  ),
-};
-
-function svgIconToPng(svg) {
-  return new Promise((resolve, reject) => {
-    const image = new Image();
-    image.onload = () => {
-      const canvas = document.createElement("canvas");
-      canvas.width = 192;
-      canvas.height = 192;
-      const context = canvas.getContext("2d");
-      if (!context) {
-        reject(new Error("Canvas is unavailable for PDF contact icons."));
-        return;
-      }
-      context.drawImage(image, 0, 0, canvas.width, canvas.height);
-      resolve(canvas.toDataURL("image/png"));
-    };
-    image.onerror = () => reject(new Error("PDF contact icon could not be rendered."));
-    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
-  });
-}
-
-async function loadContactIcons() {
-  const entries = await Promise.all(
-    Object.entries(CONTACT_ICON_SVGS).map(async ([type, svg]) => [type, await svgIconToPng(svg)])
-  );
-  return Object.fromEntries(entries);
-}
-
-function drawContactIcon(pdf, type, x, y, contactIcons) {
-  const icon = contactIcons[type];
-  if (icon) pdf.addImage(icon, "PNG", x, y, 7.5, 7.5, `catalog-contact-${type}`, "FAST");
-}
-
-function drawCoverContactInfo(pdf, contactIcons) {
-  const footerTop = 232;
-  pdf.setFillColor(12, 50, 43);
-  pdf.rect(0, footerTop, 210, 65, "F");
-  pdf.setDrawColor(130, 214, 197);
-  pdf.setLineWidth(0.45);
-  pdf.line(16, footerTop, 194, footerTop);
-
-  const columns = [
-    {
-      type: "email",
-      iconX: 16,
-      textX: 26,
-      values: ["info@sacredconnection.co"],
-      y: 243,
-      url: "mailto:info@sacredconnection.co",
-      linkX: 14,
-      linkWidth: 53,
-      linkHeight: 18,
-    },
-    {
-      type: "phone",
-      iconX: 78,
-      textX: 88,
-      values: ["+1 (818) 306-0568"],
-      y: 243,
-      url: "tel:+18183060568",
-      linkX: 76,
-      linkWidth: 50,
-      linkHeight: 18,
-    },
-    {
-      type: "location",
-      iconX: 136,
-      textX: 146,
-      values: ["2301 Stampede Ave", "Cody, WY 82414, USA"],
-      y: 241.5,
-      url: "https://www.google.com/maps/search/?api=1&query=2301+Stampede+Ave+Cody+WY+82414+USA",
-      linkX: 134,
-      linkWidth: 61,
-      linkHeight: 23,
-    },
-  ];
-
-  pdf.setDrawColor(65, 112, 103);
-  pdf.setLineWidth(0.3);
-  pdf.line(70, 242, 70, 263);
-  pdf.line(128, 242, 128, 263);
-
-  columns.forEach((column) => {
-    drawContactIcon(pdf, column.type, column.iconX, column.y, contactIcons);
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(6.3);
-    pdf.setTextColor(255, 255, 255);
-    column.values.forEach((value, index) => {
-      pdf.text(value, column.textX, column.y + 5.2 + index * 4.5);
-    });
-    pdf.link(column.linkX, column.y - 1, column.linkWidth, column.linkHeight, {
-      url: column.url,
-    });
-  });
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(7);
-  pdf.setTextColor(255, 255, 255);
-  pdf.text("SACRED CONNECTION", 16, 280);
-}
-
-function drawGenerationStamp(pdf, generatedAtLabel, { darkBackground = false } = {}) {
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(5.2);
-  pdf.setTextColor(...(darkBackground ? [180, 211, 202] : [113, 128, 123]));
-  pdf.text(`Generated: ${pdfSafeText(generatedAtLabel)}`, 198, 293, {
-    align: "right",
-  });
-}
-
-function drawPdfCover(
-  pdf,
-  logo,
-  coverBackground,
-  coverDecoration,
-  contactIcons,
-  products,
-  filterLabel,
-  generatedAtLabel
-) {
-  const normalizedFilterLabel = String(filterLabel || "").trim();
-  const isCompleteCatalog =
-    !normalizedFilterLabel ||
-    normalizedFilterLabel.toLowerCase() === "complete catalog";
-  const scopeEyebrow = isCompleteCatalog ? "" : "FILTER PATH";
-  const scopeTitle = isCompleteCatalog
-    ? "COMPLETE CATALOG"
-    : normalizedFilterLabel.replace(/\s*\|\s*/g, " / ");
-  const filterDepth = isCompleteCatalog
-    ? 0
-    : normalizedFilterLabel.split("|").filter(Boolean).length;
-  const scopeFontSize =
-    filterDepth <= 1 ? 18 : filterDepth === 2 ? 13.5 : 10.5;
-  pdf.setFillColor(20, 65, 57);
-  pdf.rect(0, 0, 210, 297, "F");
-  drawGreenCoverBackground(pdf, coverBackground);
-  pdf.setFillColor(26, 26, 26);
-  pdf.rect(0, 0, 210, 42, "F");
-  drawCoverDecoration(pdf, coverDecoration);
-  drawSharedCatalogBrand(pdf, logo, 16, 13);
-
-  pdf.setDrawColor(130, 214, 197);
-  pdf.setLineWidth(0.6);
-  pdf.line(16, 74, 54, 74);
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(8);
-  pdf.setTextColor(130, 214, 197);
-  pdf.text("INTERACTIVE DIGITAL CATALOG", 16, 68);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(31);
-  pdf.setTextColor(255, 255, 255);
-  pdf.text("Wholesale", 16, 101);
-  pdf.text("Product Catalog", 16, 116);
-
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10.5);
-  pdf.setTextColor(218, 235, 230);
-  pdf.text(
-    truncatePdfLines(
-      pdf,
-      "A curated guide to Sacred Connection products, organized by collection and product details.",
-      130,
-      4
-    ),
-    16,
-    134,
-    { lineHeightFactor: 1.45 }
-  );
-
-  if (scopeEyebrow) {
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(7.5);
-    pdf.setTextColor(130, 214, 197);
-    pdf.text(scopeEyebrow, 16, 153);
-  }
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(scopeFontSize);
-  pdf.setTextColor(255, 255, 255);
-  const scopeLines = truncatePdfLines(
-    pdf,
-    pdfSafeText(scopeTitle).toUpperCase(),
-    178,
-    3
-  );
-  const scopeLineHeight = scopeFontSize * 0.3528 * 1.08;
-  const scopeStartY =
-    (isCompleteCatalog ? 161 : 169) -
-    ((scopeLines.length - 1) * scopeLineHeight) / 2;
-  pdf.text(
-    scopeLines,
-    16,
-    scopeStartY,
-    { lineHeightFactor: 1.08 }
-  );
-
-  drawCoverContactInfo(pdf, contactIcons);
-  drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
-}
-
-function drawGridHeader(
-  pdf,
-  logo,
-  storeId,
-  storeName,
-  category,
-  pageNumber,
-  pageCount
-) {
-  const theme = storePdfTheme(storeId);
-  pdf.setFillColor(26, 26, 26);
-  pdf.rect(0, 0, 210, 28, "F");
-  drawStoreBrand(pdf, logo, 12, 6.5, 36);
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(7.5);
-  pdf.setTextColor(...theme.secondary);
-  pdf.text(
-    truncatePdfLines(
-      pdf,
-      `${pdfSafeText(storeName)} / ${pdfSafeText(category)}`.toUpperCase(),
-      105,
-      1
-    ),
-    198,
-    12,
-    { align: "right" }
-  );
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(6.5);
-  pdf.setTextColor(...theme.headerMuted);
-  pdf.text(`DIGITAL CATALOG  |  ${pageNumber}/${pageCount}`, 198, 19, { align: "right" });
-}
-
-function drawCategoryCover(
-  pdf,
-  logo,
-  coverBackground,
-  coverDecoration,
-  storeId,
-  storeName,
-  category,
-  products,
-  categoryIndex,
-  pageNumber,
-  pageCount,
-  generatedAtLabel
-) {
-  const tribes = [...new Set(products.map((product) => product.tribe).filter(Boolean))];
-  const theme = storePdfTheme(storeId);
-  const collectionHeadingColor = theme.secondary;
-  pdf.setFillColor(...theme.primary);
-  pdf.rect(0, 0, 210, 297, "F");
-  drawGreenCoverBackground(pdf, coverBackground);
-  drawCoverDecoration(pdf, coverDecoration);
-  drawStoreBrand(pdf, logo, 16, 14, 50);
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(8);
-  pdf.setTextColor(...collectionHeadingColor);
-  pdf.text(
-    `${pdfSafeText(storeName).toUpperCase()} / COLLECTION ${String(categoryIndex + 1).padStart(2, "0")}`,
-    16,
-    76
-  );
-  pdf.setDrawColor(...collectionHeadingColor);
-  pdf.setLineWidth(0.7);
-  pdf.line(16, 82, 54, 82);
-  pdf.setFontSize(29);
-  pdf.setTextColor(255, 255, 255);
-  pdf.text(truncatePdfLines(pdf, category, 168, 3), 16, 108, { lineHeightFactor: 1.08 });
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(10);
-  pdf.setTextColor(...theme.secondarySoft);
-  const collectionDescription = category === "Rapé Indigenous"
-    ? "Traditional rapé blends organized by their source tribe and the product information available in the wholesale catalog."
-    : `${pdfSafeText(storeName)} products presented with their wholesale formats, product identifiers, and catalog descriptions.`;
-  pdf.text(truncatePdfLines(pdf, collectionDescription, 145, 4), 16, 139, { lineHeightFactor: 1.45 });
-
-  pdf.setFillColor(255, 255, 255);
-  pdf.roundedRect(16, 180, 178, 48, 2.5, 2.5, "F");
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(21);
-  pdf.setTextColor(...theme.primary);
-  pdf.text(String(products.length), 42, 201, { align: "center" });
-  pdf.setFontSize(7);
-  pdf.setTextColor(83, 105, 98);
-  pdf.text("PRODUCTS", 42, 213, { align: "center" });
-  pdf.setDrawColor(220, 229, 226);
-  pdf.line(68, 190, 68, 218);
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(7.5);
-  pdf.setTextColor(83, 105, 98);
-  pdf.text(
-    truncatePdfLines(
-      pdf,
-      tribes.length ? `Subcategories: ${tribes.join(", ")}` : `${storeName} collection`,
-      113,
-      4
-    ),
-    78,
-    195,
-    { lineHeightFactor: 1.35 }
-  );
-  pdf.setFont("helvetica", "bold");
-  pdf.setTextColor(255, 255, 255);
-  pdf.text("CLICK ANY PRODUCT TO CONTINUE ONLINE", 16, 264);
-  pdf.setFont("helvetica", "normal");
-  pdf.setTextColor(...theme.muted);
-  pdf.text(`Page ${pageNumber} of ${pageCount}`, 16, 276);
-  drawGenerationStamp(pdf, generatedAtLabel, { darkBackground: true });
-}
-
-function pdfProductTarget(product, includeLinks) {
-  const productionOrigin = process.env.NEXT_PUBLIC_SITE_URL ||
-    (window.location.hostname === "localhost"
-      ? "https://sacred-connection-wholesale.vercel.app"
-      : window.location.origin);
-  const productUrl = new URL(product.productUrl || "/catalog", productionOrigin);
-  if (includeLinks) return productUrl.href;
-  const loginUrl = new URL("/my-account", productionOrigin);
-  loginUrl.searchParams.set("login", "1");
-  loginUrl.searchParams.set("redirect", productUrl.pathname + productUrl.search);
-  return loginUrl.href;
-}
-
-function drawGridProductCard(pdf, product, image, includeLinks, x, y) {
-  const width = 90;
-  const height = 108;
-  const accent = ethnicityColor(product);
-  const accentSoft = mixWithWhite(accent, 0.92);
-  const accentBorder = mixWithWhite(accent, 0.72);
-  const buttonText = buttonTextColor(accent);
-  pdf.setFillColor(255, 255, 255);
-  pdf.setDrawColor(...accentBorder);
-  pdf.setLineWidth(0.3);
-  pdf.roundedRect(x, y, width, height, 1.8, 1.8, "FD");
-
-  pdf.setFillColor(239, 244, 242);
-  pdf.roundedRect(x + 4, y + 5, 30, 30, 1.2, 1.2, "F");
-  if (image?.dataUrl && image?.format) {
-    pdf.addImage(
-      image.dataUrl,
-      image.format,
-      x + 4,
-      y + 5,
-      30,
-      30,
-      `catalog-product-${pdfSafeText(product.id || product.sku || product.name)}`,
-      "FAST"
-    );
-  } else {
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(18);
-    pdf.setTextColor(...accent);
-    pdf.text(String(product.name || "?").charAt(0).toUpperCase(), x + 19, y + 23, { align: "center" });
-  }
-
-  const identityX = x + 38;
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(5.8);
-  pdf.setTextColor(...accent);
-  pdf.text(pdfSafeText(product.tribe || product.category || "COLLECTION").toUpperCase(), identityX, y + 8);
-  pdf.setFontSize(9.2);
-  pdf.setTextColor(26, 26, 26);
-  pdf.text(truncatePdfLines(pdf, product.name, 48, 3), identityX, y + 14, { lineHeightFactor: 1.05 });
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(5.8);
-  pdf.setTextColor(113, 128, 123);
-  pdf.text(`SKU ${pdfSafeText(product.sku || "-")}`, identityX, y + 30.5);
-
-  pdf.setDrawColor(220, 229, 226);
-  pdf.line(x + 4, y + 41, x + width - 4, y + 41);
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(5.8);
-  pdf.setTextColor(...accent);
-  pdf.text("DESCRIPTION", x + 4, y + 47);
-  const description = plainPdfText(product.description) || "Description not provided in the source catalog.";
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(6.2);
-  pdf.setTextColor(65, 80, 75);
-  pdf.text(truncatePdfLines(pdf, description, 82, 5), x + 4, y + 53, { lineHeightFactor: 1.25 });
-
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(5.8);
-  pdf.setTextColor(...accent);
-  pdf.text("AVAILABLE FORMATS", x + 4, y + 77.5);
-
-  const tableOptions = product.options?.length
-    ? product.options
-    : [{ name: "Single format" }];
-  const tableX = x + 4;
-  const tableY = y + 80.5;
-  const columnCount = 5;
-  const columnGap = 1;
-  const rowGap = 0.8;
-  const cellWidth = (82 - columnGap * (columnCount - 1)) / columnCount;
-  const cellHeight = 6.2;
-  tableOptions.forEach((option, index) => {
-    const column = index % columnCount;
-    const row = Math.floor(index / columnCount);
-    const cellX = tableX + column * (cellWidth + columnGap);
-    const cellY = tableY + row * (cellHeight + rowGap);
-    const weightLabel = option.weightGrams
-      ? `${option.weightGrams}g`
-      : pdfSafeText(option.name || "Single format");
-    pdf.setFillColor(...accentSoft);
-    pdf.setDrawColor(...accentBorder);
-    pdf.setLineWidth(0.2);
-    pdf.roundedRect(cellX, cellY, cellWidth, cellHeight, 0.7, 0.7, "FD");
-    pdf.setFont("helvetica", "bold");
-    pdf.setFontSize(4.5);
-    pdf.setTextColor(...accent);
-    pdf.text(weightLabel, cellX + cellWidth / 2, cellY + 4.05, { align: "center" });
-  });
-
-  pdf.setFillColor(...accent);
-  pdf.roundedRect(x + 4, y + 96, width - 8, 8, 1, 1, "F");
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(5.8);
-  pdf.setTextColor(...buttonText);
-  pdf.text(includeLinks ? "VIEW PRODUCT" : "LOGIN TO VIEW PRODUCT", x + 8, y + 101.3);
-  pdf.text(`${product.options?.length || 1} OPTIONS  >`, x + width - 8, y + 101.3, { align: "right" });
-  pdf.link(x, y, width, height, { url: pdfProductTarget(product, includeLinks) });
-}
-
-function drawIndexNavigationButton(
-  pdf,
-  x,
-  label,
-  theme,
-  destination,
-  width = 50
-) {
-  const y = 270;
-  const height = 8;
-  pdf.setFillColor(...theme.primary);
-  pdf.roundedRect(x, y, width, height, 1, 1, "F");
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(6.2);
-  pdf.setTextColor(...buttonTextColor(theme.primary));
-  pdf.text(label, x + width / 2, y + 5.3, { align: "center" });
-  if (destination) {
-    pdf.link(x, y, width, height, {
-      pageNumber: destination.pageNumber,
-      top: 0,
-      zoom: 1,
-    });
-  }
-}
-
-function drawGridFooter(
-  pdf,
-  storeName,
-  category,
-  pageNumber,
-  pageCount,
-  generatedAtLabel,
-  storeIndexDestinations
-) {
-  drawIndexNavigationButton(
-    pdf,
-    12,
-    "HOME",
-    { primary: [26, 26, 26] },
-    { pageNumber: 1 },
-    36
-  );
-  drawIndexNavigationButton(
-    pdf,
-    53,
-    "CATALOG INDEX",
-    storePdfTheme(SACRED_STORE_ID),
-    storeIndexDestinations.get(SACRED_STORE_ID),
-    58
-  );
-  pdf.setDrawColor(220, 229, 226);
-  pdf.line(12, 282, 198, 282);
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(6);
-  pdf.setTextColor(113, 128, 123);
-  pdf.text(`${pdfSafeText(storeName)} Wholesale`, 12, 288);
-  pdf.text(
-    `${pdfSafeText(storeName)} / ${pdfSafeText(category)}  |  ${pageNumber}/${pageCount}`,
-    198,
-    288,
-    { align: "right" }
-  );
-  drawGenerationStamp(pdf, generatedAtLabel);
-}
-
-function drawGridPage(pdf, {
-  products,
-  images,
-  logo,
-  includeLinks,
-  storeId,
-  storeName,
-  category,
-  pageNumber,
-  pageCount,
-  generatedAtLabel,
-  storeIndexDestinations,
-}) {
-  drawGridHeader(
-    pdf,
-    logo,
-    storeId,
-    storeName,
-    category,
-    pageNumber,
-    pageCount
-  );
-  products.forEach((product, index) => {
-    const column = index % 2;
-    const row = Math.floor(index / 2);
-    drawGridProductCard(pdf, product, images[index], includeLinks, 12 + column * 96, 39 + row * 117);
-  });
-  drawGridFooter(
-    pdf,
-    storeName,
-    category,
-    pageNumber,
-    pageCount,
-    generatedAtLabel,
-    storeIndexDestinations
-  );
-}
-
-function buildIndexRows(store) {
-  const rows = [];
-  store.categoryGroups.forEach((group, categoryIndex) => {
-    const gapBefore = categoryIndex === 0 ? 0 : 5;
-    rows.push({
-      type: "category",
-      storeId: store.storeId,
-      label: group.category,
-      gapBefore,
-      height: 10 + gapBefore,
-    });
-    const ethnicityNames = [
-      ...new Set(
-        group.products.map((product) => product.tribe || group.category)
-      ),
-    ].sort((a, b) => a.localeCompare(b));
-    ethnicityNames.forEach((ethnicity) => {
-      if (normalizeEthnicity(ethnicity) !== normalizeEthnicity(group.category)) {
-        rows.push({
-          type: "ethnicity",
-          storeId: store.storeId,
-          label: ethnicity,
-          gapBefore: 3,
-          height: 12,
-        });
-      }
-      group.products
-        .filter((product) => (product.tribe || group.category) === ethnicity)
-        .sort((a, b) =>
-          String(a.name || "").localeCompare(String(b.name || ""))
-        )
-        .forEach((product) =>
-          rows.push({
-            type: "product",
-            storeId: store.storeId,
-            product,
-            height: 8.5,
-          })
-        );
-    });
-  });
-  return rows;
-}
-
-function paginateIndexRows(rows) {
-  const columnHeight = 236;
-  const pages = [];
-  let page = [[], []];
-  let column = 0;
-  let usedHeight = 0;
-  let currentCategory = "";
-  let currentEthnicity = "";
-
-  const advanceColumn = () => {
-    if (column === 0) {
-      column = 1;
-    } else {
-      pages.push(page);
-      page = [[], []];
-      column = 0;
-    }
-    usedHeight = 0;
-  };
-
-  const addRow = (row) => {
-    page[column].push(row);
-    usedHeight += row.height;
-  };
-
-  const continuationRows = (row) => {
-    const repeated = [];
-    if (
-      row.type === "product" &&
-      currentEthnicity &&
-      normalizeEthnicity(currentEthnicity) !== normalizeEthnicity(currentCategory)
-    ) {
-      repeated.push({
-        type: "ethnicity",
-        storeId: row.storeId,
-        label: currentEthnicity,
-        height: 9,
-        continuation: true,
-      });
-    }
-    return repeated;
-  };
-
-  rows.forEach((row, index) => {
-    if (row.type === "category") {
-      currentCategory = row.label;
-      currentEthnicity = "";
-    } else if (row.type === "ethnicity") {
-      currentEthnicity = row.label;
-    } else if (row.type === "product") {
-      currentEthnicity = row.product.tribe || currentCategory;
-    }
-
-    const nextHeight = rows[index + 1]?.height || 0;
-    const keepWithNext = row.type !== "product" ? nextHeight : 0;
-    if (usedHeight + row.height + keepWithNext > columnHeight) {
-      advanceColumn();
-      continuationRows(row).forEach(addRow);
-    }
-    addRow(row);
-  });
-  if (page[0].length || page[1].length) pages.push(page);
-  return pages;
-}
-
-function drawIndexPage(pdf, {
-  columns,
-  ethnicityLinks,
-  logo,
-  productDestinations,
-  storeId,
-  storeName,
-  pageNumber,
-  pageCount,
-  indexPage,
-  indexPageCount,
-  generatedAtLabel,
-}) {
-  const theme = storePdfTheme(storeId);
-  pdf.setFillColor(26, 26, 26);
-  pdf.rect(0, 0, 210, 28, "F");
-  drawStoreBrand(pdf, logo, 12, 6.5, 36);
-  pdf.setFont("helvetica", "bold");
-  pdf.setFontSize(10);
-  pdf.setTextColor(...theme.secondary);
-  pdf.text(`${pdfSafeText(storeName).toUpperCase()} INDEX`, 198, 12, {
-    align: "right",
-  });
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(6.5);
-  pdf.setTextColor(...theme.headerMuted);
-  pdf.text(`PRODUCT DIRECTORY  |  ${indexPage}/${indexPageCount}`, 198, 19, { align: "right" });
-  const indexRowsTop = 38;
-  pdf.setDrawColor(220, 229, 226);
-  pdf.setLineWidth(0.25);
-  pdf.line(103, indexRowsTop, 103, 274);
-
-  columns.forEach((rows, columnIndex) => {
-    const x = columnIndex === 0 ? 12 : 108;
-    const width = 90;
-    let y = indexRowsTop;
-    rows.forEach((row) => {
-      if (row.type === "category") {
-        const categoryY = y + (row.gapBefore || 0);
-        const categoryAccent =
-          ETHNICITY_COLORS[normalizeEthnicity(row.label)] || theme.primary;
-        if (row.gapBefore) {
-          pdf.setDrawColor(211, 224, 220);
-          pdf.setLineWidth(0.2);
-          pdf.line(x, y + 2, x + width, y + 2);
-        }
-        pdf.setFillColor(...categoryAccent);
-        pdf.roundedRect(x, categoryY, width, 9, 1, 1, "F");
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(8);
-        pdf.setTextColor(...buttonTextColor(categoryAccent));
-        pdf.text(
-          truncatePdfLines(
-            pdf,
-            pdfSafeText(row.label).toUpperCase(),
-            width - 6,
-            1
-          ),
-          x + 3,
-          categoryY + 6
-        );
-      } else if (row.type === "ethnicity") {
-        const ethnicityY = y + (row.gapBefore || 0);
-        const accent = ethnicityColor({ tribe: row.label });
-        const destination = ethnicityLinks.find(
-          (item) => item.storeId === row.storeId && item.label === row.label
-        )?.destination;
-        pdf.setFillColor(...mixWithWhite(accent, 0.86));
-        pdf.roundedRect(x, ethnicityY, width, 8, 1, 1, "F");
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(7.3);
-        pdf.setTextColor(...accent);
-        pdf.text(
-          truncatePdfLines(pdf, pdfSafeText(row.label).toUpperCase(), row.continuation ? width - 24 : width - 6, 1),
-          x + 3,
-          ethnicityY + 5.4
-        );
-        if (row.continuation) {
-          pdf.setFontSize(5.2);
-          pdf.text("CONT.", x + width - 3, ethnicityY + 5.4, {
-            align: "right",
-          });
-        }
-        if (destination) {
-          pdf.link(x, ethnicityY, width, 8, {
-            pageNumber: destination.pageNumber,
-            top: destination.top,
-            zoom: 1,
-          });
-        }
-      } else {
-        const accent = ethnicityColor(row.product);
-        pdf.setFillColor(...accent);
-        pdf.rect(x, y, 1.8, row.height, "F");
-        pdf.setFont("helvetica", "normal");
-        pdf.setFontSize(7.4);
-        pdf.setTextColor(45, 62, 57);
-        pdf.text(truncatePdfLines(pdf, row.product.name, 63, 1), x + 4, y + 5.5);
-        pdf.setFont("helvetica", "bold");
-        pdf.setFontSize(6.4);
-        pdf.setTextColor(...accent);
-        pdf.text(pdfSafeText(row.product.sku || "-"), x + width - 2, y + 5.5, { align: "right" });
-        const destination = productDestinations.get(row.product);
-        if (destination) {
-          pdf.link(x, y, width, row.height, {
-            pageNumber: destination.pageNumber,
-            top: destination.top,
-            zoom: 1,
-          });
-        }
-      }
-      y += row.height;
-    });
-  });
-
-  pdf.setDrawColor(220, 229, 226);
-  pdf.line(12, 282, 198, 282);
-  pdf.setFont("helvetica", "normal");
-  pdf.setFontSize(6);
-  pdf.setTextColor(113, 128, 123);
-  pdf.text(`${pdfSafeText(storeName)} Wholesale`, 12, 288);
-  pdf.text(`Index  |  ${pageNumber}/${pageCount}`, 198, 288, { align: "right" });
-  drawGenerationStamp(pdf, generatedAtLabel);
-}
-
-async function fetchDigitalCatalogProducts({
-  search = "",
-  category = "",
-  tribe = "",
-  attributes = {},
-} = {}) {
-  const params = new URLSearchParams({ export: "true" });
-  if (search) params.set("q", search);
-  if (category) params.set("category", category);
-  if (tribe) params.set("tribe", tribe);
-  Object.entries(attributes).forEach(([key, value]) => {
-    if (value) params.append("attribute", `${key}:${value}`);
-  });
-
-  const response = await fetch(`/api/catalog?${params.toString()}`, {
-    cache: "no-store",
-    credentials: "omit",
-  });
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(
-      data.error || "The digital catalog could not be prepared for export."
-    );
-  }
-  const products = Array.isArray(data.products)
-    ? data.products.filter(
-        (product) =>
-          !product.storeId || product.storeId === SACRED_STORE_ID
-      )
-    : [];
-  if (products.length === 0) {
-    throw new Error(
-      "There are no digital catalog products matching the selected filters."
-    );
-  }
-  return products;
-}
-
-async function buildDigitalCatalogPdf(options = {}) {
-  const generation = clientGenerationContext();
-  const generatedAt = generation.date;
-  const products = await fetchDigitalCatalogProducts(options);
-  const pdf = await renderDigitalCatalogPdf({
-    products,
-    includeLinks: false,
-    filterLabel: options.filterLabel || "Complete catalog",
-    generatedAt,
-    generatedAtLabel: generation.label,
-  });
-  return {
-    pdf,
-    products,
-    generatedAt,
-    generatedAtLabel: generation.label,
-  };
-}
-
-export async function createDigitalCatalogPdfPreview(options = {}) {
-  const { pdf, products, generatedAt, generatedAtLabel } =
-    await buildDigitalCatalogPdf(options);
-  return {
-    blob: pdf.output("blob"),
-    generatedAt,
-    generatedAtLabel,
-    productCount: products.length,
-  };
-}
-
-export async function downloadDigitalCatalogPdf(options = {}) {
-  const delivery = preparePdfDelivery();
-
-  try {
-    const { pdf, generatedAt } = await buildDigitalCatalogPdf(options);
-    const filename = `sacred-connection-catalog-${safeFilenameTimestamp(generatedAt)}.pdf`;
-    await deliverPdf(pdf, filename, delivery);
-  } catch (error) {
-    showPdfDeliveryError(delivery);
-    throw error;
-  }
-}
-
-async function renderDigitalCatalogPdf({
-  products,
-  includeLinks,
-  filterLabel,
-  generatedAt,
-  generatedAtLabel,
-}) {
-  const { jsPDF } = await import("jspdf");
-  const preferredStoreOrder = [SACRED_STORE_ID];
-  const preferredCategoriesByStore = {
-    [SACRED_STORE_ID]: ["Rapé Indigenous", "Sacred Connection"],
-  };
-  const categorySort = (storeId) => (a, b) => {
-    const preferredCategories =
-      preferredCategoriesByStore[storeId]?.map(normalizeEthnicity) || [];
-    const aIndex = preferredCategories.indexOf(normalizeEthnicity(a));
-    const bIndex = preferredCategories.indexOf(normalizeEthnicity(b));
-    if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-    if (aIndex === -1) return 1;
-    if (bIndex === -1) return -1;
-    return aIndex - bIndex;
-  };
-  const storeIds = [
-    ...new Set(products.map((product) => product.storeId || SACRED_STORE_ID)),
-  ].sort((a, b) => {
-    const aIndex = preferredStoreOrder.indexOf(a);
-    const bIndex = preferredStoreOrder.indexOf(b);
-    if (aIndex === -1 && bIndex === -1) return a.localeCompare(b);
-    if (aIndex === -1) return 1;
-    if (bIndex === -1) return -1;
-    return aIndex - bIndex;
-  });
-  const storeGroups = storeIds.map((storeId) => {
-    const storeProducts = products.filter(
-      (product) => (product.storeId || SACRED_STORE_ID) === storeId
-    );
-    const storeName =
-      storeProducts.find((product) => product.storeName)?.storeName ||
-      "Sacred Connection";
-    const categories = [
-      ...new Set(
-        storeProducts.map((product) => product.category || "Other")
-      ),
-    ].sort(categorySort(storeId));
-    return {
-      storeId,
-      storeName,
-      products: storeProducts,
-      categoryGroups: categories.map((category) => ({
-        storeId,
-        storeName,
-        category,
-        products: storeProducts.filter(
-          (product) => (product.category || "Other") === category
-        ),
-      })),
-    };
-  });
-  const categoryGroups = storeGroups.flatMap((store) => store.categoryGroups);
-  const firstProductByEthnicity = new Map();
-  categoryGroups.forEach((group) => {
-    group.products.forEach((product) => {
-      const ethnicity = product.tribe || group.category;
-      const key = `${group.storeId}\u0000${ethnicity}`;
-      if (!firstProductByEthnicity.has(key)) {
-        firstProductByEthnicity.set(key, {
-          storeId: group.storeId,
-          label: ethnicity,
-          product,
-        });
-      }
-    });
-  });
-  const indexEthnicities = [...firstProductByEthnicity.values()].sort(
-    (a, b) => {
-      const storeComparison =
-        preferredStoreOrder.indexOf(a.storeId) -
-        preferredStoreOrder.indexOf(b.storeId);
-      return storeComparison || a.label.localeCompare(b.label);
-    }
-  );
-  const storeIndexes = storeGroups.map((store) => ({
-    storeId: store.storeId,
-    storeName: store.storeName,
-    pages: paginateIndexRows(buildIndexRows(store)),
-  }));
-  const storeIndexDestinations = new Map();
-  let storeIndexPageNumber = 2;
-  storeIndexes.forEach((storeIndex) => {
-    if (storeIndex.pages.length) {
-      storeIndexDestinations.set(storeIndex.storeId, {
-        pageNumber: storeIndexPageNumber,
-      });
-    }
-    storeIndexPageNumber += storeIndex.pages.length;
-  });
-  const indexPageCount = storeIndexes.reduce(
-    (total, storeIndex) => total + storeIndex.pages.length,
-    0
-  );
-  const pageCount =
-    1 +
-    indexPageCount +
-    categoryGroups.reduce(
-      (total, group) => total + Math.ceil(group.products.length / 4),
-      0
-    );
-  const productDestinations = new Map();
-  let destinationPage = 1 + indexPageCount;
-  storeGroups.forEach((store) => {
-    store.categoryGroups.forEach((group) => {
-      for (let start = 0; start < group.products.length; start += 4) {
-        destinationPage += 1;
-        group.products.slice(start, start + 4).forEach((product, index) => {
-          productDestinations.set(product, {
-            pageNumber: destinationPage,
-            top: 35 + Math.floor(index / 2) * 117,
-          });
-        });
-      }
-    });
-  });
-  const ethnicityLinks = indexEthnicities.map((item) => ({
-    storeId: item.storeId,
-    label: item.label,
-    destination: productDestinations.get(item.product),
-  }));
-  const pdf = new jsPDF({
-    unit: "mm",
-    format: "a4",
-    orientation: "portrait",
-    compress: true,
-    putOnlyUsedFonts: true,
-  });
-  pdf.setDisplayMode("100%", "continuous", "UseNone");
-  pdf.setProperties({
-    title: "Sacred Connection Wholesale Catalog",
-    subject: "Interactive wholesale product catalog",
-    author: "Sacred Connection",
-    creator: "Wholesale Digital Catalog",
-  });
-
-  let logo = null;
-  try {
-    logo = await loadPdfLogo();
-  } catch {
-    // A text fallback is drawn when the local brand asset cannot be loaded.
-  }
-
-  let coverBackground = null;
-  try {
-    coverBackground = await fetchPdfAsset("/catalog-cover-background/catalog-cover-background.png", {
-      cache: "no-store",
-    });
-  } catch {
-    // The green covers remain solid until the optional background file is added.
-  }
-
-  let coverDecoration = null;
-  try {
-    coverDecoration = await fetchPdfAsset(
-      "/catalog-cover-decoration/catalog-cover-decoration.png",
-      { cache: "no-store" }
-    );
-  } catch {
-    // The black cover bar remains clean until the optional decoration is added.
-  }
-
-  let contactIcons = {};
-  try {
-    contactIcons = await loadContactIcons();
-  } catch {
-    // Contact text and links remain available if an icon cannot be rendered.
-  }
-
-  const imageCache = new Map();
-  const loadProductImage = (product) => {
-    if (!product.image) return Promise.resolve(null);
-    if (!imageCache.has(product.image)) {
-      const proxyUrl = `/api/catalog/image?url=${encodeURIComponent(product.image)}&v=base64-json-v3`;
-      imageCache.set(
-        product.image,
-        fetchPdfProductImage(proxyUrl).catch(() => null)
-      );
-    }
-    return imageCache.get(product.image);
-  };
-
-  const productImages = [];
-  const imageBatchSize = 12;
-  for (let batchStart = 0; batchStart < products.length; batchStart += imageBatchSize) {
-    const batch = products.slice(batchStart, batchStart + imageBatchSize);
-    productImages.push(...(await Promise.all(batch.map(loadProductImage))));
-  }
-  const imagesByProduct = new Map(products.map((product, index) => [product.id || product.sku, productImages[index]]));
-  pdf.setCreationDate(generatedAt);
-  drawPdfCover(
-    pdf,
-    logo,
-    coverBackground,
-    coverDecoration,
-    contactIcons,
-    products,
-    filterLabel,
-    generatedAtLabel
-  );
-  let currentPage = 1;
-  storeIndexes.forEach((storeIndex) => {
-    const storeEthnicityLinks = ethnicityLinks.filter(
-      (item) => item.storeId === storeIndex.storeId
-    );
-    storeIndex.pages.forEach((columns, indexPage) => {
-      pdf.addPage("a4", "portrait");
-      currentPage += 1;
-      drawIndexPage(pdf, {
-        columns,
-        ethnicityLinks: storeEthnicityLinks,
-        logo,
-        productDestinations,
-        storeId: storeIndex.storeId,
-        storeName: storeIndex.storeName,
-        pageNumber: currentPage,
-        pageCount,
-        indexPage: indexPage + 1,
-        indexPageCount: storeIndex.pages.length,
-        generatedAtLabel,
-      });
-    });
-  });
-  storeGroups.forEach((store) => {
-    store.categoryGroups.forEach((group) => {
-      for (let start = 0; start < group.products.length; start += 4) {
-        const pageProducts = group.products.slice(start, start + 4);
-        pdf.addPage("a4", "portrait");
-        currentPage += 1;
-        drawGridPage(pdf, {
-          products: pageProducts,
-          images: pageProducts.map(
-            (product) =>
-              imagesByProduct.get(product.id || product.sku) || null
-          ),
-          logo,
-          includeLinks,
-          storeId: store.storeId,
-          storeName: store.storeName,
-          category: group.category,
-          pageNumber: currentPage,
-          pageCount,
-          generatedAtLabel,
-          storeIndexDestinations,
-        });
-      }
-    });
-  });
-
-  return pdf;
-}
+export {
+  loadPdfCatalog,
+  generateCatalogPdf,
+  saveCatalogPdf,
+  createDigitalCatalogPdfPreview,
+  downloadDigitalCatalogPdf,
+} from "@/lib/catalog-pdf-export";

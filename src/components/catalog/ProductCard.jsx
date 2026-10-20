@@ -6,6 +6,8 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { Check, LockKeyhole, ShoppingBag } from "lucide-react";
 import { getEthnicityColor } from "@/lib/ethnicity-colors";
+import { catalogProductTitle, getCatalogTaxonomy } from "@/lib/catalog-taxonomy";
+import ShelfButton from "@/components/ShelfButton";
 
 export default function ProductCard({
   product,
@@ -15,34 +17,38 @@ export default function ProductCard({
 }) {
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [addedAt, setAddedAt] = useState(0);
+  const [failedImage, setFailedImage] = useState("");
 
   useEffect(() => {
     if (!addedAt) return undefined;
     const timer = window.setTimeout(() => setAddedAt(0), 1800);
     return () => window.clearTimeout(timer);
   }, [addedAt]);
-  const selectedOption = product.options[0];
+  const selectedOptionIndex = Math.max(0, product.options.findIndex((option) => option.inStock !== false));
+  const selectedOption = product.options[selectedOptionIndex];
   const description =
     product.description || "Wholesale product from the Sacred Connection collection.";
   const hasLongDescription = description.length > 180;
   const descriptionId = `product-description-${product.id}`;
   const media = (
     <>
-      {product.image ? (
+      {product.image && failedImage !== product.image ? (
         <img
           src={product.image}
           alt={product.name}
           loading="lazy"
+          onError={() => setFailedImage(product.image)}
           className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-[1.03]"
         />
       ) : (
         <div
-          className="flex h-full w-full items-center justify-center text-7xl font-black text-white/90"
+          className="flex h-full w-full flex-col items-center justify-center text-7xl font-black text-white/90"
           style={{
             backgroundColor: getEthnicityColor(product.tribe, product.category),
           }}
         >
           {(product.tribe || product.name).charAt(0).toUpperCase()}
+          <span className="mt-4 text-xs font-normal text-white/70">Photo unavailable</span>
         </div>
       )}
 
@@ -76,14 +82,15 @@ export default function ProductCard({
         <div className="mb-3 flex min-h-[4.25rem] min-w-0 items-start justify-between gap-3 xl:min-h-0">
           <div className="min-w-0">
             <p className="mb-1 text-[10px] font-bold uppercase tracking-[0.15em] text-[#82d6c5]">
-              {product.category}
+              {getCatalogTaxonomy(product).subcategory}
             </p>
             <Link href={product.productUrl} className="block no-underline">
               <h2 title={product.name} className="text-lg font-bold leading-snug text-white transition-colors group-hover:text-[#82d6c5] sm:text-xl xl:truncate">
-                {product.name}
+                {catalogProductTitle(product)}
               </h2>
             </Link>
           </div>
+          {isLoggedIn && <ShelfButton product={product} />}
         </div>
 
         <div className={isDescriptionExpanded ? "" : "min-h-28 sm:min-h-28 xl:min-h-[4.5rem]"}>
@@ -153,9 +160,10 @@ export default function ProductCard({
             <button
               type="button"
               onClick={() => {
-                onAddToCart(product, 0);
+                onAddToCart(product, selectedOptionIndex);
                 setAddedAt(Date.now());
               }}
+              disabled={!selectedOption}
               className={`inline-flex min-h-11 items-center justify-center gap-2 rounded-sm border-0 px-5 py-3 text-xs font-black uppercase tracking-[0.12em] text-white transition-colors sm:col-span-2 xl:col-span-1 xl:min-w-48 ${
                 addedAt ? "bg-[#268072]" : "bg-[#EC2300] hover:bg-[#c51d00]"
               }`}

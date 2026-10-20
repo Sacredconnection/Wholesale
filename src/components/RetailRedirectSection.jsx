@@ -24,11 +24,11 @@ export default function RetailRedirectSection() {
             </h2>
 
             <p className="mt-5 max-w-lg font-body-md text-sm leading-7 text-neutral-300 sm:text-base">
-              Explore our curated collection of sustainably harvested sacred snuffs, handcrafted accessories, and botanical blends available for individual worldwide shipping at Sacred Snuff.
+              Explore sacred snuffs, handcrafted accessories, and botanical blends for individual orders at Sacred Connection.
             </p>
 
             <a
-              href="https://sacred-snuff.com/"
+              href="https://SacredConnection.com/"
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Explore Retail Store — opens in a new tab"

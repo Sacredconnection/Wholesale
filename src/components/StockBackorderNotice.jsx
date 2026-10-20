@@ -4,6 +4,7 @@ export default function StockBackorderNotice({
   compact = false,
   className = "",
   items = [],
+  madeToOrder = false,
 }) {
   const detailedItems = Array.isArray(items) ? items.filter(Boolean) : [];
 
@@ -18,10 +19,10 @@ export default function StockBackorderNotice({
       <Clock3 className={`${compact ? "h-3.5 w-3.5" : "h-4 w-4"} mt-0.5 shrink-0 text-amber-300`} />
       <p>
         <strong className="block font-black text-amber-200">
-          Temporarily Out of Stock
+          {madeToOrder ? "Made to order" : "Temporarily Out of Stock"}
         </strong>
         <span className="block">
-          Usually available again within 30 days. Contact our team for the latest availability.
+          {madeToOrder ? "Prepared on request. Our team will confirm availability and timing." : "Contact our team for the latest availability and restock timing."}
         </span>
         {detailedItems.length > 0 && (
           <span className="mt-2 block">

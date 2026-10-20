@@ -50,12 +50,12 @@ async function loadStoreCatalog(storeId, storeName, role, revealPricing, include
       ...visible,
       productUrl: `/product/${encodeURIComponent(mapped.slug)}`,
     };
-  });
+  }).filter((product) => product.catalogVisible !== false);
 }
 
 const getCachedStoreCatalog = unstable_cache(
   loadStoreCatalog,
-  ["sacred-connection-catalog-v5"],
+  ["sacred-connection-catalog-v6"],
   { revalidate: catalogCacheSeconds, tags: ["woocommerce-catalog"] }
 );
 

@@ -6,10 +6,12 @@ import { useMemo, useRef, useState } from "react";
 import { Check, FileSpreadsheet, Layers3, Minus, Plus, RefreshCw, Trash2, X } from "lucide-react";
 import { useDialogAccessibility } from "@/lib/use-dialog-accessibility";
 import {
-  maximumOrderQuantityForWeight,
+  maximumOrderQuantity,
   needsBackorder,
   optionPriceForUser,
   quantityStepForWeight,
+  orderQuantityError,
+  stockLimitErrors,
 } from "@/lib/pricing";
 
 export default function WorkbookImportReviewModal({
@@ -40,12 +42,25 @@ export default function WorkbookImportReviewModal({
     return { units, value };
   }, [items, user]);
 
+  const currentQuantityFor = (item) => importMode === "add"
+    ? existingCart.filter((cartItem) =>
+      (cartItem.storeId || "sacred-connection") === (item.product.storeId || "sacred-connection") &&
+      String(cartItem.sku).toLowerCase() === String(item.product.options?.[item.optionIndex]?.sku).toLowerCase())
+      .reduce((total, cartItem) => total + cartItem.quantity, 0)
+    : 0;
+  const availabilityErrors = items.map((item) => orderQuantityError(
+    item.product.options?.[item.optionIndex], item.quantity + currentQuantityFor(item)));
+  const sharedStockErrors = stockLimitErrors([
+    ...(importMode === "add" ? existingCart : []),
+    ...items.map((item) => ({ ...item.product.options?.[item.optionIndex], storeId: item.product.storeId, quantity: item.quantity })),
+  ]);
+
   const changeQuantity = (itemIndex, direction) => {
     setItems((current) => current.map((item, index) => {
       if (index !== itemIndex) return item;
       const option = item.product.options?.[item.optionIndex];
       const step = quantityStepForWeight(option?.weightGrams);
-      const maximum = maximumOrderQuantityForWeight(option?.weightGrams);
+      const maximum = Math.max(step, maximumOrderQuantity(option) - currentQuantityFor(item));
       return {
         ...item,
         quantity: Math.min(maximum, Math.max(step, item.quantity + direction * step)),
@@ -90,6 +105,7 @@ export default function WorkbookImportReviewModal({
         </header>
 
         <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-8 sm:py-6">
+          {sharedStockErrors.length > 0 && <p role="alert" className="mb-4 text-sm text-red-200">{sharedStockErrors[0].error} Reduce the quantities or remove the affected line before importing.</p>}
           {replacesExistingOrder && (
             <fieldset className="mb-5">
               <legend className="mb-3 font-mono text-[10px] font-bold uppercase tracking-[0.18em] text-white/50">
@@ -128,18 +144,13 @@ export default function WorkbookImportReviewModal({
                 const option = item.product.options?.[item.optionIndex];
                 const step = quantityStepForWeight(option?.weightGrams);
                 const price = optionPriceForUser(option, user, item.product.category);
-                const storeId = item.product.storeId || "sacred-connection";
-                const currentQuantity = importMode === "add"
-                  ? existingCart.find(
-                    (cartItem) => cartItem.storeId === storeId && cartItem.sku === option?.sku
-                  )?.quantity || 0
-                  : 0;
+                const currentQuantity = currentQuantityFor(item);
                 const requiresBackorder = needsBackorder(
                   option,
                   currentQuantity + item.quantity
                 );
                 const atMaximum =
-                  item.quantity + step > maximumOrderQuantityForWeight(option?.weightGrams);
+                  currentQuantity + item.quantity + step > maximumOrderQuantity(option);
                 return (
                   <li key={`${item.product.storeId || "sacred-connection"}:${option?.sku}`} className="grid gap-4 py-5 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <div className="flex min-w-0 gap-4">
@@ -155,6 +166,7 @@ export default function WorkbookImportReviewModal({
                         <h3 className="mt-1 truncate font-headline-md text-base font-bold text-white sm:text-lg">{item.product.name}</h3>
                         <p className="mt-1 text-xs text-white/55">{option?.name}</p>
                         <p className="mt-1 break-all font-mono text-[10px] text-white/35">SKU {option?.sku || "unavailable"}</p>
+                        {availabilityErrors[index] && <p role="alert" className="mt-2 text-xs text-red-200">{availabilityErrors[index]}</p>}
                         {requiresBackorder && (
                           <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-amber-200">
                             Includes units awaiting restock
@@ -216,7 +228,7 @@ export default function WorkbookImportReviewModal({
             <button
               type="button"
               onClick={() => onConfirm(items, importMode)}
-              disabled={items.length === 0}
+              disabled={items.length === 0 || availabilityErrors.some(Boolean) || sharedStockErrors.length > 0}
               className="flex min-h-11 flex-1 items-center justify-center gap-2 rounded-sm bg-[#EC2300] px-6 text-xs font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#c51d00] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5] disabled:cursor-not-allowed disabled:opacity-35 sm:flex-none"
             >
               <Check className="h-4 w-4" aria-hidden="true" />

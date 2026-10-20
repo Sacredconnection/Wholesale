@@ -72,15 +72,8 @@ export default function Header({ onOpenLogin }) {
           >
             Wholesale Catalog
           </Link>
-          {isLoggedIn && (
-            <Link
-              className={`${pathname === '/suggested-blends' ? 'text-white after:scale-x-100' : 'text-[#82d6c5] after:scale-x-0 hover:text-white hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:absolute after:bottom-0 after:left-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:transition-transform after:duration-300 after:content-[''] hover:-translate-y-0.5 motion-reduce:transform-none`}
-              href="/suggested-blends"
-              aria-current={pathname === '/suggested-blends' ? 'page' : undefined}
-            >
-              Suggested Blends
-            </Link>
-          )}
+
+          {isLoggedIn && <Link href="/my-shelf" aria-current={pathname === '/my-shelf' ? 'page' : undefined} className="py-2 text-[#82d6c5] transition-colors hover:text-white">My Shelf</Link>}
           <Link
             className={`${pathname === '/contact' ? 'text-white after:scale-x-100' : 'hover:text-white after:scale-x-0 hover:after:scale-x-100'} relative inline-flex items-center justify-center py-2 leading-none transition-all duration-300 ease-out after:content-[''] after:absolute after:left-0 after:bottom-0 after:h-0.5 after:w-full after:origin-center after:bg-[#82d6c5] after:shadow-[0_0_10px_rgba(130,214,197,0.65)] after:transition-transform after:duration-300 hover:after:scale-x-100 hover:-translate-y-0.5 hover:drop-shadow-[0_0_8px_rgba(130,214,197,0.45)] motion-reduce:transform-none`}
             href="/contact"
@@ -97,10 +90,11 @@ export default function Header({ onOpenLogin }) {
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
-            aria-label={`Open order sheet${cartTotalItems > 0 ? `, ${cartTotalItems} items` : ''}`}
-            className="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 text-white rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5]"
+            aria-label={`Open cart${cartTotalItems > 0 ? `, ${cartTotalItems} items` : ''}`}
+            className="relative gap-2 px-4 py-3 bg-[#EC2300] hover:bg-[#c51d00] border border-[#EC2300] text-white rounded-sm transition-all cursor-pointer flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5]"
           >
             <ShoppingBag className="w-4 h-4" aria-hidden="true" />
+            <span className="text-xs font-bold uppercase">Cart</span>
             {cartTotalItems > 0 && (
               <span aria-hidden="true" className="absolute -top-1.5 -right-1.5 bg-[#268072] text-white text-[10px] font-bold w-5 h-5 rounded-full flex items-center justify-center border border-[#131313]">
                 {cartTotalItems}
@@ -123,7 +117,7 @@ export default function Header({ onOpenLogin }) {
                 onClick={handleHeaderLogout}
                 className="bg-[#93000a]/15 hover:bg-[#93000a]/30 text-[#ffb4ab] text-xs font-bold tracking-wider uppercase px-5 py-3 rounded-sm border border-[#93000a]/30 hover:border-[#ffb4ab]/40 transition-all duration-300 flex items-center gap-2 cursor-pointer"
               >
-                Exit Portal
+                Log Out
                 <LogOut className="w-3.5 h-3.5" />
               </button>
             </>
@@ -146,13 +140,13 @@ export default function Header({ onOpenLogin }) {
             </>
           )}
 
-          <Link
+          {!isLoggedIn && <Link
             className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5] hover:border-[#82d6c5] hover:bg-[#268072]/20 hover:text-white'} inline-flex items-center justify-center rounded-sm border px-3 py-2 text-[10px] font-bold uppercase tracking-wider transition-all duration-300`}
             href="/digital-catalog"
             aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
           >
             Digital Catalog
-          </Link>
+          </Link>}
         </div>
 
         {/* Mobile Cart and Hamburger Container (Mobile Only) */}
@@ -161,8 +155,8 @@ export default function Header({ onOpenLogin }) {
           <button
             type="button"
             onClick={() => setIsCartOpen(true)}
-            aria-label={`Open order sheet${cartTotalItems > 0 ? `, ${cartTotalItems} items` : ''}`}
-            className="relative p-2.5 bg-white/5 hover:bg-white/10 border border-white/10 text-white rounded-full transition-all cursor-pointer flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5]"
+            aria-label={`Open cart${cartTotalItems > 0 ? `, ${cartTotalItems} items` : ''}`}
+            className="relative p-2.5 bg-[#EC2300] hover:bg-[#c51d00] border border-[#EC2300] text-white rounded-sm transition-all cursor-pointer flex items-center justify-center shrink-0 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#82d6c5]"
           >
             <ShoppingBag className="w-4 h-4" aria-hidden="true" />
             {cartTotalItems > 0 && (
@@ -208,16 +202,8 @@ export default function Header({ onOpenLogin }) {
           >
             Wholesale Catalog
           </Link>
-          {isLoggedIn && (
-            <Link
-              className={`${pathname === '/suggested-blends' ? 'text-white' : 'text-[#82d6c5]'} text-base font-medium transition-all duration-300 hover:translate-x-1.5 hover:text-white motion-reduce:transform-none`}
-              href="/suggested-blends"
-              aria-current={pathname === '/suggested-blends' ? 'page' : undefined}
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Suggested Blends
-            </Link>
-          )}
+
+          {isLoggedIn && <Link href="/my-shelf" aria-current={pathname === '/my-shelf' ? 'page' : undefined} onClick={() => setMobileMenuOpen(false)} className="text-base font-medium text-[#82d6c5] hover:text-white">My Shelf</Link>}
           <Link
             className={`${pathname === '/contact' ? 'text-white' : 'text-white/70'} text-base font-medium transition-all duration-300 hover:text-[#82d6c5] hover:translate-x-1.5 motion-reduce:transform-none`}
             href="/contact"
@@ -246,7 +232,7 @@ export default function Header({ onOpenLogin }) {
                 className="flex items-center gap-2 text-left text-[#ffb4ab] text-base font-medium py-2 bg-transparent border-0 cursor-pointer"
               >
                 <LogOut className="w-4 h-4" />
-                Exit Portal
+                Log Out
               </button>
             </>
           ) : (
@@ -270,14 +256,14 @@ export default function Header({ onOpenLogin }) {
               </Link>
             </>
           )}
-          <Link
+          {!isLoggedIn && <Link
             className={`${pathname === '/digital-catalog' ? 'border-[#82d6c5] bg-[#268072]/25 text-white' : 'border-[#268072]/50 bg-[#268072]/10 text-[#82d6c5]'} rounded-sm border px-4 py-3 text-center text-sm font-bold uppercase tracking-wider transition-colors hover:border-[#82d6c5] hover:text-white`}
             href="/digital-catalog"
             aria-current={pathname === '/digital-catalog' ? 'page' : undefined}
             onClick={() => setMobileMenuOpen(false)}
           >
             Open Digital Catalog
-          </Link>
+          </Link>}
         </nav>
       )}
     </header>

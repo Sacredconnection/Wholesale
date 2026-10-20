@@ -18,6 +18,7 @@ import {
   mapCustomerToUser,
   mapOrder,
   roleBasedPrices,
+  stockFromWooCommerce,
   toWcAddress,
 } from "@/lib/wc-mappers";
 import {
@@ -25,7 +26,9 @@ import {
   MAX_ORDER_ITEM_QUANTITY,
   orderableStockQuantity,
   orderMinimumStatus,
+  stockLimitErrors,
 } from "@/lib/pricing";
+import { applyOptionLifecycle, productLifecycle } from "@/lib/catalog-lifecycle";
 import { createHash } from "node:crypto";
 import {
   cleanText,
@@ -392,6 +395,9 @@ export async function POST(request) {
         if (!payload) {
           return { unresolved: `${store.name}: ${sku || "unknown item"}` };
         }
+        if (!variationId && payload.type === "variable") {
+          return { unresolved: `${store.name}: choose a format for ${payload.name}` };
+        }
 
         const optionText =
           (payload.attributes || [])
@@ -399,15 +405,14 @@ export async function POST(request) {
             .filter(Boolean)
             .join(" ") || payload.name;
         const weightGrams = extractWeightGrams(optionText, payload.weight) || 0;
-        const stockQuantity =
-          payload.stock_quantity == null ? null : Number(payload.stock_quantity);
-        const stockStatus = payload.stock_status || "instock";
+        const stock = stockFromWooCommerce(payload, parentProduct);
+        const { stockQuantity, stockStatus, stockItemId } = stock;
         const availableQuantity = orderableStockQuantity({
           stockQuantity,
           weightGrams,
         });
         return {
-          entry: {
+          entry: applyOptionLifecycle({
             store,
             productId,
             variationId,
@@ -423,7 +428,8 @@ export async function POST(request) {
               (availableQuantity == null || availableQuantity > 0),
             stockStatus,
             stockQuantity,
-          },
+            stockItemId,
+          }, productLifecycle(parentProduct || payload)),
           lineWeightGrams: weightGrams * quantity,
         };
       }
@@ -467,6 +473,16 @@ export async function POST(request) {
         (quantityByStockItem.get(key) || 0) + entry.quantity
       );
     });
+    const unavailableItems = stockLimitErrors(resolved).map(({ item, error }) => ({
+      sku: item.sku, productName: item.productName, error,
+    }));
+    if (unavailableItems.length) {
+      return Response.json({
+        code: "item_no_longer_orderable",
+        error: "Some items are discontinued or exceed remaining stock. Update your cart before submitting.",
+        unavailableItems,
+      }, { status: 422 });
+    }
     const backorderWarnings = resolved.flatMap((entry) => {
       const key = `${entry.store.id}:${entry.productId}:${entry.variationId || 0}`;
       const requestedQuantity = quantityByStockItem.get(key);

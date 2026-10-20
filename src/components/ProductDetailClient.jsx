@@ -9,9 +9,12 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import LoginModal from "@/components/LoginModal";
 import StockBackorderNotice from "@/components/StockBackorderNotice";
+import ShelfButton from "@/components/ShelfButton";
+import { catalogProductTitle } from "@/lib/catalog-taxonomy";
 import { useProducts } from "@/components/ProductsContext";
 import {
-  maximumOrderQuantityForWeight,
+  maximumOrderQuantity,
+  orderQuantityError,
   needsBackorder,
   optionPriceForUser,
   orderableStockQuantity,
@@ -32,9 +35,8 @@ import {
 } from "lucide-react";
 
 function RelatedProductMedia({ product, href }) {
-  const [imageUnavailable, setImageUnavailable] = useState(
-    !product.image || product.image === "/logo.svg"
-  );
+  const [failedImage, setFailedImage] = useState("");
+  const imageUnavailable = !product.image || product.image === "/logo.svg" || failedImage === product.image;
 
   return (
     <Link
@@ -50,13 +52,14 @@ function RelatedProductMedia({ product, href }) {
           <span className="relative mt-4 text-[9px] font-bold uppercase tracking-[0.18em] text-[#82d6c5]/75">
             Sacred Connection
           </span>
+          <span className="relative mt-2 text-xs text-white/60">Photo unavailable</span>
         </div>
       ) : (
         <img
           src={product.image}
           alt={product.name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-          onError={() => setImageUnavailable(true)}
+          onError={() => setFailedImage(product.image)}
         />
       )}
     </Link>
@@ -81,9 +84,9 @@ export default function ProductDetailClient({ initialProduct }) {
   const catalogProduct = liveProduct || initialProduct;
   const [resolvedProduct, setResolvedProduct] = useState(null);
   const [productLoadError, setProductLoadError] = useState("");
-  const [selectedOptIdx, setSelectedOptIdx] = useState(0);
+  const [selectedOptIdx, setSelectedOptIdx] = useState(() => Math.max(0, initialProduct?.options?.findIndex((option) => option.inStock !== false) ?? 0));
   const [quantity, setQuantity] = useState(() =>
-    quantityStepForWeight(initialProduct?.options?.[0]?.weightGrams)
+    quantityStepForWeight(initialProduct?.options?.find((option) => option.inStock !== false)?.weightGrams || initialProduct?.options?.[0]?.weightGrams)
   );
   const [addedAt, setAddedAt] = useState(0);
   const resolvedPricingMatches =
@@ -115,9 +118,10 @@ export default function ProductDetailClient({ initialProduct }) {
         }
         if (!cancelled) {
           setResolvedProduct(data.product);
-          setSelectedOptIdx(0);
+          const firstAvailable = Math.max(0, data.product.options.findIndex((option) => option.inStock !== false));
+          setSelectedOptIdx(firstAvailable);
           setQuantity(
-            quantityStepForWeight(data.product.options?.[0]?.weightGrams)
+            quantityStepForWeight(data.product.options?.[firstAvailable]?.weightGrams)
           );
         }
       } catch (error) {
@@ -145,7 +149,7 @@ export default function ProductDetailClient({ initialProduct }) {
 
   // States
   const [isLoginOpen, setIsLoginOpen] = useState(false);
-  const [imgError, setImgError] = useState(false);
+  const [failedMainImage, setFailedMainImage] = useState("");
   const [isDescriptionExpanded, setIsDescriptionExpanded] = useState(false);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const relatedCarouselRef = useRef(null);
@@ -241,7 +245,8 @@ export default function ProductDetailClient({ initialProduct }) {
   const selectedOption = product.options[selectedOptIdx];
   const quantityStep = activeQuantityStep;
   const availableQuantity = orderableStockQuantity(selectedOption);
-  const maximumQuantity = maximumOrderQuantityForWeight(selectedOption?.weightGrams);
+  const maximumQuantity = maximumOrderQuantity(selectedOption);
+  const availabilityError = orderQuantityError(selectedOption, quantity);
   const canIncreaseQuantity = quantity + quantityStep <= maximumQuantity;
   const requiresBackorder = needsBackorder(selectedOption, quantity);
   const canPurchase = Boolean(
@@ -269,11 +274,14 @@ export default function ProductDetailClient({ initialProduct }) {
     finalPrice == null ? null : finalPrice * quantity;
 
   const handleAddToCartClick = () => {
-    if (!canPurchase || !product.optionsLoaded) {
+    if (!canPurchase || !product.optionsLoaded || availabilityError) {
       if (!isLoggedIn) setIsLoginOpen(true);
       return;
     }
-    addToCart(product, selectedOptIdx, quantity);
+    if (!addToCart(product, selectedOptIdx, quantity)) {
+      setProductLoadError("The combined cart quantity exceeds remaining stock. Review your cart.");
+      return;
+    }
     setAddedAt(Date.now());
   };
 
@@ -322,12 +330,12 @@ export default function ProductDetailClient({ initialProduct }) {
             {/* Ambient Background Glow */}
             <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-[#268072]/5 via-transparent to-transparent opacity-60 z-0"></div>
             {/* Real Product Image with Fallback */}
-            {!imgError ? (
+            {product.image && product.image !== "/logo.svg" && failedMainImage !== product.image ? (
               <div className="w-full h-full overflow-hidden rounded-lg bg-white relative z-10">
                 <img
-                  src={product.image || `/products/${product.photoFolder}/${product.photo}.jpg`}
+                  src={product.image}
                   alt={product.name}
-                  onError={() => setImgError(true)}
+                  onError={() => setFailedMainImage(product.image)}
                   className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105"
                 />
               </div>
@@ -343,6 +351,7 @@ export default function ProductDetailClient({ initialProduct }) {
                 <span className="relative mt-2 max-w-[16rem] font-headline-md text-lg font-bold leading-snug text-[#23403b]">
                   {product.name}
                 </span>
+                <span className="relative mt-3 text-sm text-[#23403b]/70">Photo unavailable</span>
               </div>
             )}
           </div>
@@ -369,8 +378,9 @@ export default function ProductDetailClient({ initialProduct }) {
             {/* Product Title */}
             <div>
               <h1 className="font-headline-lg text-3xl md:text-4xl font-black text-white leading-tight">
-                {product.name}
+                {catalogProductTitle(product)}
               </h1>
+              <div className="mt-3"><ShelfButton product={product} /></div>
               <p className="text-[11px] font-mono text-white/40 mt-1">
                 SKU: <span className="text-white/60 font-bold">{selectedOption?.sku || product.sku}</span>
               </p>
@@ -497,12 +507,12 @@ export default function ProductDetailClient({ initialProduct }) {
                 </div>
               )}
 
-              {requiresBackorder && <StockBackorderNotice />}
+              {requiresBackorder && <StockBackorderNotice madeToOrder={selectedOption?.availabilityLabel === "Made to order"} />}
               {quantityStep > 1 && selectedOption && (
                 <p className="text-[10px] font-semibold text-[#82d6c5]">
                   This {Math.round(selectedOption.weightGrams)}g tin is sold in
                   multiples of {quantityStep} units.
-                  {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now; additional packs can be requested for restock.`}
+                  {availableQuantity != null && ` ${availableQuantity / quantityStep} ${availableQuantity / quantityStep === 1 ? "pack" : "packs"} available now.${selectedOption.stockLimited ? "" : " Additional packs can be requested for restock."}`}
                 </p>
               )}
 
@@ -558,7 +568,7 @@ export default function ProductDetailClient({ initialProduct }) {
                 <div className="flex-grow w-full">
                   <button
                     onClick={handleAddToCartClick}
-                    disabled={!product.optionsLoaded}
+                    disabled={!product.optionsLoaded || Boolean(availabilityError)}
                     className="w-full bg-[#EC2300] hover:bg-[#c51d00] text-white text-xs font-bold uppercase tracking-widest py-4 px-6 rounded shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/45 transition-all flex items-center justify-center gap-2 cursor-pointer border-0"
                   >
                     {addedAt ? (

@@ -9,7 +9,7 @@ import { useAuth } from './AuthContext';
 import LoginModal from './LoginModal';
 import ProductRecommendations from './ProductRecommendations';
 import { ShoppingBag, X, Minus, Plus, ArrowRight, CircleDollarSign, Scale } from 'lucide-react';
-import { orderMinimumStatus } from '@/lib/pricing';
+import { maximumOrderQuantity, orderMinimumStatus } from '@/lib/pricing';
 import { useDialogAccessibility } from '@/lib/use-dialog-accessibility';
 
 export default function CartDrawer() {
@@ -147,6 +147,7 @@ export default function CartDrawer() {
                                 Includes units awaiting restock
                               </span>
                             )}
+                            {item.availabilityError && <span role="alert" className="text-xs text-red-200">{item.availabilityError}</span>}
                           </div>
                         </div>
                       </div>
@@ -173,6 +174,7 @@ export default function CartDrawer() {
                             type="button"
                             aria-label={`Increase quantity of ${item.name}`}
                             onClick={() => updateQuantity(item.cartKey, 1)}
+                            disabled={item.quantity + item.quantityStep > maximumOrderQuantity(item)}
                             className="p-1.5 text-white/50 hover:text-white cursor-pointer bg-transparent border-0"
                           >
                             <Plus className="w-3 h-3" />
@@ -271,7 +273,7 @@ export default function CartDrawer() {
               <button
                 type="button"
                 onClick={handleCheckout}
-                disabled={cart.length === 0 || (isLoggedIn && !minimumStatus.meetsMinimum)}
+                disabled={cart.length === 0 || cart.some((item) => item.availabilityError) || (isLoggedIn && !minimumStatus.meetsMinimum)}
                 className="w-full bg-[#EC2300] hover:bg-[#c51d00] disabled:opacity-40 disabled:hover:bg-[#EC2300] text-white text-xs font-bold uppercase tracking-widest py-5 rounded-sm transition-all duration-300 shadow-lg shadow-[#EC2300]/20 hover:shadow-[#EC2300]/40 flex items-center justify-center gap-3 cursor-pointer disabled:cursor-not-allowed border-0"
               >
                 {isLoggedIn ? (

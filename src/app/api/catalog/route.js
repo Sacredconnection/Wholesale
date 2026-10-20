@@ -160,7 +160,7 @@ async function loadRestStoreCatalog(store, customer, catalogFetchOptions) {
         productUrl: `/product/${encodeURIComponent(catalogProduct.slug)}`,
       };
     }
-  ).then((products) => products.filter(Boolean));
+  ).then((products) => products.filter((product) => product && product.catalogVisible !== false));
 }
 
 async function loadLocalCatalogSnapshot() {
@@ -312,6 +312,7 @@ export async function GET(request) {
       );
     }
 
+    products = products.filter((product) => product.catalogVisible !== false);
     const allPrices = products.flatMap((product) => [
       product.priceMin,
       product.priceMax,

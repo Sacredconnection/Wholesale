@@ -1,16 +1,18 @@
 "use client";
 
+import { useId } from "react";
 import { ChevronDown, Filter, Search } from "lucide-react";
 
 export default function FilterSidebar({
   filters,
-  categories,
-  tribes,
+  categories = [],
+  tribes = [],
   onChange,
   onClear,
   disabled = false,
   allValue = "",
 }) {
+  const id = useId();
   const updateSearch = (value) =>
     onChange({ ...filters, search: value });
   const updateCategory = (value) =>
@@ -42,7 +44,7 @@ export default function FilterSidebar({
       >
         <div className="flex w-full min-w-0 flex-col gap-2">
           <label
-            htmlFor="catalog-search"
+            htmlFor={`${id}-search`}
             className="text-xs font-semibold uppercase tracking-wide text-white/55"
           >
             Search
@@ -53,7 +55,7 @@ export default function FilterSidebar({
               aria-hidden="true"
             />
             <input
-              id="catalog-search"
+              id={`${id}-search`}
               type="text"
               value={filters.search || ""}
               onChange={(event) => updateSearch(event.target.value)}
@@ -66,17 +68,18 @@ export default function FilterSidebar({
 
         <div className="flex w-full min-w-0 flex-col gap-2">
           <label
-            htmlFor="catalog-category"
+            htmlFor={`${id}-category`}
             className="text-xs font-semibold uppercase tracking-wide text-white/55"
           >
             Category
           </label>
           <div className="relative">
             <select
-              id="catalog-category"
+              id={`${id}-category`}
               value={filters.category}
+              disabled={disabled}
               onChange={(event) => updateCategory(event.target.value)}
-              className="w-full cursor-pointer appearance-none rounded-sm border border-white/10 bg-[#131313] px-4 py-4 text-sm text-white outline-none transition-colors focus:border-[#268072]"
+              className="w-full cursor-pointer appearance-none rounded-sm border border-white/10 bg-[#131313] px-4 py-4 text-sm text-white outline-none transition-colors focus:border-[#268072] disabled:cursor-not-allowed disabled:opacity-40"
             >
               <option value={allValue}>All Categories</option>
               {categories.map((category) => (
@@ -95,17 +98,18 @@ export default function FilterSidebar({
         {showTribe && (
           <div className="flex w-full min-w-0 flex-col gap-2">
             <label
-              htmlFor="catalog-tribe"
+              htmlFor={`${id}-tribe`}
               className="text-xs font-semibold uppercase tracking-wide text-white/55"
             >
               {tribeLabel}
             </label>
             <div className="relative">
               <select
-                id="catalog-tribe"
+                id={`${id}-tribe`}
                 value={filters.tribe}
+                disabled={disabled}
                 onChange={(event) => updateTribe(event.target.value)}
-                className="w-full cursor-pointer appearance-none rounded-sm border border-white/10 bg-[#131313] px-4 py-4 text-sm text-white outline-none transition-colors focus:border-[#268072]"
+                className="w-full cursor-pointer appearance-none rounded-sm border border-white/10 bg-[#131313] px-4 py-4 text-sm text-white outline-none transition-colors focus:border-[#268072] disabled:cursor-not-allowed disabled:opacity-40"
               >
                 <option value={allValue}>{allTribesLabel}</option>
                 {tribes.map((tribe) => (
