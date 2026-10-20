@@ -1,15 +1,11 @@
 "use client";
 
-/* eslint-disable @next/next/no-img-element -- Product media comes from runtime WooCommerce URLs. */
-
 import { Fragment, useState, useMemo, useEffect, useRef } from "react";
 import Link from "next/link";
 import Header from "@/components/Header";
 import LoginModal from "@/components/LoginModal";
 import CatalogPdfExportDialog from "@/components/CatalogPdfExportDialog";
 import CatalogExcelExportDialog from "@/components/CatalogExcelExportDialog";
-import ShelfButton from "@/components/ShelfButton";
-import ProductPurchaseControls from "@/components/ProductPurchaseControls";
 import WorkbookImportReviewModal from "@/components/WorkbookImportReviewModal";
 import FilterSidebar from "@/components/catalog/FilterSidebar";
 import { useAuth } from "@/components/AuthContext";
@@ -28,9 +24,8 @@ import {
 } from "lucide-react";
 
 import { useProducts } from "@/components/ProductsContext";
-import { getEthnicityColor } from "@/lib/ethnicity-colors";
 import { readCatalogOrderWorkbook } from "@/lib/catalog-order-workbook";
-import { orderQuantityError } from "@/lib/pricing";
+import { getOrderableProductOptions, optionPriceForUser, orderQuantityError } from "@/lib/pricing";
 import { catalogProductTitle, compareCatalogProducts, getCatalogTaxonomy, groupCatalogProducts } from "@/lib/catalog-taxonomy";
 
 // Normalize string for accent-insensitive comparison
@@ -93,7 +88,6 @@ export default function CatalogClient({
   const [workbookError, setWorkbookError] = useState("");
   const [workbookSuccess, setWorkbookSuccess] = useState("");
   const [workbookReview, setWorkbookReview] = useState(null);
-  const [failedImages, setFailedImages] = useState({});
   const importInputRef = useRef(null);
 
   // Filter States
@@ -503,92 +497,36 @@ export default function CatalogClient({
                 const taxonomy = getCatalogTaxonomy(product);
                 const previousTaxonomy = index > 0 ? getCatalogTaxonomy(paginatedProducts[index - 1]) : null;
                 const startsGroup = taxonomy.mainCategory !== previousTaxonomy?.mainCategory || taxonomy.subcategory !== previousTaxonomy?.subcategory;
+                const prices = isLoggedIn && product.pricingVisible === true
+                  ? getOrderableProductOptions(product)
+                      .map((option) => Number(optionPriceForUser(option, user)))
+                      .filter((price) => Number.isFinite(price) && price >= 0)
+                  : [];
+                const minimumPrice = prices.length ? Math.min(...prices) : null;
+                const hasPriceRange = prices.some((price) => price !== minimumPrice);
                 return <Fragment key={product.id}>
                   {startsGroup && <h2 className="col-span-full border-b border-[#82d6c5]/20 pb-2 pt-3 text-sm font-bold text-[#82d6c5]">{taxonomy.mainCategory}{taxonomy.subcategory !== taxonomy.mainCategory ? ` / ${taxonomy.subcategory}` : ""}</h2>}
-                  <div
-                    className="catalog-product-row grid grid-cols-[auto_minmax(0,1fr)] items-start gap-x-4 gap-y-5 rounded-xl border border-white/10 bg-[#171717] p-5 shadow-lg shadow-black/20 transition-[background-color,border-color,box-shadow] hover:border-[#268072]/50 hover:bg-[#1b1b1b] hover:shadow-xl"
-                  >
-                    {/* Image Column — product thumbnail, tribe-letter fallback */}
-                    <div className="col-span-1 flex items-center">
-                      <Link href={`/product/${product.slug}?fromPage=${currentPage}`} className="block">
-                        {product.image && !failedImages[product.image] ? (
-                          <div className="relative h-16 w-16 overflow-hidden rounded-lg border border-white/10 bg-[#131313] shadow-md transition-all duration-300 hover:border-[#268072]/45 hover:shadow-lg">
-                            <img
-                              src={product.image}
-                              alt={product.name}
-                              loading="lazy"
-                              onError={() => setFailedImages((current) => ({ ...current, [product.image]: true }))}
-                              className="w-full h-full object-contain transition-transform duration-300 hover:scale-110"
-                            />
-                          </div>
-                        ) : (
-                          <div
-                            className="relative flex h-16 w-16 flex-col items-center justify-center rounded-lg border border-white/10 text-lg font-black uppercase text-white shadow-md transition-all duration-300 hover:border-[#268072]/45 hover:shadow-lg font-mono select-none"
-                            style={{ backgroundColor: getEthnicityColor(product.tribe, product.category) }}
-                          >
-                            <span className="transform hover:scale-110 transition-transform duration-300">
-                              {(product.tribe || product.name || "P").charAt(0).toUpperCase()}
-                            </span>
-                            <span className="mt-1 px-1 text-center font-sans text-[8px] font-normal normal-case leading-tight text-white/70">Photo unavailable</span>
-                          </div>
-                        )}
-                      </Link>
-                    </div>
-
-                    {/* Name Column */}
-                    <div className="col-span-1 flex min-w-0 flex-col gap-2">
-                      <Link href={`/product/${product.slug}?fromPage=${currentPage}`} className="hover:text-[#82d6c5] transition-colors text-left no-underline group">
-                        <h3 className="catalog-product-title font-headline-md text-lg font-bold text-white group-hover:text-[#82d6c5] transition-colors flex items-center gap-2 flex-wrap">
-                          {catalogProductTitle(product)}
-                          {product.isNew && (
-                            <span className="inline-block text-[9px] font-black tracking-widest bg-emerald-500 text-white px-1.5 py-0.5 rounded-sm uppercase align-middle">
-                              New
-                            </span>
-                          )}
-                        </h3>
-                      </Link>
-                      <div className="flex min-w-0 flex-wrap gap-2">
-                        <span className="max-w-full break-words text-[10px] font-semibold bg-[#268072]/15 text-[#82d6c5] border border-[#268072]/30 px-2 py-0.5 rounded-sm uppercase tracking-wide font-label-sm">
-                          {taxonomy.subcategory}
-                        </span>
-                        {product.availabilityLabel && <span className="text-xs text-white/55">{product.availabilityLabel}</span>}
-                      </div>
-                      {isLoggedIn && <ShelfButton product={product} />}
-                    </div>
-
-                    <div className="col-span-2 border-t border-white/10 pt-4">
-                      {isLoggedIn && product.pricingVisible === true ? (
-                        <ProductPurchaseControls
-                          product={product}
-                        />
-                      ) : (
-                        <div className="flex flex-col gap-3 rounded-lg border border-[#82d6c5]/20 bg-[#102c27]/55 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
-                          <div>
-                            <p className="text-sm font-bold text-white">
-                              {isLoggedIn
-                                ? "Loading your partner pricing"
-                                : "Partner pricing is private"}
-                            </p>
-                            <p className="mt-1 text-xs text-white/55">
-                              {isLoggedIn
-                                ? "Your account-specific catalog is being prepared."
-                                : "Sign in to see pricing for your approved account level."}
-                            </p>
-                          </div>
-                          {!isLoggedIn && (
-                          <button
-                            type="button"
-                            onClick={() => setIsLoginOpen(true)}
-                            className="shrink-0 rounded-sm border border-[#82d6c5]/35 bg-[#268072]/15 px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider text-[#82d6c5] transition-colors hover:bg-[#268072]/30 hover:text-white"
-                          >
-                            Sign in to view pricing
-                          </button>
-                          )}
-                        </div>
-                      )}
-                    </div>
-
-                  </div>
+                  <article className="catalog-product-row flex min-w-0 flex-col gap-3 rounded-xl border border-white/10 bg-[#171717] p-5 shadow-lg shadow-black/20 transition-colors hover:border-[#268072]/50 hover:bg-[#1b1b1b]">
+                    <Link href={`/product/${product.slug}?fromPage=${currentPage}`} className="group no-underline">
+                      <h3 className="catalog-product-title font-headline-md text-lg font-bold text-white transition-colors group-hover:text-[#82d6c5]">
+                        {catalogProductTitle(product)}
+                      </h3>
+                    </Link>
+                    {minimumPrice != null ? (
+                      <p className="text-base font-bold text-[#82d6c5]">
+                        {hasPriceRange ? "From " : ""}${minimumPrice.toFixed(2)}
+                      </p>
+                    ) : !isLoggedIn ? (
+                      <button type="button" onClick={() => setIsLoginOpen(true)} className="self-start text-sm font-semibold text-[#82d6c5] hover:underline">
+                        Sign in to view pricing
+                      </button>
+                    ) : (
+                      <p className="text-sm text-white/55">Price available on product details</p>
+                    )}
+                    <p className="line-clamp-3 text-sm leading-6 text-white/60">
+                      {product.description || "Wholesale product from the Sacred Connection collection."}
+                    </p>
+                  </article>
                 </Fragment>;
               })}
             </div>
