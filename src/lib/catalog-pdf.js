@@ -56,7 +56,7 @@ export function renderCatalogListPdf({
     if (first) {
       font(7.5, false, [79, 98, 91]);
       const note = includePrices
-        ? "USD unit prices for your wholesale profile. Final order discounts and shipping are calculated at checkout."
+        ? "USD unit prices for your wholesale profile. Shipping is calculated at checkout."
         : "Available wholesale products and formats. Sign in to view your account prices.";
       const noteLines = lines(note, width);
       text(noteLines, margin, cursor + 2);

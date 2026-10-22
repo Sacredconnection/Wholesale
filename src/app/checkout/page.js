@@ -865,9 +865,6 @@ export default function CheckoutPage() {
               </div>
               <div className="flex flex-col gap-2 border-t border-white/10 px-5 py-5 text-xs">
                 <div className="flex justify-between text-white/50"><span>Subtotal</span><span>${cartSubtotal.toFixed(2)}</span></div>
-                {discountPercentage > 0 && (
-                  <div className="flex justify-between text-[#82d6c5]"><span>B2B discount ({discountPercentage}%)</span><span>-${discountAmount.toFixed(2)}</span></div>
-                )}
                 <div className="flex justify-between text-white/50">
                   <span>Est. weight</span>
                   <span>{cartTotalWeightGrams >= 1000 ? `${(cartTotalWeightGrams / 1000).toFixed(2)} kg` : `${Math.round(cartTotalWeightGrams)} g`}</span>

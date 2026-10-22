@@ -201,7 +201,7 @@ export default function CatalogPdfExportDialog({ user, initialCategory = "", onC
               {!visible.length && <p className="py-6 text-sm text-white/60">No products match your search.</p>}
             </>}
             {step === 2 && <>
-              <p className="mb-5 text-sm text-white/60">{selected.length} products · Your account prices in USD. Account discounts and shipping are calculated separately when you place an order.</p>
+              <p className="mb-5 text-sm text-white/60">{selected.length} products · Your account prices in USD. Shipping is calculated separately when you place an order.</p>
               {reviewGroups.map((group) => <section key={group.name} className="mb-6"><h4 className="mb-3 border-b border-[#82d6c5]/25 pb-2 font-semibold text-[#82d6c5]">{group.name}</h4>{group.subcategories.map((sub) => <div key={sub.name} className="mb-4"><h5 className="mb-2 text-xs font-bold uppercase tracking-wide text-white/50">{sub.name}</h5>{sub.products.map((product) => <div key={productKey(product)} className="border-b border-white/10 py-3"><p className="text-sm font-medium">{catalogProductTitle(product)}</p><dl className="mt-2 grid gap-x-6 gap-y-1 text-xs sm:grid-cols-2">{getOrderableProductOptions(product).map((option, index) => <div key={option.sku || index} className="flex justify-between gap-3 text-white/65"><dt>{option.name}</dt><dd className="shrink-0 font-mono text-white">{money(optionPriceForUser(option, user))}</dd></div>)}</dl></div>)}</div>)}</section>)}
             </>}
             {step === 3 && <div className="py-4">

@@ -398,11 +398,6 @@ export default function ProductDetailClient({ initialProduct }) {
                       <span className="font-headline-lg text-3xl font-black text-[#82d6c5]">
                         ${finalPrice.toFixed(2)}
                       </span>
-                      {discountPercentage > 0 && (
-                        <span className="text-xs font-mono text-white/40 line-through">
-                          ${basePrice.toFixed(2)}
-                        </span>
-                      )}
                     </div>
                     {quantityStep > 1 && minimumPackTotal != null && (
                       <div className="mt-3 border-t border-white/10 pt-3">
@@ -415,9 +410,6 @@ export default function ProductDetailClient({ initialProduct }) {
                       </div>
                     )}
                   </div>
-                  <span className="rounded-sm border border-emerald-400/25 bg-emerald-400/10 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-400 font-mono">
-                    Partner {user.discountRate}% Off
-                  </span>
                 </>
               ) : (
                 <>

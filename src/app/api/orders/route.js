@@ -544,7 +544,7 @@ export async function POST(request) {
           error:
             minimumStatus.type === "weight"
               ? `Minimum wholesale order is ${minimumStatus.required}g; this order sheet weighs ${Math.round(totalWeightGrams)}g.`
-              : `Minimum wholesale order is $${minimumStatus.required.toFixed(2)}; this order sheet totals $${estimatedPartnerTotal.toFixed(2)} after partner discounts.`,
+              : `Minimum wholesale order is $${minimumStatus.required.toFixed(2)}; this order sheet totals $${estimatedPartnerTotal.toFixed(2)}.`,
         },
         { status: 422 }
       );
